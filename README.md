@@ -64,8 +64,7 @@ call SEC submissions, filing archives, or other SEC endpoints.
 
 Company Facts provides facts for a known CIK; it does not provide company
 discovery. `list_edgar_companies` therefore lists the small local company
-directory in the tool module (currently Apple, whose CIK is known from the
-saved filing). The fact-list and fact-lookup tools accept any CIK.
+directory in the tool module (currently Apple, Microsoft and Alphabet). The fact-list and fact-lookup tools accept any CIK.
 
 Successful Company Facts responses are cached in `data/edgar_cache/` by CIK so
 repeat lookups do not make another request. Pass `force_refresh=True` to fetch
@@ -73,6 +72,31 @@ fresh API data. Results retain reported value, unit, fiscal year and period,
 filing form/date, start/end dates, and accession number. Errors, including a
 missing User-Agent or SEC request failure, are returned explicitly as
 structured JSON.
+
+## Researcher agent
+
+`python -m agent_desk "question"` runs a single standalone researcher: a
+LangGraph ReAct agent that calls the EDGAR tools one at a time (serial, no
+parallel agents) and answers from the data they return.
+
+1. `python -m pip install -r requirements.txt`
+2. Put `SEC_USER_AGENT` and `OPENROUTER_API_KEY` in `.env` (see `.env.example`).
+3. Run (cmd shown; set `PYTHONPATH` once per terminal):
+
+```bat
+set PYTHONPATH=src
+python -m agent_desk "Compare Microsoft and Alphabet operating margins over the last three fiscal years"
+python -m agent_desk --search "supply chain risk"
+```
+
+`--search` keeps the offline keyword search over the saved Apple 10-K.
+
+Models (OpenRouter, in `src/agent_desk/llm.py`): `meta-llama/llama-3.3-70b-instruct`
+for tool calls (`tool_llm`) and `meta-llama/llama-3.1-8b-instruct` for fast
+routing or plain chat (`fast_llm`, not used by the researcher yet).
+
+Limitation: the agent only has XBRL facts, so it cannot read narrative text
+such as risk factors until filing retrieval is added.
 
 ## Initial structure
 

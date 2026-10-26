@@ -1,5 +1,7 @@
 beautifulsoup4
 langchain-core
+langchain-openai
+langgraph
 python-dotenv
 requests
 pytest

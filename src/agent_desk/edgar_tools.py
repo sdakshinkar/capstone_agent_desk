@@ -20,6 +20,8 @@ MAX_RESULT_LIMIT = 200
 
 COMPANIES = {
     "AAPL": {"name": "Apple Inc.", "cik": "0000320193"},
+    "MSFT": {"name": "Microsoft Corporation", "cik": "0000789019"},
+    "GOOGL": {"name": "Alphabet Inc.", "cik": "0001652044"},
 }
 
 load_dotenv(PROJECT_ROOT / ".env")
