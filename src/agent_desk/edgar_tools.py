@@ -18,6 +18,7 @@ REQUEST_TIMEOUT_SECONDS = 30
 DEFAULT_RESULT_LIMIT = 50
 MAX_RESULT_LIMIT = 200
 
+#revisit
 COMPANIES = {
     "AAPL": {"name": "Apple Inc.", "cik": "0000320193"},
     "MSFT": {"name": "Microsoft Corporation", "cik": "0000789019"},
