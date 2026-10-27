@@ -1,4 +1,4 @@
-from agent_desk.filing_search import load_passages, search
+from agent_desk.filing_parser import load_passages
 
 SAMPLE = """
 <html><body>
@@ -27,13 +27,3 @@ def test_passages_are_labelled_with_item(tmp_path):
 def test_table_of_contents_does_not_change_item(tmp_path):
     first = _passages(tmp_path)[0]
     assert first.item != "Item 1 - Business" or "designs" in first.text
-
-
-def test_search_returns_best_passage_with_item(tmp_path):
-    matches = search(_passages(tmp_path), "supply chain risk")
-    assert matches
-    assert matches[0].passage.item == "Item 1A - Risk Factors"
-
-
-def test_search_without_terms_returns_nothing(tmp_path):
-    assert search(_passages(tmp_path), "a an") == []

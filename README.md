@@ -26,28 +26,36 @@ capstone topics are out of scope unless requested later.
 - Before each step that creates or changes files, describe the intended files
   and their contents and wait for approval.
 
-## Quick start (proof of concept)
+## Quick start
 
-The first prototype is a local keyword search over a saved 10-K. It makes no
-network calls and uses no model.
+Install dependencies and run the tests in cmd:
 
-
-## ********************************************
-```powershell
-pip install -r requirements.txt
-set PYTHONPATH=src
-python -m agent_desk "supply chain risk"
+```bat
+python -m pip install -r requirements.txt
 python -m pytest
 ```
-## ********************************************
 
-Place filings under `data/filings/<company>/<year>/`. By default the CLI reads
-`data/filings/apple/2025/aapl-20251227.html` (Apple's FY2025 10-K); use
-`--filing PATH` to point at another file.
+Run the agent by opening `src/agent_desk/__main__.py`, setting `QUESTION` at
+the top, and pressing Run or Debug (F5). The researcher agent can use both
+local filing retrieval and SEC Company Facts tools.
 
-Current limits: literal keyword scoring only, table text is flattened, and
-there is no embedding search, reranking, query decomposition or answer
-generation yet. These arrive in later stages.
+The initial filing is `data/filings/apple/2025/aapl-20251227.html` (Apple's
+FY2025 10-K); the RAG tool currently uses that default filing.
+
+## Initial local RAG
+
+The RAG tool extracts text from the HTML using BeautifulSoup
+(`filing_parser.py`), splits each Item passage with
+`RecursiveCharacterTextSplitter` (1,000-character chunks with 150-character
+overlap), embeds with `sentence-transformers/all-MiniLM-L6-v2`, and searches a
+local FAISS index. The first RAG query downloads the embedding model from
+Hugging Face and builds the index; later queries reuse the index at
+`data/faiss_index/apple_2025/`. The model and index remain local after download
+and indexing.
+
+This is the simple RAG foundation only: it indexes one Apple FY2025 filing,
+flattens table contents to text, and does not yet include hybrid search,
+reranking, or query decomposition.
 
 ## SEC Company Facts tools (L7 step)
 
@@ -75,28 +83,25 @@ structured JSON.
 
 ## Researcher agent
 
-`python -m agent_desk "question"` runs a single standalone researcher: a
-LangGraph ReAct agent that calls the EDGAR tools one at a time (serial, no
-parallel agents) and answers from the data they return.
+Running `src/agent_desk/__main__.py` runs a single standalone researcher: a
+LangGraph ReAct agent that calls the filing retrieval and EDGAR tools one at a
+time (serial, no parallel agents). It uses filing retrieval for narrative
+questions and Company Facts for reported numbers.
 
 1. `python -m pip install -r requirements.txt`
 2. Put `SEC_USER_AGENT` and `OPENROUTER_API_KEY` in `.env` (see `.env.example`).
-3. Run (cmd shown; set `PYTHONPATH` once per terminal):
-
-```bat
-set PYTHONPATH=src
-python -m agent_desk "Compare Microsoft and Alphabet operating margins over the last three fiscal years"
-python -m agent_desk --search "supply chain risk"
-```
-
-`--search` keeps the offline keyword search over the saved Apple 10-K.
+3. Run: edit `QUESTION` in `__main__.py` (for example, "Compare Microsoft and
+   Alphabet operating margins over the last three fiscal years") and run or
+   debug the file. Alternatively, run `python src\agent_desk\__main__.py` from
+   the project root.
 
 Models (OpenRouter, in `src/agent_desk/llm.py`): `meta-llama/llama-3.3-70b-instruct`
 for tool calls (`tool_llm`) and `meta-llama/llama-3.1-8b-instruct` for fast
 routing or plain chat (`fast_llm`, not used by the researcher yet).
 
-Limitation: the agent only has XBRL facts, so it cannot read narrative text
-such as risk factors until filing retrieval is added.
+The RAG index currently contains only the saved Apple FY2025 filing. Company
+Facts supports the listed companies' reported XBRL data, but their narrative
+filing text is not available until those filings are added to the index.
 
 ## Initial structure
 
@@ -106,7 +111,7 @@ such as risk factors until filing retrieval is added.
 ├── documents/             # Capstone brief and other reference documents
 ├── notebooks/             # Lesson notebooks used as references only
 ├── src/
-│   └── agent_desk/        # Application package and SEC Company Facts tools
+│   └── agent_desk/        # Application, local RAG and SEC Company Facts tools
 ├── tests/                 # Automated tests
 ├── .gitignore
 ├── .env.example
@@ -114,5 +119,3 @@ such as risk factors until filing retrieval is added.
 ├── requirements.txt
 └── README.md
 ```
-
-python -m agent_desk "supply chain risk"

@@ -1,7 +1,13 @@
 beautifulsoup4
 langchain-core
+langchain-community
+langchain-huggingface
 langchain-openai
+langchain-text-splitters
 langgraph
 python-dotenv
 requests
+sentence-transformers
+faiss-cpu
 pytest
+huggingface-hub>=0.33.4,<2.0.0

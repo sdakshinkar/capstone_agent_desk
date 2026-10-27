@@ -1,4 +1,4 @@
-"""Keyword search over a locally saved SEC 10-K HTML file."""
+"""Extract Item-labelled text passages from a saved SEC 10-K HTML file."""
 
 import re
 from dataclasses import dataclass
@@ -17,12 +17,6 @@ MIN_PASSAGE_CHARS = 40
 class Passage:
     item: str
     text: str
-
-
-@dataclass
-class Match:
-    passage: Passage
-    score: int
 
 
 def _clean(text: str) -> str:
@@ -63,21 +57,3 @@ def load_passages(path: Path) -> list[Passage]:
         if len(text) >= MIN_PASSAGE_CHARS:
             passages.append(Passage(current_item, text))
     return passages
-
-
-def _terms(query: str) -> list[str]:
-    return [t for t in re.findall(r"[a-z0-9]+", query.lower()) if len(t) > 2]
-
-
-def search(passages: list[Passage], query: str, limit: int = 5) -> list[Match]:
-    terms = _terms(query)
-    if not terms:
-        return []
-    matches = []
-    for passage in passages:
-        lowered = passage.text.lower()
-        score = sum(lowered.count(term) for term in terms)
-        if score:
-            matches.append(Match(passage, score))
-    matches.sort(key=lambda m: m.score, reverse=True)
-    return matches[:limit]
