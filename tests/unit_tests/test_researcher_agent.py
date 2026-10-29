@@ -4,7 +4,8 @@ import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
 
-from agent_desk import llm, researcher_agent
+from agent_desk.agents import researcher_agent
+from agent_desk.llm import llm
 
 
 class ToolFakeChat(GenericFakeChatModel):

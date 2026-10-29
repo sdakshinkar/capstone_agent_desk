@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from agent_desk import edgar_tools
+from agent_desk.tools import edgar_tools
 
 
 def sample_company_facts():

@@ -1,4 +1,4 @@
-# Agent Desk
+﻿# Agent Desk
 
 A company-filings research assistant built in small, reviewable stages. The
 capstone notebooks and project brief are reference material only; the project
@@ -39,27 +39,31 @@ Run the agent by opening `src/agent_desk/__main__.py`, setting `QUESTION` at
 the top, and pressing Run or Debug (F5). The researcher agent can use both
 local filing retrieval and SEC Company Facts tools.
 
-The initial filing is `data/filings/apple/2025/aapl-20251227.html` (Apple's
-FY2025 10-K); the RAG tool currently uses that default filing.
+## Filings and embeddings
 
-## Initial local RAG
+1. Download 10-Ks (HTML) with `src/agent_desk/utils/filling_download.py`; edit
+   `SPECS` in `main()` and run it. Files go to
+   `data/filings/<company>/<year>/`.
+2. Build the index with `src/agent_desk/utils/create_embeddings.py`; uncomment
+   one call in `main()`: `create_all_embeddings()`,
+   `create_company_embeddings(name)`, `delete_company_embeddings(name)` or
+   `delete_all_embeddings()`.
 
-The RAG tool extracts text from the HTML using BeautifulSoup
-(`filing_parser.py`), splits each Item passage with
-`RecursiveCharacterTextSplitter` (1,000-character chunks with 150-character
-overlap), embeds with `sentence-transformers/all-MiniLM-L6-v2`, and searches a
-local FAISS index. The first RAG query downloads the embedding model from
-Hugging Face and builds the index; later queries reuse the index at
-`data/faiss_index/apple_2025/`. The model and index remain local after download
-and indexing.
+Embeddings are never built during a search. `create_embeddings.py` extracts text
+with BeautifulSoup (`rag/filing_parser.py`), splits each Item passage with
+`RecursiveCharacterTextSplitter` (1,000-character chunks, 150 overlap), embeds with
+`sentence-transformers/all-MiniLM-L6-v2` (downloaded from Hugging Face on first
+use) and saves one combined FAISS index in `data/faiss_index/`. Every chunk has
+`company`, `year`, `item` and `source` metadata. `search_filing(query, company,
+year, k)` searches that index and can filter by company and/or year; it raises an
+error if the index has not been built.
 
-This is the simple RAG foundation only: it indexes one Apple FY2025 filing,
-flattens table contents to text, and does not yet include hybrid search,
+This is the simple RAG foundation only: it flattens table contents to text, and does not yet include hybrid search,
 reranking, or query decomposition.
 
 ## SEC Company Facts tools (L7 step)
 
-`src/agent_desk/edgar_tools.py` exposes LangChain tools backed only by the SEC
+`src/agent_desk/tools/edgar_tools.py` exposes LangChain tools backed only by the SEC
 XBRL Company Facts API. It does not download or search filing HTML and does not
 call SEC submissions, filing archives, or other SEC endpoints.
 
@@ -68,7 +72,7 @@ call SEC submissions, filing archives, or other SEC endpoints.
    `.env` is ignored by Git.
 2. Install dependencies with `pip install -r requirements.txt`.
 3. Import `list_edgar_companies`, `list_company_facts`, and
-   `get_company_fact` from `agent_desk.edgar_tools` in the project agent.
+   `get_company_fact` from `agent_desk.tools.edgar_tools` in the project agent.
 
 Company Facts provides facts for a known CIK; it does not provide company
 discovery. `list_edgar_companies` therefore lists the small local company
@@ -95,27 +99,32 @@ questions and Company Facts for reported numbers.
    debug the file. Alternatively, run `python src\agent_desk\__main__.py` from
    the project root.
 
-Models (OpenRouter, in `src/agent_desk/llm.py`): `meta-llama/llama-3.3-70b-instruct`
+Models (OpenRouter, in `src/agent_desk/llm/llm.py`): `meta-llama/llama-3.3-70b-instruct`
 for tool calls (`tool_llm`) and `meta-llama/llama-3.1-8b-instruct` for fast
 routing or plain chat (`fast_llm`, not used by the researcher yet).
 
-The RAG index currently contains only the saved Apple FY2025 filing. Company
-Facts supports the listed companies' reported XBRL data, but their narrative
-filing text is not available until those filings are added to the index.
+Narrative filing search covers the companies and years whose filings you downloaded and indexed (see "Filings and embeddings"). Company Facts supports reported XBRL data for the listed companies.
 
 ## Initial structure
 
 ```text
 .
-├── data/                  # Local project data; generated data is not committed
-├── documents/             # Capstone brief and other reference documents
-├── notebooks/             # Lesson notebooks used as references only
+├── data/              # Local project data; generated data is not committed
+├── documents/         # Capstone brief and other reference documents
+├── notebooks/         # Lesson notebooks used as references only
 ├── src/
-│   └── agent_desk/        # Application, local RAG and SEC Company Facts tools
-├── tests/                 # Automated tests
+│   └── agent_desk/
+│       ├── agents/    # researcher_agent.py (LangGraph ReAct agent)
+│       ├── llm/       # llm.py (OpenRouter chat models)
+│       ├── rag/       # filing_parser.py, filing_rag.py (FAISS search)
+│       ├── tools/     # edgar_tools.py, rag_tools.py (agent tools)
+│       ├── utils/     # filling_download.py, create_embeddings.py
+│       └── __main__.py   # Run or debug this file
+├── tests/             # Automated tests (see tests/unit_tests/)
 ├── .gitignore
 ├── .env.example
 ├── pytest.ini
 ├── requirements.txt
 └── README.md
 ```
+

@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 BASE_URL = "https://openrouter.ai/api/v1"
 TOOL_MODEL = "meta-llama/llama-3.3-70b-instruct"  # reliable at tool calls
 FAST_MODEL = "meta-llama/llama-3.1-8b-instruct"  # cheap, routing / plain chat

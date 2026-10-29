@@ -1,4 +1,4 @@
-from agent_desk.filing_parser import load_passages
+from agent_desk.rag.filing_parser import load_passages
 
 SAMPLE = """
 <html><body>

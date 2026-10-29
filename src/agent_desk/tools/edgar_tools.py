@@ -11,7 +11,7 @@ import requests
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CACHE_DIR = PROJECT_ROOT / "data" / "edgar_cache" / "companyfacts"
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 REQUEST_TIMEOUT_SECONDS = 30
