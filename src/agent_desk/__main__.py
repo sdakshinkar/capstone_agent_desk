@@ -3,6 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from agent_desk.agents.research_lead_agent import run_research_lead
 from agent_desk.agents.researcher_agent import run_researcher
 
 QUESTION1 = "What was Apple's operating income in the latest fiscal year?"
@@ -18,7 +19,8 @@ QUESTION3 = (
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    print(run_researcher(QUESTION2))
+    # print(run_researcher(QUESTION2))
+    print(run_research_lead(QUESTION3))
     return 0
 
 
