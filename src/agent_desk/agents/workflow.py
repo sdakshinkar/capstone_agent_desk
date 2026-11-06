@@ -7,39 +7,100 @@ is kept in team_state.py.
 
 from __future__ import annotations
 
+import json
+
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
 from .quant_agent import run_quant_agent
+from .research_lead_agent import run_research_lead
 from .researcher_agent import run_researcher
 from .risk_diff_agent import run_risk_diff_agent
 from .supervisor_agent import supervisor_decision
 from .team_state import TeamState
 
 
-def supervisor_node(state: TeamState) -> TeamState:
+def _parse_plan(raw: str, question: str) -> dict:
+    """Parse the lead's JSON, tolerating markdown code fences around it."""
+    start, end = raw.find("{"), raw.rfind("}")
+    try:
+        return json.loads(raw[start : end + 1])
+    except json.JSONDecodeError:
+        return {
+            "goal": question,
+            "sub_questions": [question],
+            "outline": ["Gather evidence for the question", "Answer the question"],
+        }
+
+
+def research_lead_node(state: TeamState) -> dict:
+    question = state["question"]
+    replan_count = state.get("replan_count", 0)
+    feedback = None
+    if state.get("replan_reason"):
+        feedback = (
+            f"Previous plan: {json.dumps(state.get('plan', {}))}\n"
+            f"Failed task: {state.get('task', '')}\n"
+            f"Reason: {state['replan_reason']}"
+        )
+        replan_count += 1
+
+    plan = _parse_plan(run_research_lead(question, feedback=feedback), question)
+    steps = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan.get("outline", [])))
+    summary = f"Plan goal: {plan.get('goal', question)}\nSteps:\n{steps}"
+    return {
+        "plan": plan,
+        "plan_step": 0,
+        "replan_count": replan_count,
+        "replan_reason": "",
+        "messages": [HumanMessage(content=summary, name="research_lead")],
+    }
+
+
+def supervisor_node(state: TeamState) -> dict:
     return supervisor_decision(state)
 
 
-def researcher_worker_node(state: TeamState) -> TeamState:
-    state["narrative"] = run_researcher(state["task"])
-    state["messages"].append(HumanMessage(content=state["narrative"], name="researcher_worker"))
-    return state
+def _failed(worker: str, exc: Exception) -> dict:
+    """Report a crashed worker to the supervisor so it can retry or replan."""
+    report = f"WORKER FAILED: {type(exc).__name__}: {str(exc)[:200]}"
+    return {"messages": [HumanMessage(content=report, name=worker)]}
 
 
-def quant_worker_node(state: TeamState) -> TeamState:
-    state["facts"] = run_quant_agent(state["task"])
-    state["messages"].append(HumanMessage(content=state["facts"], name="quant_worker"))
-    return state
+def researcher_worker_node(state: TeamState) -> dict:
+    try:
+        narrative = run_researcher(state["task"])
+    except Exception as exc:
+        return _failed("researcher_worker", exc)
+    return {
+        "narrative": narrative,
+        "messages": [HumanMessage(content=narrative, name="researcher_worker")],
+    }
 
 
-def risk_worker_node(state: TeamState) -> TeamState:
-    state["risk"] = run_risk_diff_agent(state["task"])
-    state["messages"].append(HumanMessage(content=state["risk"], name="risk_worker"))
-    return state
+def quant_worker_node(state: TeamState) -> dict:
+    try:
+        facts = run_quant_agent(state["task"])
+    except Exception as exc:
+        return _failed("quant_worker", exc)
+    return {
+        "facts": facts,
+        "messages": [HumanMessage(content=facts, name="quant_worker")],
+    }
 
 
-def aggregate_node(state: TeamState) -> TeamState:
+def risk_worker_node(state: TeamState) -> dict:
+    try:
+        risk = run_risk_diff_agent(state["task"])
+    except Exception as exc:
+        return _failed("risk_worker", exc)
+    return {
+        "risk": risk,
+        "messages": [HumanMessage(content=risk, name="risk_worker")],
+    }
+
+
+def aggregate_node(state: TeamState) -> dict:
     parts: list[str] = []
     if state.get("narrative"):
         parts.append("Narrative findings:\n" + state["narrative"])
@@ -47,19 +108,21 @@ def aggregate_node(state: TeamState) -> TeamState:
         parts.append("Quant findings:\n" + state["facts"])
     if state.get("risk"):
         parts.append("Risk comparison:\n" + state["risk"])
-    state["final_answer"] = "\n\n".join(parts)
-    return state
+    # With no worker output, the supervisor's FINISH report is the answer.
+    return {"final_answer": "\n\n".join(parts) or state.get("task", "")}
 
 
 def build_team_workflow():
     workflow = StateGraph(TeamState)
+    workflow.add_node("research_lead", research_lead_node)
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("researcher_worker", researcher_worker_node)
     workflow.add_node("quant_worker", quant_worker_node)
     workflow.add_node("risk_worker", risk_worker_node)
     workflow.add_node("aggregate", aggregate_node)
 
-    workflow.set_entry_point("supervisor")
+    workflow.set_entry_point("research_lead")
+    workflow.add_edge("research_lead", "supervisor")
 
     workflow.add_conditional_edges(
         "supervisor",
@@ -68,6 +131,7 @@ def build_team_workflow():
             "researcher_worker": "researcher_worker",
             "quant_worker": "quant_worker",
             "risk_worker": "risk_worker",
+            "REPLAN": "research_lead",
             "FINISH": "aggregate",
         },
     )
@@ -83,13 +147,19 @@ def build_team_workflow():
 def run_team_workflow(question: str) -> str:
     app = build_team_workflow()
     initial: TeamState = {
+        "question": question,
         "messages": [HumanMessage(content=question)],
         "next": "",
         "task": "",
+        "plan": {},
+        "plan_step": 0,
+        "replan_count": 0,
+        "max_replans": 2,
+        "replan_reason": "",
         "narrative": "",
         "facts": "",
         "risk": "",
         "final_answer": "",
     }
-    result = app.invoke(initial,{"recursion_limit": 30})
+    result = app.invoke(initial, {"recursion_limit": 30})
     return result["final_answer"]

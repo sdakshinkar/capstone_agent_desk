@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Annotated, TypedDict
 
-
-class Route(TypedDict):
-    next: Literal["researcher_worker", "quant_worker", "risk_worker", "FINISH"]
-    message: str
+from langgraph.graph.message import add_messages
 
 
 class TeamState(TypedDict):
-    messages: list
+    question: str
+    messages: Annotated[list, add_messages]
     next: str
     task: str
+    plan: dict
+    plan_step: int
+    replan_count: int
+    max_replans: int
+    replan_reason: str
     narrative: str
     facts: str
     risk: str
