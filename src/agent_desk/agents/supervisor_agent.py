@@ -21,6 +21,10 @@ VALID_ROUTES = WORKERS | {"REPLAN", "FINISH"}
 # 'message': "What was Microsoft's operating income for fiscal year 2023 and revenue for fiscal year 2023? 
 # Also, what was Microsoft's operating income for fiscal year 2024 and revenue for fiscal year 2024? 
 # What was Microsoft's operating income for fiscal year 2025 and revenue for fiscal year 2025?"}
+#
+#{'next': 'researcher_worker', 
+# 'message': 'Find the risk factors disclosed by Microsoft in their 10-K filings for fiscal years 2023, 2024, and 2025, 
+# specifically in Item 1A.'}
 class Route(TypedDict):
     next: Literal["researcher_worker", "quant_worker", "risk_worker", "REPLAN", "FINISH"]
     message: str
@@ -43,8 +47,7 @@ def _plan_text(plan: dict, step: int) -> str:
     return f"Goal: {plan.get('goal', '')}\nSub-questions (current one marked ->):\n" + "\n".join(lines)
 
 #choice
-#{'next': 'quant_worker', 
-# 'message': "What was Microsoft's operating income and revenue for its last three fiscal years?"}
+#{'next': 'quant_worker', 'message': "What was Microsoft's operating margin for fiscal years 2023, 2024 and 2025?"}
 def supervisor_decision(state: TeamState) -> dict:
     """Choose the next worker (or REPLAN / FINISH) and write the brief for it."""
     replan_count = state.get("replan_count", 0)
@@ -127,9 +130,9 @@ def run_supervisor(question: str) -> str:
         "replan_count": 0,
         "max_replans": 2,
         "replan_reason": "",
-        "narrative": "",
-        "facts": "",
-        "risk": "",
+        "narrative": [],
+        "facts": [],
+        "risk": [],
         "final_answer": "",
     }
     return supervisor_decision(initial)["task"]

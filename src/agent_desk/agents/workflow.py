@@ -78,25 +78,61 @@ def _failed(worker: str, exc: Exception) -> dict:
     return {"messages": [HumanMessage(content=report, name=worker)]}
 
 
+# Formats one worker result as "Q: <brief>\nA: <answer>".
+# narrative, facts and risk are lists that every worker call appends to (operator.add reducer in
+# TeamState), so a second call, e.g. quant_worker for Alphabet after Microsoft, adds an entry
+# instead of overwriting the first. Prefixing the brief keeps each entry self-describing, because
+# a worker's answer does not always name the company or years it was asked about.
+# aggregate_node later joins these entries under "Narrative findings", "Quant findings" and
+# "Risk comparison".
+# Example: _entry("What were Alphabet's operating margins for 2023-2025?", "27.4%, 32.1%, 32.0%")
+#   -> "Q: What were Alphabet's operating margins for 2023-2025?\nA: 27.4%, 32.1%, 32.0%"
+def _entry(task: str, output: str) -> str:
+    """Label a worker result with the brief it answered, so repeat calls stay distinguishable."""
+    return f"Q: {task}\nA: {output}"
+
+#state[task] = 'Find the risk factors disclosed by Microsoft in their 10-K filings for fiscal years 2023, 2024, and 2025, specifically in Item 1A.'
+#result:
+#state['narrative']=['Q: Find the risk factors disclosed by Microsoft in their 10-K filings for fiscal years 2023, 2024, and 2025, specifically in Item 1A.\n
+# A: The risk factors disclosed by Microsoft in their 10-K filings for fiscal years 2023, 2024, and 2025, 
+# specifically in Item 1A, include risks related to the evolution of their business, economic conditions, challenges, and risks, as well as regulatory matters. 
+# The filings for each year can be found in the sources listed in the output.']
 def researcher_worker_node(state: TeamState) -> dict:
     try:
         narrative = run_researcher(state["task"])
     except Exception as exc:
         return _failed("researcher_worker", exc)
     return {
-        "narrative": narrative,
+        "narrative": [_entry(state["task"], narrative)],
         "messages": [HumanMessage(content=narrative, name="researcher_worker")],
     }
 
-# state["task"]
-# "What was Microsoft's operating margin for fiscal year 2023?"
+
+# state["task"] is the supervisor's brief, for example
+# "What were Microsoft's operating margins for fiscal years 2023, 2024 and 2025?"
+
+#result: state["facts"] =
+#["Q: What was Microsoft's operating margin for fiscal years 2023, 2024 and 2025?\n
+# A: Microsoft's operating margin for fiscal years 2023, 2024, and 2025 are as follows:\n\n- 
+# 2023: (88.523 billion / 211.915 billion) = 41.8%\n- 
+# 2024: (109.433 billion / 245.122 billion) = 44.7%\n- 
+# 2025: (128.528 billion / 281.724 billion) = 45.6%\n\n
+# Note: The operating margin is calculated by dividing the operating income by the revenue for each fiscal year. 
+# The values used are based on the output of the get_company_fact function calls.",
+#
+# "Q: What was Alphabet's operating margin for fiscal years 2023, 2024 and 2025?\n
+# A: Alphabet's operating margin for fiscal years 2023, 2024 and 2025 is as follows:\n\n* 
+# 2023: Operating income of $84,293,000,000 and revenue of $307,394,000,000, resulting in an operating margin of 27.4% (fiscal year 2023, form 10-K, period 2023-01-01 to 2023-12-31).\n* 
+# 2024: Operating income of $112,390,000,000 and revenue of $350,018,000,000, resulting in an operating margin of 32.1% (fiscal year 2024, form 10-K, period 2024-01-01 to 2024-12-31).\n* 
+# 2025: Operating income of $129,039,000,000 and revenue of $402,836,000,000, resulting in an operating margin of 32.0% (fiscal year 2025, form 10-K, period 2025-01-01 to 2025-12-31).\n\n
+# Note: The operating margin is calculated by dividing the operating income by the revenue for each fiscal year."]
 def quant_worker_node(state: TeamState) -> dict:
     try:
         facts = run_quant_agent(state["task"])
     except Exception as exc:
         return _failed("quant_worker", exc)
     return {
-        "facts": facts,
+        "facts": [_entry(state["task"], facts)],
         "messages": [HumanMessage(content=facts, name="quant_worker")],
     }
 
@@ -107,7 +143,7 @@ def risk_worker_node(state: TeamState) -> dict:
     except Exception as exc:
         return _failed("risk_worker", exc)
     return {
-        "risk": risk,
+        "risk": [_entry(state["task"], risk)],
         "messages": [HumanMessage(content=risk, name="risk_worker")],
     }
 
@@ -115,11 +151,11 @@ def risk_worker_node(state: TeamState) -> dict:
 def aggregate_node(state: TeamState) -> dict:
     parts: list[str] = []
     if state.get("narrative"):
-        parts.append("Narrative findings:\n" + state["narrative"])
+        parts.append("Narrative findings:\n" + "\n\n".join(state["narrative"]))
     if state.get("facts"):
-        parts.append("Quant findings:\n" + state["facts"])
+        parts.append("Quant findings:\n" + "\n\n".join(state["facts"]))
     if state.get("risk"):
-        parts.append("Risk comparison:\n" + state["risk"])
+        parts.append("Risk comparison:\n" + "\n\n".join(state["risk"]))
     # With no worker output, the supervisor's FINISH report is the answer.
     return {"final_answer": "\n\n".join(parts) or state.get("task", "")}
 
@@ -170,9 +206,9 @@ def run_team_workflow(question: str) -> str:
         "replan_count": 0,
         "max_replans": 2,
         "replan_reason": "",
-        "narrative": "",
-        "facts": "",
-        "risk": "",
+        "narrative": [],
+        "facts": [],
+        "risk": [],
         "final_answer": "",
     }
     result = app.invoke(initial, {"recursion_limit": 30})
