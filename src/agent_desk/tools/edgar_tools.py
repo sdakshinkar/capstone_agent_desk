@@ -124,6 +124,21 @@ def _validated_limit(limit: int) -> int | None:
     return limit
 
 
+def _latest_annual_fiscal_year(units: dict[str, Any]) -> int | None:
+    """Newest fiscal year that has a full-year 10-K row in the given unit entries."""
+    years = [
+        entry["fy"]
+        for entries in units.values()
+        if isinstance(entries, list)
+        for entry in entries
+        if isinstance(entry, dict)
+        and entry.get("form") == "10-K"
+        and entry.get("fp") == "FY"
+        and isinstance(entry.get("fy"), int)
+    ]
+    return max(years, default=None)
+
+
 @tool
 def list_edgar_companies() -> str:
     """List companies in the local directory that can be queried by this project."""
@@ -207,8 +222,15 @@ def get_company_fact(
     unit: str = "",
     limit: int = 20,
     force_refresh: bool = False,
+    form: str = "10-K",
 ) -> str:
-    """Get reported values and filing metadata for an XBRL concept and company."""
+    """Get reported values and filing metadata for an XBRL concept and company.
+
+    By default only annual 10-K rows are returned, newest period first. Pass form="" to include
+    every form (10-Q quarters too). The result always includes latest_annual_fiscal_year, the
+    newest fiscal year with 10-K data for this concept. If fiscal_year has no data the result
+    is an error that names that latest year.
+    """
     normalized_cik = _normalize_cik(cik)
     result_limit = _validated_limit(limit)
     if normalized_cik is None:
@@ -250,6 +272,8 @@ def get_company_fact(
             available_units=sorted(available_units),
         )
 
+    requested_form = form.strip()
+    latest_annual_fiscal_year = _latest_annual_fiscal_year(selected_units)
     observations: list[dict[str, Any]] = []
     for fact_unit, entries in selected_units.items():
         if not isinstance(entries, list):
@@ -258,6 +282,8 @@ def get_company_fact(
             if not isinstance(entry, dict):
                 continue
             if fiscal_year is not None and entry.get("fy") != fiscal_year:
+                continue
+            if requested_form and entry.get("form") != requested_form:
                 continue
             observations.append(
                 {
@@ -273,6 +299,16 @@ def get_company_fact(
                     "frame": entry.get("frame"),
                 }
             )
+    if fiscal_year is not None and not observations:
+        return _json_result(
+            ok=False,
+            error=(
+                f"No {requested_form or 'SEC'} data for {taxonomy}:{concept} in fiscal year "
+                f"{fiscal_year}. Latest fiscal year with 10-K data for this concept: "
+                f"{latest_annual_fiscal_year}."
+            ),
+            latest_annual_fiscal_year=latest_annual_fiscal_year,
+        )
     observations.sort(
         key=lambda item: (item.get("end") or "", item.get("filed") or ""),
         reverse=True,
@@ -284,6 +320,8 @@ def get_company_fact(
         taxonomy=taxonomy,
         concept=concept,
         label=fact.get("label", concept),
+        form=requested_form or "any",
+        latest_annual_fiscal_year=latest_annual_fiscal_year,
         observations=observations[:result_limit],
         total_observations=len(observations),
     )

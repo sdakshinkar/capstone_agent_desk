@@ -32,7 +32,13 @@ def _parse_plan(raw: str, question: str) -> dict:
             "outline": ["Gather evidence for the question", "Answer the question"],
         }
 
-
+# Example plan from the research lead:
+#{'goal': "Compare Microsoft and Alphabet's operating margins and risk factor changes", 
+# 'sub_questions': ["What was Microsoft's operating margin for fiscal years 2023, 2024 and 2025?", 
+# "What was Alphabet's operating margin for fiscal years 2023, 2024 and 2025?", 
+# 'What risk factors did Microsoft disclose for fiscal years 2023, 2024 and 2025?', 
+# 'What risk factors did Alphabet disclose for fiscal years 2023, 2024 and 2025?'], 
+# 'outline': ['Operating margin comparison', 'Risk factor changes for Microsoft', 'Risk factor changes for Alphabet']}
 def research_lead_node(state: TeamState) -> dict:
     question = state["question"]
     replan_count = state.get("replan_count", 0)
@@ -46,8 +52,13 @@ def research_lead_node(state: TeamState) -> dict:
         replan_count += 1
 
     plan = _parse_plan(run_research_lead(question, feedback=feedback), question)
-    steps = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan.get("outline", [])))
-    summary = f"Plan goal: {plan.get('goal', question)}\nSteps:\n{steps}"
+    steps = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(plan.get("sub_questions", [])))
+    structure = ", ".join(plan.get("outline", []))
+    summary = (
+        f"Plan goal: {plan.get('goal', question)}\n"
+        f"Sub-questions (work steps):\n{steps}\n"
+        f"Answer structure: {structure}"
+    )
     return {
         "plan": plan,
         "plan_step": 0,
@@ -77,7 +88,8 @@ def researcher_worker_node(state: TeamState) -> dict:
         "messages": [HumanMessage(content=narrative, name="researcher_worker")],
     }
 
-
+# state["task"]
+# "What was Microsoft's operating margin for fiscal year 2023?"
 def quant_worker_node(state: TeamState) -> dict:
     try:
         facts = run_quant_agent(state["task"])
@@ -144,6 +156,8 @@ def build_team_workflow():
     return workflow.compile()
 
 
+#question='Compare Microsoft’s and Alphabet’s operating margins over the last three fiscal years,
+#  and tell me what changed in their risk factors.'
 def run_team_workflow(question: str) -> str:
     app = build_team_workflow()
     initial: TeamState = {

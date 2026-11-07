@@ -16,35 +16,54 @@ from .team_state import TeamState
 WORKERS = {"researcher_worker", "quant_worker", "risk_worker"}
 VALID_ROUTES = WORKERS | {"REPLAN", "FINISH"}
 
-
+#choice
+#{'next': 'quant_worker', 
+# 'message': "What was Microsoft's operating income for fiscal year 2023 and revenue for fiscal year 2023? 
+# Also, what was Microsoft's operating income for fiscal year 2024 and revenue for fiscal year 2024? 
+# What was Microsoft's operating income for fiscal year 2025 and revenue for fiscal year 2025?"}
 class Route(TypedDict):
     next: Literal["researcher_worker", "quant_worker", "risk_worker", "REPLAN", "FINISH"]
     message: str
 
 # example:
-#    1. Get FY2025 annual report
-# -> 2. Get operating income
-#    3. Verify the figure
-def _plan_text(state: TeamState) -> str:
-    plan = state.get("plan") or {}
-    outline = plan.get("outline", [])
-    if not outline:
+#    1. What was Apple's operating income for FY2025?
+# -> 2. What was Apple's revenue for FY2025?
+#    3. What were Apple's risk factors for FY2025?
+def _plan_text(plan: dict, step: int) -> str:
+    questions = plan.get("sub_questions", [])
+    if not questions:
         return "No plan is available."
-    step = min(state.get("plan_step", 0), len(outline) - 1)
-    lines = [f"{'->' if i == step else '  '} {i + 1}. {s}" for i, s in enumerate(outline)]
-    return f"Goal: {plan.get('goal', '')}\nPlan steps (current step marked ->):\n" + "\n".join(lines)
+    if step >= len(questions):
+        return (
+            f"Goal: {plan.get('goal', '')}\n"
+            f"All {len(questions)} sub-questions have been answered. Choose FINISH and write "
+            "the final report."
+        )
+    lines = [f"{'->' if i == step else '  '} {i + 1}. {q}" for i, q in enumerate(questions)]
+    return f"Goal: {plan.get('goal', '')}\nSub-questions (current one marked ->):\n" + "\n".join(lines)
 
-
+#choice
+#{'next': 'quant_worker', 
+# 'message': "What was Microsoft's operating income and revenue for its last three fiscal years?"}
 def supervisor_decision(state: TeamState) -> dict:
     """Choose the next worker (or REPLAN / FINISH) and write the brief for it."""
     replan_count = state.get("replan_count", 0)
     replans_left = state.get("max_replans", 2) - replan_count
+
+    messages = state["messages"]
+    last = messages[-1] if messages else None
+    step = state.get("plan_step", 0)
+    # A successful worker report means the sub-question it was working on is answered.
+    if getattr(last, "name", None) in WORKERS and not str(last.content).startswith("WORKER FAILED"):
+        step += 1
+
     system = (
         "You are the supervisor. You coordinate these workers and never do their work yourself:\n"
         "- researcher_worker: searches 10-K filing text (Item 1A risk factors, Item 7 MD&A, etc.) "
         "for a company and fiscal year and returns narrative passages with citations.\n"
         "- quant_worker: looks up reported numbers (revenue, operating income, ...) for a company "
-        "and fiscal year from SEC Company Facts and computes ratios. It cannot return dates or text.\n"
+        "and one or more fiscal years from SEC Company Facts and computes ratios. It cannot "
+        "return dates or text.\n"
         "- risk_worker: compares Item 1A risk factors year over year.\n"
         "- REPLAN: ask the research lead for a new plan. Choose it when a worker reports an error "
         "(WORKER FAILED), an empty result, 'no passages' or 'could not find', or when the plan "
@@ -52,13 +71,15 @@ def supervisor_decision(state: TeamState) -> dict:
         f"Replans left: {replans_left}.\n"
         "- FINISH: stop when the answer is complete or cannot be completed; put your final "
         "report in `message`.\n\n"
-        f"{_plan_text(state)}\n\n"
-        "Write the brief for the current plan step (marked ->) only, as one concrete question the "
-        "chosen worker's tools can answer, with the company, fiscal year and metric spelled out. "
-        "Do not work on later steps yet. If the current step cannot be answered by any worker as "
-        "written, rephrase it into a question one can answer; if that is impossible, choose "
-        "REPLAN. A worker sees only the brief you write for it, not the conversation. "
-        "Never ask for something a worker has already reported. One worker at a time."
+        f"{_plan_text(state.get('plan') or {}, step)}\n\n"
+        "Write the brief for the current sub-question (marked ->) only, as one concrete question "
+        "the chosen worker's tools can answer, with the company, fiscal year and metric spelled "
+        "out. Keep the company, metric and every fiscal year from the current sub-question in "
+        "the brief; do not narrow a multi-year sub-question to a single year. Do not work on "
+        "later sub-questions yet. If the current sub-question cannot be "
+        "answered by any worker as written, rephrase it into a question one can answer; if that "
+        "is impossible, choose REPLAN. A worker sees only the brief you write for it, not the "
+        "conversation. Never ask for something a worker has already reported. One worker at a time."
     )
 
     router = get_tool_llm().with_structured_output(
@@ -68,7 +89,6 @@ def supervisor_decision(state: TeamState) -> dict:
         include_raw=True,
     )
 
-    messages = state["messages"]
     try:
         out = router.invoke([SystemMessage(content=system), *messages])
         choice = out["parsed"] or {}
@@ -91,14 +111,7 @@ def supervisor_decision(state: TeamState) -> dict:
         update["replan_reason"] = message
     else:
         update["task"] = message
-        last = messages[-1] if messages else None
-        # Moving on after a successful worker report means the current plan step is done.
-        if (
-            next_step in WORKERS
-            and getattr(last, "name", None) in WORKERS
-            and not str(last.content).startswith("WORKER FAILED")
-        ):
-            update["plan_step"] = state.get("plan_step", 0) + 1
+        update["plan_step"] = step
     return update
 
 

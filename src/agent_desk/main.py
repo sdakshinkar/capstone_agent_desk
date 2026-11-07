@@ -34,7 +34,7 @@ def main() -> int:
                 print(run_team_workflow(QUESTION1))
         else:
             # print(run_langgraph_workflow(QUESTION))
-            print(run_team_workflow(QUESTION1))
+            print(run_team_workflow(QUESTION3))
         return 0
     except Exception as exc:  # pragma: no cover - debugger path
         print(f"Workflow failed: {exc}")
