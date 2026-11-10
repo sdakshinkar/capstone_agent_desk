@@ -3,14 +3,22 @@
 This file holds only the graph wiring and node orchestration. The supervisor
 routing logic itself is kept in supervisor_agent.py, and the shared state schema
 is kept in team_state.py.
+
+Plan approval: after the research lead writes a plan, the approve_plan node pauses the run with
+interrupt() so a person can approve it or edit it. It needs a checkpointer and a thread id (see
+build_team_workflow). run_team_workflow is the unattended path: it builds the graph without a
+checkpointer, so there is no approval step.
 """
 
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from langchain_core.messages import HumanMessage, RemoveMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
+from langgraph.types import interrupt
 
 from .quant_agent import run_quant_agent
 from ..llm.llm import get_tool_llm
@@ -58,13 +66,7 @@ def research_lead_node(state: TeamState) -> dict:
         replan_count += 1
 
     plan = _parse_plan(run_research_lead(question, feedback=feedback), question)
-    steps = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(plan.get("sub_questions", [])))
-    structure = ", ".join(plan.get("outline", []))
-    summary = (
-        f"Plan goal: {plan.get('goal', question)}\n"
-        f"Sub-questions (work steps):\n{steps}\n"
-        f"Answer structure: {structure}"
-    )
+    summary = _plan_summary(plan, question)
     update: dict = {
         "plan": plan,
         "plan_step": 0,
@@ -80,6 +82,52 @@ def research_lead_node(state: TeamState) -> dict:
         update["facts"] = [RESET]
         update["risk"] = [RESET]
     return update
+
+
+# The plan as the text message the supervisor reads in its conversation.
+def _plan_summary(plan: dict, question: str) -> str:
+    steps = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(plan.get("sub_questions", [])))
+    structure = ", ".join(plan.get("outline", []))
+    return (
+        f"Plan goal: {plan.get('goal', question)}\n"
+        f"Sub-questions (work steps):\n{steps}\n"
+        f"Answer structure: {structure}"
+    )
+
+
+# Pauses the run so a person can approve or edit the plan the research lead just wrote.
+#
+# interrupt(payload) stops the graph and hands `payload` to whoever called invoke(); the run
+# continues when they call invoke(Command(resume=answer)) on the same thread. The answer is one of:
+#   {"action": "approve"}                 keep the plan as written (the string "approve" works too)
+#   {"action": "edit", "plan": {...}}     use this plan instead, exactly as given
+# Kept simple on purpose: an edited plan is not checked (a malformed one is the caller's problem),
+# there is no reject action, and any other answer counts as approve. Checking edits and sending a
+# rejected plan back to the research lead can be added later.
+#
+# LangGraph runs this node again from the top on resume, so nothing before interrupt() may have
+# side effects (no model calls, no writes). This node only reads the state and asks.
+#
+# With config["configurable"]["auto_approve"] set the node returns at once without pausing.
+def approve_plan_node(state: TeamState, config: RunnableConfig) -> dict:
+    if (config.get("configurable") or {}).get("auto_approve"):
+        return {}
+
+    answer = interrupt({"type": "plan_approval", "question": state["question"], "plan": state["plan"]})
+    if isinstance(answer, str):
+        answer = {"action": answer}
+    if not (isinstance(answer, dict) and answer.get("action") == "edit" and isinstance(answer.get("plan"), dict)):
+        return {}
+
+    edited = answer["plan"]
+    summary = HumanMessage(
+        content=_plan_summary(edited, state["question"]) + "\n(Plan edited by the user.)",
+        name="research_lead",
+    )
+    last = state["messages"][-1]
+    # Replace the lead's summary so the supervisor reads the edited plan, not the old one.
+    replace = [RemoveMessage(id=last.id)] if getattr(last, "name", None) == "research_lead" and last.id else []
+    return {"plan": edited, "plan_step": 0, "messages": replace + [summary]}
 
 
 def supervisor_node(state: TeamState) -> dict:
@@ -232,7 +280,15 @@ def writer_node(state: TeamState) -> dict:
     return {"final_answer": "\n\n".join(parts)}
 
 
-def build_team_workflow():
+# Builds the graph: research_lead -> approve_plan -> supervisor <-> workers -> writer.
+# After a supervisor REPLAN the new plan goes through approval again.
+# The approval step needs a `checkpointer` (for example langgraph.checkpoint.memory.InMemorySaver()):
+# it saves the run's state so interrupt() can pause and a later call can resume, and every run
+# needs a thread id in its config. WITHOUT a checkpointer the approve_plan node is left out
+# (research_lead -> supervisor), because a pause that cannot be saved would silently stop the run
+# with an empty answer. Pass config={"configurable": {"auto_approve": True}} to skip the pause on
+# a graph that has a checkpointer.
+def build_team_workflow(checkpointer: Any | None = None):
     workflow = StateGraph(TeamState)
     workflow.add_node("research_lead", research_lead_node)
     workflow.add_node("supervisor", supervisor_node)
@@ -242,7 +298,12 @@ def build_team_workflow():
     workflow.add_node("writer", writer_node)
 
     workflow.set_entry_point("research_lead")
-    workflow.add_edge("research_lead", "supervisor")
+    if checkpointer is None:
+        workflow.add_edge("research_lead", "supervisor")
+    else:
+        workflow.add_node("approve_plan", approve_plan_node)
+        workflow.add_edge("research_lead", "approve_plan")
+        workflow.add_edge("approve_plan", "supervisor")
 
     workflow.add_conditional_edges(
         "supervisor",
@@ -261,14 +322,13 @@ def build_team_workflow():
     workflow.add_edge("risk_worker", "supervisor")
     workflow.add_edge("writer", END)
 
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer)
 
 
-#question='Compare Microsoft’s and Alphabet’s operating margins over the last three fiscal years,
-#  and tell me what changed in their risk factors.'
-def run_team_workflow(question: str) -> str:
-    app = build_team_workflow()
-    initial: TeamState = {
+# The state a run starts from. Kept in one place so run_team_workflow and an interactive caller
+# (which resumes the same thread after approval) start identically.
+def initial_state(question: str) -> TeamState:
+    return {
         "question": question,
         "messages": [HumanMessage(content=question)],
         "next": "",
@@ -283,5 +343,14 @@ def run_team_workflow(question: str) -> str:
         "risk": [],
         "final_answer": "",
     }
-    result = app.invoke(initial, {"recursion_limit": 30})
+
+
+# The unattended path: runs the whole graph in one call with no approval step (no checkpointer, so
+# nobody is asked). The recursion limit counts graph steps; it is 40 to leave room for the extra
+# rounds of a plan with many sub-questions and for one replan.
+#question='Compare Microsoft’s and Alphabet’s operating margins over the last three fiscal years,
+#  and tell me what changed in their risk factors.'
+def run_team_workflow(question: str) -> str:
+    app = build_team_workflow()
+    result = app.invoke(initial_state(question), {"recursion_limit": 40})
     return result["final_answer"]
