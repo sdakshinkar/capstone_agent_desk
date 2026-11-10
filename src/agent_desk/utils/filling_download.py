@@ -111,14 +111,19 @@ def download_from_spec(spec: dict[str, Any]) -> dict[int, dict[str, str]]:
     return download_filings(spec["company_name"], spec["cik"], spec["years"])
 
 
-# SPECS = [
-#     {"company_name": "microsoft", "cik": "0000789019", "years": [2023, 2024, 2025]},
-# ]
-# SPECS = [
-#     {"company_name": "alphabet", "cik": "0001652044", "years": [2023, 2024, 2025]},
-# ]
 SPECS = [
-    {"company_name": "apple", "cik": "0000320193", "years": [2023, 2024]},
+    # Technology
+    {"company_name": "microsoft", "cik": "0000789019", "years": [2023, 2024, 2025]},
+    {"company_name": "apple", "cik": "0000320193", "years": [2023, 2024, 2025]},
+    {"company_name": "alphabet", "cik": "0001652044", "years": [2023, 2024, 2025]},
+    {"company_name": "amazon", "cik": "0001018724", "years": [2023, 2024, 2025]},
+    {"company_name": "meta", "cik": "0001326801", "years": [2023, 2024, 2025]},
+    {"company_name": "nvidia", "cik": "0001045810", "years": [2023, 2024, 2025]},
+    # Financials
+    {"company_name": "jpmorgan", "cik": "0000019617", "years": [2023, 2024, 2025]},
+    {"company_name": "bank_of_america", "cik": "0000070858", "years": [2023, 2024, 2025]},
+    {"company_name": "goldman_sachs", "cik": "0000886982", "years": [2023, 2024, 2025]},
+    {"company_name": "mastercard", "cik": "0001141391", "years": [2023, 2024, 2025]},
 ]
 
 
