@@ -161,7 +161,13 @@ def list_company_facts(
     limit: int = DEFAULT_RESULT_LIMIT,
     force_refresh: bool = False,
 ) -> str:
-    """List XBRL fact concepts for a company, optionally filtering by name or taxonomy."""
+    """List XBRL fact concepts for a company, optionally filtering by name or taxonomy.
+
+    Each concept shows latest_annual_fiscal_year, the newest fiscal year with 10-K data under that
+    concept. Companies switch concepts over time, so the same metric (for example revenue) can sit
+    under an older concept that stops at an earlier year and a newer one that continues. Prefer the
+    concept whose latest_annual_fiscal_year is highest.
+    """
     normalized_cik = _normalize_cik(cik)
     result_limit = _validated_limit(limit)
     if normalized_cik is None:
@@ -200,6 +206,11 @@ def list_company_facts(
                     "concept": concept_name,
                     "label": label,
                     "units": sorted(units) if isinstance(units, dict) else [],
+                    # Newest fiscal year with a full-year 10-K row, or None if the concept has no
+                    # annual 10-K data. A low year means the company stopped using this tag.
+                    "latest_annual_fiscal_year": (
+                        _latest_annual_fiscal_year(units) if isinstance(units, dict) else None
+                    ),
                 }
             )
 
@@ -304,8 +315,11 @@ def get_company_fact(
             ok=False,
             error=(
                 f"No {requested_form or 'SEC'} data for {taxonomy}:{concept} in fiscal year "
-                f"{fiscal_year}. Latest fiscal year with 10-K data for this concept: "
-                f"{latest_annual_fiscal_year}."
+                f"{fiscal_year}. This concept's newest 10-K data is for fiscal year "
+                f"{latest_annual_fiscal_year}. That does not mean the company has no fiscal "
+                f"{fiscal_year} data: companies switch to a different concept for the same metric. "
+                f"Search list_company_facts for the metric and use the concept whose "
+                f"latest_annual_fiscal_year is highest before reporting it as unavailable."
             ),
             latest_annual_fiscal_year=latest_annual_fiscal_year,
         )

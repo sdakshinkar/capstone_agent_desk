@@ -16,6 +16,13 @@ from .team_state import TeamState
 WORKERS = {"researcher_worker", "quant_worker", "risk_worker"}
 VALID_ROUTES = WORKERS | {"REPLAN", "FINISH"}
 
+# The supervisor's reply is one short JSON object (a route plus a brief or a final report). The cap
+# stops a model that loops inside the "message" string from generating for minutes: one such call
+# produced 115,571 tokens, cost $0.06 and ended in LengthFinishReasonError.
+MAX_ROUTE_TOKENS = 1000
+# Calls to make before giving up; the runaway is random, so a second try usually works.
+ROUTE_ATTEMPTS = 2
+
 #choice
 #{'next': 'quant_worker', 
 # 'message': "What was Microsoft's operating income for fiscal year 2023 and revenue for fiscal year 2023? 
@@ -63,14 +70,20 @@ def supervisor_decision(state: TeamState) -> dict:
     system = (
         "You are the supervisor. You coordinate these workers and never do their work yourself:\n"
         "- researcher_worker: searches 10-K filing text (Item 1A risk factors, Item 7 MD&A, etc.) "
-        "for a company and fiscal year and returns narrative passages with citations.\n"
+        "for a company and fiscal year and returns narrative passages with citations. It reports "
+        "what a filing says in one year; it does not compare years.\n"
         "- quant_worker: looks up reported numbers (revenue, operating income, ...) for a company "
         "and one or more fiscal years from SEC Company Facts and computes ratios. It cannot "
         "return dates or text.\n"
-        "- risk_worker: compares Item 1A risk factors year over year.\n"
+        "- risk_worker: compares one company's Item 1A risk factors between two fiscal years and "
+        "returns the risks that were added, removed or materially changed, with passage ids. Use "
+        "it for every question about what changed, was added or was removed in risk factors; "
+        "the brief must name the company and both fiscal years. It only has the filings stored "
+        "locally and answers with the years that are available when a year is missing.\n"
         "- REPLAN: ask the research lead for a new plan. Choose it when a worker reports an error "
-        "(WORKER FAILED), an empty result, 'no passages' or 'could not find', or when the plan "
-        "cannot be answered with the workers' tools. Put the reason in `message`. "
+        "(WORKER FAILED), an empty result, 'no passages', 'could not find', or a filing that is "
+        "not available for a year, or when the plan cannot be answered with the workers' tools. "
+        "Put the reason in `message`, including any available years a worker listed. "
         f"Replans left: {replans_left}.\n"
         "- FINISH: stop when the answer is complete or cannot be completed; put your final "
         "report in `message`.\n\n"
@@ -85,23 +98,35 @@ def supervisor_decision(state: TeamState) -> dict:
         "conversation. Never ask for something a worker has already reported. One worker at a time."
     )
 
-    router = get_tool_llm().with_structured_output(
+    router = get_tool_llm(max_tokens=MAX_ROUTE_TOKENS).with_structured_output(
         Route,
         method="json_schema",
         strict=True,
         include_raw=True,
     )
 
-    try:
-        out = router.invoke([SystemMessage(content=system), *messages])
+    # Ask up to ROUTE_ATTEMPTS times. A call that raises (for example LengthFinishReasonError when
+    # the reply hits the cap) or returns nothing parseable is retried; the last problem is kept so
+    # the final STOPPED message can say what really went wrong.
+    choice: dict = {}
+    problem = ""
+    for _ in range(ROUTE_ATTEMPTS):
+        try:
+            out = router.invoke([SystemMessage(content=system), *messages])
+        except Exception as exc:
+            problem = f"{type(exc).__name__}: {str(exc)[:200]}"
+            continue
         choice = out["parsed"] or {}
-    except Exception as exc:
-        choice = {"error": type(exc).__name__}
+        if choice.get("next") in VALID_ROUTES:
+            break
+        problem = f"unparseable reply: {out.get('parsing_error') or choice or 'empty'}"
+        choice = {}
 
     next_step = choice.get("next")
     message = choice.get("message", "")
     if next_step not in VALID_ROUTES:
-        next_step, message = "FINISH", f"STOPPED: supervisor returned no usable route {choice}"
+        next_step = "FINISH"
+        message = f"STOPPED: supervisor returned no usable route after {ROUTE_ATTEMPTS} attempts ({problem})"
     if next_step == "REPLAN" and replans_left <= 0:
         next_step = "FINISH"
         message = f"Could not complete the request after {replan_count} replans. Last problem: {message}"

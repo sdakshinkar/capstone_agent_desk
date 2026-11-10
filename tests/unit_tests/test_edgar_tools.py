@@ -141,3 +141,70 @@ def test_http_error_is_returned_explicitly(monkeypatch, tmp_path):
     assert data is None
     assert error is not None
     assert "request failed" in error
+
+
+def alphabet_style_facts():
+    """Revenue moved from an old concept (ends FY2024) to a new one (continues to FY2025)."""
+
+    def row(value, fy, form="10-K", fp="FY"):
+        return {"val": value, "fy": fy, "fp": fp, "form": form, "filed": f"{fy + 1}-02-05",
+                "start": f"{fy}-01-01", "end": f"{fy}-12-31", "accn": f"acc-{fy}"}
+
+    return {
+        "cik": 1652044,
+        "entityName": "Alphabet Inc.",
+        "facts": {
+            "us-gaap": {
+                "RevenueFromContractWithCustomerExcludingAssessedTax": {
+                    "label": "Revenue (old concept)",
+                    "units": {"USD": [row(307, 2023), row(350, 2024), row(90, 2025, "10-Q", "Q1")]},
+                },
+                "Revenues": {
+                    "label": "Revenues",
+                    "units": {"USD": [row(350, 2024), row(402, 2025)]},
+                },
+                "NeverAnnual": {"label": "Only quarterly", "units": {"USD": [row(1, 2025, "10-Q", "Q1")]}},
+            }
+        },
+    }
+
+
+def stub_facts(monkeypatch, data):
+    monkeypatch.setattr(edgar_tools, "_fetch_company_facts", lambda cik, force_refresh=False: (data, None))
+
+
+def test_list_company_facts_shows_each_concepts_latest_annual_year(monkeypatch):
+    stub_facts(monkeypatch, alphabet_style_facts())
+
+    result = json.loads(
+        edgar_tools.list_company_facts.invoke({"cik": "1652044", "search_term": "revenue"})
+    )
+
+    years = {f["concept"]: f["latest_annual_fiscal_year"] for f in result["facts"]}
+    assert years == {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2024,  # the retired concept
+        "Revenues": 2025,  # the live one
+    }
+
+    everything = json.loads(edgar_tools.list_company_facts.invoke({"cik": "1652044"}))
+    never = next(f for f in everything["facts"] if f["concept"] == "NeverAnnual")
+    assert never["latest_annual_fiscal_year"] is None  # a 10-Q row is not a full-year 10-K row
+
+
+def test_missing_year_error_says_the_data_may_sit_under_another_concept(monkeypatch):
+    stub_facts(monkeypatch, alphabet_style_facts())
+
+    old = json.loads(
+        edgar_tools.get_company_fact.invoke(
+            {"cik": "1652044", "concept": "RevenueFromContractWithCustomerExcludingAssessedTax", "fiscal_year": 2025}
+        )
+    )
+    new = json.loads(
+        edgar_tools.get_company_fact.invoke({"cik": "1652044", "concept": "Revenues", "fiscal_year": 2025})
+    )
+
+    assert old["ok"] is False and old["latest_annual_fiscal_year"] == 2024
+    assert "newest 10-K data is for fiscal year 2024" in old["error"]
+    assert "does not mean the company has no fiscal 2025 data" in old["error"]
+    assert "latest_annual_fiscal_year is highest" in old["error"]
+    assert new["ok"] is True and new["observations"][0]["value"] == 402

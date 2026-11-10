@@ -166,8 +166,8 @@ def create_company_embeddings(company_name: str) -> dict[str, Any]:
 
 def main() -> None:
     # Uncomment the operation to run.
-    print(create_all_embeddings())
-    # print(create_company_embeddings("microsoft"))
+    # print(create_all_embeddings())
+    print(create_company_embeddings("alphabet"))
     # print(delete_company_embeddings("microsoft"))
     # print(delete_all_embeddings())
     pass

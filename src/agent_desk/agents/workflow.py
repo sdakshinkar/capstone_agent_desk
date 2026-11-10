@@ -9,15 +9,16 @@ from __future__ import annotations
 
 import json
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, RemoveMessage
 from langgraph.graph import END, StateGraph
 
 from .quant_agent import run_quant_agent
+from ..llm.llm import get_tool_llm
 from .research_lead_agent import run_research_lead
 from .researcher_agent import run_researcher
 from .risk_diff_agent import run_risk_diff_agent
 from .supervisor_agent import supervisor_decision
-from .team_state import TeamState
+from .team_state import RESET, TeamState
 
 
 def _parse_plan(raw: str, question: str) -> dict:
@@ -33,17 +34,22 @@ def _parse_plan(raw: str, question: str) -> dict:
         }
 
 # Example plan from the research lead:
-#{'goal': "Compare Microsoft and Alphabet's operating margins and risk factor changes", 
+#{'goal': "Compare Microsoft's and Alphabet's operating margins for fiscal years 2023, 2024 and 2025, 
+# and describe the changes in their risk factors between consecutive years; 
+# note that the goal uses the latest three available fiscal years for both companies", 
 # 'sub_questions': ["What was Microsoft's operating margin for fiscal years 2023, 2024 and 2025?", 
 # "What was Alphabet's operating margin for fiscal years 2023, 2024 and 2025?", 
-# 'What risk factors did Microsoft disclose for fiscal years 2023, 2024 and 2025?', 
-# 'What risk factors did Alphabet disclose for fiscal years 2023, 2024 and 2025?'], 
-# 'outline': ['Operating margin comparison', 'Risk factor changes for Microsoft', 'Risk factor changes for Alphabet']}
+# "What changed in Microsoft's risk factors between fiscal 2023 and fiscal 2024?", 
+# "What changed in Microsoft's risk factors between fiscal 2024 and fiscal 2025?", 
+# "What changed in Alphabet's risk factors between fiscal 2023 and fiscal 2024?", 
+# "What changed in Alphabet's risk factors between fiscal 2024 and fiscal 2025?"], 
+# 'outline': ['Operating margin comparison', 'Microsoft risk factor changes', 'Alphabet risk factor changes']}
 def research_lead_node(state: TeamState) -> dict:
     question = state["question"]
     replan_count = state.get("replan_count", 0)
+    replanning = bool(state.get("replan_reason"))
     feedback = None
-    if state.get("replan_reason"):
+    if replanning:
         feedback = (
             f"Previous plan: {json.dumps(state.get('plan', {}))}\n"
             f"Failed task: {state.get('task', '')}\n"
@@ -59,13 +65,21 @@ def research_lead_node(state: TeamState) -> dict:
         f"Sub-questions (work steps):\n{steps}\n"
         f"Answer structure: {structure}"
     )
-    return {
+    update: dict = {
         "plan": plan,
         "plan_step": 0,
         "replan_count": replan_count,
         "replan_reason": "",
         "messages": [HumanMessage(content=summary, name="research_lead")],
     }
+    if replanning:
+        # messages[0] is the user's question; everything after it came from the failed plan.
+        removed = [RemoveMessage(id=m.id) for m in state["messages"][1:] if m.id]
+        update["messages"] = removed + update["messages"]
+        update["narrative"] = [RESET]
+        update["facts"] = [RESET]
+        update["risk"] = [RESET]
+    return update
 
 
 def supervisor_node(state: TeamState) -> dict:
@@ -83,7 +97,7 @@ def _failed(worker: str, exc: Exception) -> dict:
 # TeamState), so a second call, e.g. quant_worker for Alphabet after Microsoft, adds an entry
 # instead of overwriting the first. Prefixing the brief keeps each entry self-describing, because
 # a worker's answer does not always name the company or years it was asked about.
-# aggregate_node later joins these entries under "Narrative findings", "Quant findings" and
+# writer_node later joins these entries under "Narrative findings", "Quant findings" and
 # "Risk comparison".
 # Example: _entry("What were Alphabet's operating margins for 2023-2025?", "27.4%, 32.1%, 32.0%")
 #   -> "Q: What were Alphabet's operating margins for 2023-2025?\nA: 27.4%, 32.1%, 32.0%"
@@ -137,6 +151,7 @@ def quant_worker_node(state: TeamState) -> dict:
     }
 
 
+#"Compare Alphabet's Item 1A risk factors for fiscal years 2024 and 2025, and list any added, removed, or materially changed risks."
 def risk_worker_node(state: TeamState) -> dict:
     try:
         risk = run_risk_diff_agent(state["task"])
@@ -148,16 +163,73 @@ def risk_worker_node(state: TeamState) -> dict:
     }
 
 
-def aggregate_node(state: TeamState) -> dict:
-    parts: list[str] = []
+# System prompt for the final writer call inside writer_node.
+WRITER_PROMPT = """You write the final answer to a user's question about companies' 10-K filings.
+You are given the question, a suggested answer structure (outline), the findings that research
+workers returned (each as Q: and A:), and the supervisor's notes.
+
+Rules:
+- Use only facts and numbers that appear in the findings. Do not add outside knowledge.
+- Answer the question directly and make the comparison it asks for, across companies, across
+  years, or both. You may do simple arithmetic on numbers in the findings; show it.
+- Follow the outline's headings where they fit.
+- If something the question asks for is missing, or a finding says it was not available, say so
+  plainly. Do not fill the gap with a guess.
+- If the notes say an attempt was superseded (for example a year was not available so another
+  year is reported), state which year the numbers are for.
+- Be concise. Do not repeat the findings verbatim; they are attached separately."""
+
+
+# Formats everything the writer needs into one user message: question, outline, supervisor notes
+# and the worker findings. `evidence` is the already-built "Quant findings: ..." text blocks.
+def _writer_input(state: TeamState, notes: str, evidence: list[str]) -> str:
+    outline = "\n".join(f"- {h}" for h in (state.get("plan") or {}).get("outline", []))
+    return (
+        f"Question:\n{state.get('question', '')}\n\n"
+        f"Suggested answer structure:\n{outline or '(none)'}\n\n"
+        f"Supervisor notes:\n{notes or '(none)'}\n\n"
+        "Findings:\n\n" + "\n\n".join(evidence)
+    )
+
+
+# The final node. It runs once, after the supervisor chooses FINISH (supervisor -> writer -> END),
+# and builds state["final_answer"] in two parts:
+#   1. A written answer: one model call that reads the question, the plan's outline, every worker
+#      entry (Q:/A:) and the supervisor's FINISH report (kept in state["task"]; it explains
+#      superseded attempts such as "FY2026 not available, used FY2025") and writes the comparison
+#      the user asked for, e.g. Microsoft's margins against Alphabet's.
+#   2. "Supporting findings": the worker entries, appended unchanged by code. The model never
+#      rewrites them, so every number in the answer can be checked against its source.
+# The model is called every time there are findings. With no worker output there is nothing to
+# write from, so the supervisor's report is the answer. If the call fails, the answer falls back
+# to the supervisor's report plus the findings, so a model error cannot lose the results.
+def writer_node(state: TeamState) -> dict:
+    notes = state.get("task", "") if state.get("next") == "FINISH" else ""
+
+    evidence: list[str] = []
     if state.get("narrative"):
-        parts.append("Narrative findings:\n" + "\n\n".join(state["narrative"]))
+        evidence.append("Narrative findings:\n" + "\n\n".join(state["narrative"]))
     if state.get("facts"):
-        parts.append("Quant findings:\n" + "\n\n".join(state["facts"]))
+        evidence.append("Quant findings:\n" + "\n\n".join(state["facts"]))
     if state.get("risk"):
-        parts.append("Risk comparison:\n" + "\n\n".join(state["risk"]))
-    # With no worker output, the supervisor's FINISH report is the answer.
-    return {"final_answer": "\n\n".join(parts) or state.get("task", "")}
+        evidence.append("Risk comparison:\n" + "\n\n".join(state["risk"]))
+
+    written = notes
+    if evidence:
+        try:
+            reply = get_tool_llm().invoke(
+                [("system", WRITER_PROMPT), ("user", _writer_input(state, notes, evidence))]
+            )
+            written = str(reply.content).strip() or notes
+        except Exception:
+            written = notes
+
+    parts: list[str] = []
+    if written:
+        parts.append(written)
+    if evidence:
+        parts.append("Supporting findings:\n\n" + "\n\n".join(evidence))
+    return {"final_answer": "\n\n".join(parts)}
 
 
 def build_team_workflow():
@@ -167,7 +239,7 @@ def build_team_workflow():
     workflow.add_node("researcher_worker", researcher_worker_node)
     workflow.add_node("quant_worker", quant_worker_node)
     workflow.add_node("risk_worker", risk_worker_node)
-    workflow.add_node("aggregate", aggregate_node)
+    workflow.add_node("writer", writer_node)
 
     workflow.set_entry_point("research_lead")
     workflow.add_edge("research_lead", "supervisor")
@@ -180,14 +252,14 @@ def build_team_workflow():
             "quant_worker": "quant_worker",
             "risk_worker": "risk_worker",
             "REPLAN": "research_lead",
-            "FINISH": "aggregate",
+            "FINISH": "writer",
         },
     )
 
     workflow.add_edge("researcher_worker", "supervisor")
     workflow.add_edge("quant_worker", "supervisor")
     workflow.add_edge("risk_worker", "supervisor")
-    workflow.add_edge("aggregate", END)
+    workflow.add_edge("writer", END)
 
     return workflow.compile()
 
