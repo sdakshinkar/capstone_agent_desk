@@ -20,6 +20,8 @@ dist/
 # Local data
 /data/*
 !/data/.gitkeep
+# The 10-K filings are committed so a clone can build the index without downloading from SEC.
+!/data/filings/
 
 # Eval run outputs (answers, traces); copy the ones you report into the write-up
 /tests/evals/runs/
