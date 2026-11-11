@@ -70,6 +70,15 @@ def test_precision_rules():
     assert not matches(extract_numbers("44.6")[0], 44.6443, percent=True)
 
 
+def test_truncated_percent_is_accepted():
+    # Apple FY2025 operating margin is 31.97%; the agent wrote 31.9% (cut off, not rounded).
+    assert matches(extract_numbers("31.9%")[0], 31.9708, percent=True)
+    assert matches(extract_numbers("31.97%")[0], 31.9708, percent=True)
+    assert not matches(extract_numbers("31.8%")[0], 31.9708, percent=True)
+    assert not matches(extract_numbers("31%")[0], 31.9708, percent=True)  # whole numbers must round
+    assert matches(extract_numbers("-2.3%")[0], -2.38, percent=True)
+
+
 def test_unscaled_table_number_does_not_match():
     # "245,122" without "million" is ambiguous, so it must not count as $245.1 billion.
     assert find_value(extract_numbers("Revenue was 245,122."), [245_122e6], percent=False) is None

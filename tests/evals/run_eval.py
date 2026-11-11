@@ -7,6 +7,7 @@ Run from the project root. Nothing calls OpenRouter unless --yes is given:
     python tests/evals/run_eval.py --config c2_team --split dev --ids n01,t01 --yes
     python tests/evals/run_eval.py --config c2_team --split heldout --repeat 3 --yes
     python tests/evals/run_eval.py --resume tests/evals/runs/<run dir> --yes
+    python tests/evals/run_eval.py --regrade tests/evals/runs/<run dir>   # free: re-check saved answers
 
 Each run writes tests/evals/runs/<timestamp>_<config>_<split>/:
     run.json       config, split, case ids, model, git commit, cache settings
@@ -164,6 +165,29 @@ def read_results(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def regrade(run_dir: Path) -> int:
+    """Re-run the code checks on saved answers (after a checker or gold fix). No LLM calls."""
+    from evals.report import summarize_run
+
+    meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    by_id = {c["id"]: c for c in load_split(meta["split"])}
+    has_tools = meta["config"]["system"] in SYSTEMS_WITH_TOOLS
+    truth = load_truth()
+    results_file = run_dir / "results.jsonl"
+    records = read_results(results_file)
+    for record in records:
+        before = record["grade"]["code_pass"]
+        record["grade"] = grade(by_id[record["case_id"]], record, truth, config_has_tools=has_tools)
+        if record["grade"]["code_pass"] != before:
+            after = "PASS" if record["grade"]["code_pass"] else "FAIL"
+            print(f"  {record['case_id']} r{record['repeat']}: {'PASS' if before else 'FAIL'} -> {after}")
+    results_file.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records), encoding="utf-8")
+    summary = summarize_run(run_dir)
+    (run_dir / "summary.md").write_text(summary, encoding="utf-8")
+    print("\n" + summary)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", help="config name in tests/evals/configs or a path")
@@ -176,7 +200,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--resume", type=Path, help="continue an interrupted run directory")
     parser.add_argument("--yes", action="store_true", help="actually call the models (spends credits)")
     parser.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
+    parser.add_argument("--regrade", type=Path, help="re-run the code checks on a saved run (free)")
     args = parser.parse_args(argv)
+
+    if args.regrade:
+        problems = validate()
+        if problems:
+            print("The golden set is invalid; fix it first:\n  " + "\n  ".join(problems))
+            return 2
+        return regrade(args.regrade)
 
     if args.resume:
         meta = json.loads((args.resume / "run.json").read_text(encoding="utf-8"))

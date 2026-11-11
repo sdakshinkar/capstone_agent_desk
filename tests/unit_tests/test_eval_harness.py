@@ -127,6 +127,14 @@ def test_end_to_end_run_with_fake_system(monkeypatch, tmp_path):
     summary = (run_dir / "summary.md").read_text()
     assert "**1/2**" in summary and "`n02`" in summary
 
+    # Regrade re-checks saved answers with no system calls; a stale grade gets fixed.
+    stale = [dict(r, grade={"code_pass": not r["grade"]["code_pass"]}) for r in results]
+    (run_dir / "results.jsonl").write_text("".join(json.dumps(r) + "\n" for r in stale))
+    monkeypatch.setitem(systems.SYSTEMS, "c2_team", lambda q: pytest.fail("regrade must not run the system"))
+    assert run_eval.main(["--regrade", str(run_dir)]) == 0
+    regraded = [json.loads(l) for l in (run_dir / "results.jsonl").read_text().splitlines()]
+    assert [r["grade"]["code_pass"] for r in regraded] == [True, False]
+
     # Resume finds nothing left to do; a judge verdict then lowers the score.
     assert run_eval.main(["--resume", str(run_dir), "--yes"]) == 0
     (run_dir / "judgments.jsonl").write_text(json.dumps({"case_id": "n01", "repeat": 1, "pass": False}) + "\n")

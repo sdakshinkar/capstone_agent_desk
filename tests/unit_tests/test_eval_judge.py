@@ -35,7 +35,9 @@ def test_parse_verdict(reply, expected):
 def test_rubrics_carry_the_gold_outcome():
     assert "apple has the higher value" in judge.rubric(CASES["c01"])
     assert "age verification" in judge.rubric(CASES["k01"])
-    assert "nearly identical" in judge.rubric(CASES["k02"])
+    assert "automation, AI and machine learning" in judge.rubric(CASES["k02"])
+    no_change = {"type": "risk_change", "expected": {"labels": [], "no_material_change": True}}
+    assert "nearly identical" in judge.rubric(no_change)
     assert "Tesla" in judge.rubric(load_split("heldout")[[c["id"] for c in load_split("heldout")].index("m01")])
 
 

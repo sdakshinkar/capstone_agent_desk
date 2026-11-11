@@ -64,6 +64,13 @@ def matches(number: Number, truth: float, *, percent: bool) -> bool:
     if percent:
         # Rounding to the written precision, but never looser than half a percentage point.
         tol = min(max(number.tolerance, 0.06), 0.5)
+        if abs(number.value - truth) <= tol + 1e-9:
+            return True
+        # Also accept a percentage truncated instead of rounded, when written with decimals:
+        # "31.9%" for 31.97% (models often cut digits off). "31%" for 31.97% still fails.
+        step = 2 * number.tolerance
+        same_sign = (number.value >= 0) == (truth >= 0)
+        return step <= 0.1 + 1e-9 and same_sign and 0 <= abs(truth) - abs(number.value) < step
     else:
         # Allow the written precision, plus 0.5% for answers that round sloppily.
         tol = max(number.tolerance, abs(truth) * 0.005)
