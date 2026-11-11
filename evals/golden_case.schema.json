@@ -41,6 +41,21 @@
     "author": { "type": "string" },
     "reviewer": { "type": "string" },
     "expected_written_at": { "type": "string", "format": "date-time" },
+    "reasoning_type": { "enum": ["information_extraction", "numerical", "logical", "comparison"] },
+    "evidence": {
+      "type": "array",
+      "description": "Where the answer is found, written before any run",
+      "items": {
+        "type": "object",
+        "required": ["doc", "location"],
+        "properties": {
+          "doc": { "type": "string", "description": "company|fiscal period|accession" },
+          "location": { "type": "string", "description": "Item and page or table, or passage ID" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "justification": { "type": "string", "description": "How the expected answer follows from the evidence" },
     "notes": { "type": "string" }
   }
 }

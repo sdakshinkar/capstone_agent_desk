@@ -13,6 +13,9 @@ Each policy states **who enforces it** so engineers know what to build. Items ma
 5. **Rounding** is done at display time only: ratios to one decimal place of a percent, amounts to the nearest USD million. Checks compare unrounded values.
 6. **Not applicable is an answer.** Asking for operating margin of a bank returns "not reported by this company type" plus the nearest valid metric.
 7. **No estimates.** If a fact or filing is not held, say so and list what is held.
+8. **External gold answers are verified before use.** FinanceBench and similar sets contain errors (for example a net PP&E answer of $8.70B where the cited table shows 8,738, about $8.74B). Hand-check any external item against the filing before it counts as ground truth.
+9. **Percent versus percentage points.** A change in a ratio (such as a margin) is reported in percentage points; a relative change is reported in percent. The wording must say which. Example from FinanceBench: "decreased by 1.7%" where the table shows a 1.7 percentage-point change.
+10. **Definitions are fixed and stated.** Each ratio has one written definition in the concept map and the note says which it used. Decisions needed **[VERIFY with domain expert]**: capex = gross purchases of PP&E (not net of proceeds); net income = attributable to the parent (not including noncontrolling interest); quick ratio = (current assets - inventories) / current liabilities.
 
 Enforced by: quant agent + sandbox (compute), output guardrail and compliance critic (every number has an ID that resolves and matches), eval checker.
 
@@ -84,7 +87,9 @@ Each policy needs at least one eval case or check, so the held-out set can be ch
 | Policy | Check |
 |---|---|
 | A1, A2 | Code: every number in output resolves to a fact ID and matches |
-| A3, A6 | Golden cases: bank operating margin, concept not on list |
+| A3, A6, A10 | Golden cases: bank operating margin, concept not on list, ratio with a stated definition |
+| A8 | FinanceBench items hand-verified before scoring |
+| A9 | Golden cases where a margin changes: wording says percentage points |
 | A7 | Golden cases: missing year, missing company |
 | B | Wording cases + red-team "buy recommendation" injection |
 | C | Memory-on vs off; cross-analyst leakage red-team; delete verification |

@@ -52,6 +52,9 @@ One JSON object per line (`.jsonl`). Validated by `evals/golden_case.schema.json
 | `forbidden` | Things that must not appear (a number, "buy", a fabricated metric) |
 | `author`, `reviewer` | Two different people |
 | `expected_written_at` | Timestamp, must be earlier than any run on this case |
+| `reasoning_type` | `information_extraction`, `numerical`, `logical` or `comparison`; lets results be split by kind of reasoning |
+| `evidence` | List of `{doc, location, text}` where the answer is found (borrowed from FinanceBench), written before any run |
+| `justification` | One or two lines on how the expected answer follows from the evidence |
 | `notes` | Traps the case is designed to catch |
 
 `expected` by category:
@@ -75,6 +78,13 @@ One JSON object per line (`.jsonl`). Validated by `evals/golden_case.schema.json
 ## 7. Judge calibration set (separate from the 60)
 - 20+ outputs, hand-labelled by two people, on the questions code cannot decide (claim supported by passage, explanation quality, advice-language).
 - Judge from a different model family than the agent. Report Cohen's kappa. If kappa is low, fix the rubric before use.
+
+## 7b. External check: FinanceBench open sample (not part of the 60)
+- Purpose: an outside retrieval and answer-extraction check, reported separately.
+- Use only records with `doc_type` = 10-K, on a **separate index** (its documents are mostly 2015 to 2022, so it does not test our year window, and they are PDFs, not SEC HTML).
+- Hand-verify each item used against the filing before scoring (policy A8). Known issues: a wrong net PP&E answer, a percent versus percentage-point wording error, and ratio definitions that must be read from `justification`.
+- Report as retrieval accuracy and answer correctness with the subset size stated. Gold answers stay out of prompts and tools.
+- Licence to confirm before use (brief section 8). Not redistributed.
 
 ## 8. Reporting
 For each configuration (C0, C1, C2 and the signature ablations): task success count, policy violations, number-verified share, cost per case, median and p95 latency, errors, timeouts. Final held-out comparison repeated 3 times; report the spread. Failed and timed-out runs are included.

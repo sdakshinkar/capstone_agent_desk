@@ -145,7 +145,11 @@ Rule: every metric has one written formula and a list of accepted XBRL concepts.
 ## 8. Data and licensing
 
 - EDGAR filings and XBRL are public. Cache locally; do not commit filings or caches to the repo (`data/` is gitignored).
-- FinanceBench open sample (150 questions, CC BY-NC 4.0): external retrieval check only; do not redistribute.
+- FinanceBench open sample (150 questions, `patronus-ai/financebench`; the guide states CC BY-NC 4.0, **[VERIFY on Hugging Face: the GitHub repo shows no license file]**): external retrieval check only; do not redistribute. Limits of fit with this project:
+  - Its documents are mostly 2015 to 2022 and include 10-Qs, 8-Ks and earnings releases (see `doc_type`). Use only `10k` records, on a **separate index** from the 30-company window. It cannot test our year window.
+  - Its documents are PDFs linked from company sites; our parser reads SEC HTML. Either parse the PDFs or fetch the same filings from EDGAR.
+  - Company overlap with our 30 is partial. Seen in the data: Adobe, Amazon, Apple, Best Buy, Costco **[VERIFY the rest, e.g. Microsoft, Oracle, Salesforce, Walmart, JPMorgan]**.
+  - Gold answers are not trusted blindly (see policy pack A8).
 - Keep collection date and source URL for every filing.
 
 ## 9. Dependencies on other roles
