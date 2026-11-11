@@ -20,3 +20,6 @@ dist/
 # Local data
 /data/*
 !/data/.gitkeep
+
+# Eval run outputs (answers, traces); copy the ones you report into the write-up
+/tests/evals/runs/

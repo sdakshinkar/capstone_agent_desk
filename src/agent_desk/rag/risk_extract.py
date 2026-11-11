@@ -18,6 +18,10 @@ changed).
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+from pathlib import Path
 from typing import Any, TypedDict
 
 from ..llm.llm import get_tool_llm
@@ -173,8 +177,45 @@ def _merge(
 #   [Risk(title="Competition", passage_ids=["microsoft-2025-1A-2", "microsoft-2025-1A-3"], ...),
 #    Risk(title="Cyberattacks", passage_ids=["microsoft-2025-1A-36", ...], ...), ...]
 def extract_risks(passages: list[RiskPassage], llm: Any | None = None) -> list[Risk]:
-    """Group passages into risks, fill in unassigned passages, and attach code-derived quotes."""
-    llm = llm or get_tool_llm()
+    """Group passages into risks, fill in unassigned passages, and attach code-derived quotes.
+
+    With the default model and AGENT_DESK_RISK_CACHE=1, the result is cached on disk (see
+    _cache_path), so the same filing's Item 1A is extracted only once.
+    """
+    cache_file = _cache_path(passages) if llm is None and _cache_enabled() else None
+    if cache_file and cache_file.exists():
+        return json.loads(cache_file.read_text(encoding="utf-8"))
+    risks = _extract_risks(passages, llm or get_tool_llm())
+    if cache_file:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps(risks), encoding="utf-8")
+    return risks
+
+
+# Risk extraction reads about 100 passages per filing with an LLM, and every risk comparison
+# needs two years, so FY2024 -> FY2025 and FY2025 -> FY2026 both re-extract FY2025. The cache
+# is keyed by the model, both prompts and the exact passage text: changing any of them misses.
+# It is opt-in (the eval harness turns it on) so normal runs behave as before.
+RISK_CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "risk_cache"
+
+
+def _cache_enabled() -> bool:
+    return os.getenv("AGENT_DESK_RISK_CACHE", "").strip() == "1"
+
+
+def _cache_path(passages: list[RiskPassage]) -> Path:
+    from ..llm.llm import TOOL_MODEL
+
+    digest = hashlib.sha256()
+    for part in (TOOL_MODEL, SYSTEM_PROMPT, GAP_PROMPT_SUFFIX):
+        digest.update(part.encode("utf-8"))
+    for p in passages:
+        digest.update(f"\n{p.id}\n{p.text}".encode("utf-8"))
+    name = passages[0].id.rsplit("-1A-", 1)[0] if passages else "empty"
+    return RISK_CACHE_DIR / f"{name}-{digest.hexdigest()[:16]}.json"
+
+
+def _extract_risks(passages: list[RiskPassage], llm: Any) -> list[Risk]:
     order = {p.id: n for n, p in enumerate(passages)}
     text_by_id = {p.id: p.text for p in passages}
     valid_ids = set(order)

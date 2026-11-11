@@ -65,7 +65,8 @@ reranking, or query decomposition.
 
 `SPECS` in `filling_download.py` lists ten companies in two sectors, each with
 fiscal years 2023, 2024 and 2025 (the year of the fiscal period end date, so
-NVIDIA's 2025 is the year ending January 2025):
+NVIDIA's 2025 is the year ending January 2025). Microsoft also has fiscal 2026
+(year ending June 2026):
 
 | Sector | Company (folder) | CIK |
 |---|---|---|

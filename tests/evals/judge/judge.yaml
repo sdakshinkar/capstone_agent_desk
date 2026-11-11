@@ -1,0 +1,5 @@
+# Judge model: must be a different model family from the agents (Llama 3.3 70B).
+model: qwen/qwen-2.5-72b-instruct
+max_tokens: 300
+# Reuse identical judge calls from the local cache (data/eval_llm_cache.sqlite).
+llm_cache: true

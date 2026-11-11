@@ -113,7 +113,7 @@ def download_from_spec(spec: dict[str, Any]) -> dict[int, dict[str, str]]:
 
 SPECS = [
     # Technology
-    {"company_name": "microsoft", "cik": "0000789019", "years": [2023, 2024, 2025]},
+    {"company_name": "microsoft", "cik": "0000789019", "years": [2023, 2024, 2025, 2026]},
     {"company_name": "apple", "cik": "0000320193", "years": [2023, 2024, 2025]},
     {"company_name": "alphabet", "cik": "0001652044", "years": [2023, 2024, 2025]},
     {"company_name": "amazon", "cik": "0001018724", "years": [2023, 2024, 2025]},
