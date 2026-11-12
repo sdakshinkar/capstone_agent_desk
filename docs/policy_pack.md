@@ -11,11 +11,12 @@ Each policy states **who enforces it** so engineers know what to build. Items ma
 3. **One formula per metric** and one accepted concept list per metric (brief section 5). A concept outside the list is reported as "not available".
 4. **Units** are normalised to USD millions in code. Original unit and scale are kept with the fact.
 5. **Rounding** is done at display time only: ratios to one decimal place of a percent, amounts to the nearest USD million. Checks compare unrounded values.
-6. **Not applicable is an answer.** Asking for operating margin of a bank returns "not reported by this company type" plus the nearest valid metric.
+6. **Not applicable is an answer.** Asking for operating margin of a bank (JPMorgan, Bank of America, Goldman Sachs) returns "not reported by this company type" plus the nearest valid metric. Mastercard is a payments network, not a bank, and does report operating income.
 7. **No estimates.** If a fact or filing is not held, say so and list what is held.
 8. **External gold answers are verified before use.** FinanceBench and similar sets contain errors (for example a net PP&E answer of $8.70B where the cited table shows 8,738, about $8.74B). Hand-check any external item against the filing before it counts as ground truth.
 9. **Percent versus percentage points.** A change in a ratio (such as a margin) is reported in percentage points; a relative change is reported in percent. The wording must say which. Example from FinanceBench: "decreased by 1.7%" where the table shows a 1.7 percentage-point change.
 10. **Definitions are fixed and stated.** Each ratio has one written definition in the concept map and the note says which it used. Decisions needed **[VERIFY with domain expert]**: capex = gross purchases of PP&E (not net of proceeds); net income = attributable to the parent (not including noncontrolling interest); quick ratio = (current assets - inventories) / current liabilities.
+11. **Fiscal-year label.** A fiscal year is labelled by the year of its fiscal period end date (README convention), and notes also give the period end date. Example: Nvidia's 2025 is the year ending January 2025. Never relabel by the year a period started.
 
 Enforced by: quant agent + sandbox (compute), output guardrail and compliance critic (every number has an ID that resolves and matches), eval checker.
 
@@ -77,6 +78,9 @@ Enforced by: approval gate (`interrupt()`), hooks, portal API.
 4. Each ingested filing records source URL, accession number and collection date. A filing with no collection date is not indexed.
 5. FinanceBench open sample is used only as an external retrieval check and is not redistributed.
 6. No API keys, private data or non-redistributable material in the repository.
+7. **Stored coverage is fixed.** Evidence comes only from the ten covered companies and the fiscal years stored per README `SPECS` (Microsoft 2023 to 2026, others 2023 to 2025). A company or year that is not stored is "not available" and the system lists what is stored. Companies whose 10-K has no Item headings (Morgan Stanley; likely Citigroup and Wells Fargo) are excluded, not half-parsed.
+8. **Searches are filtered.** Every filing search carries a company filter, and a year when the question names one. Bank filings are about 60% of the index, so an unfiltered search is biased towards them.
+9. **Citations show the stored label.** Section labels are cited as stored (for example JPMorgan's MD&A is labelled Item 15), not as the reader might expect.
 
 Enforced by: ingestion pipeline, hooks (rate limit, allow-list), input guardrails, repo review.
 
@@ -87,7 +91,8 @@ Each policy needs at least one eval case or check, so the held-out set can be ch
 | Policy | Check |
 |---|---|
 | A1, A2 | Code: every number in output resolves to a fact ID and matches |
-| A3, A6, A10 | Golden cases: bank operating margin, concept not on list, ratio with a stated definition |
+| A3, A6, A10 | Golden cases: bank operating margin (and Mastercard, which does report it), concept not on list, ratio with a stated definition |
+| A11 | Golden cases: Nvidia and Microsoft labels vs period end dates |
 | A8 | FinanceBench items hand-verified before scoring |
 | A9 | Golden cases where a margin changes: wording says percentage points |
 | A7 | Golden cases: missing year, missing company |
@@ -95,3 +100,5 @@ Each policy needs at least one eval case or check, so the held-out set can be ch
 | C | Memory-on vs off; cross-analyst leakage red-team; delete verification |
 | D1 | Live demo: edit invalidates approval; automated test |
 | E1, E2 | Red-team: injected article, poisoned filing text |
+| E7 | Golden cases: company not covered (for example Citigroup), year not stored (Apple 2026) |
+| E8, E9 | Retrieval test: unfiltered vs filtered search; JPMorgan MD&A cited as Item 15 |
