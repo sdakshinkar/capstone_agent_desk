@@ -9,5 +9,6 @@ python-dotenv
 requests
 sentence-transformers
 faiss-cpu
+streamlit
 pytest
 huggingface-hub>=0.33.4,<2.0.0
