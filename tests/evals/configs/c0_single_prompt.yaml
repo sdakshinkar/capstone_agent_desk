@@ -1,0 +1,24 @@
+# Experiment config: one file per system, the same harness for all (brief: "one harness").
+name: c0_single_prompt
+system: c0_single_prompt
+# Same model for every config (set in src/agent_desk/llm/llm.py); recorded in each run.
+model: meta-llama/llama-3.3-70b-instruct
+
+limits:
+  max_tokens_per_case: 300000   # a risk comparison reads two full Item 1A sections
+  max_llm_calls_per_case: 80
+  timeout_s: 900
+  max_total_tokens: 2000000     # the run stops before the next case once this is passed
+
+cache:
+  # Reuse identical LLM calls from a local SQLite cache. Good while building checkers; it is
+  # turned off automatically for --repeat runs, which must measure real variation.
+  llm: true
+  # Reuse risk extraction per company-year (data/risk_cache).
+  risk_extraction: true
+
+# Optional prices in USD per million tokens, used only when OpenRouter does not report the cost.
+# From openrouter.ai/api/v1/models for meta-llama/llama-3.3-70b-instruct on 2026-11-11.
+prices:
+  input_per_mtok: 0.71
+  output_per_mtok: 0.71

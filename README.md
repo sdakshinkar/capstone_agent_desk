@@ -61,6 +61,38 @@ error if the index has not been built.
 This is the simple RAG foundation only: it flattens table contents to text, and does not yet include hybrid search,
 reranking, or query decomposition.
 
+### Covered companies
+
+`SPECS` in `filling_download.py` lists ten companies in two sectors, each with
+fiscal years 2023, 2024 and 2025 (the year of the fiscal period end date, so
+NVIDIA's 2025 is the year ending January 2025). Microsoft also has fiscal 2026
+(year ending June 2026):
+
+| Sector | Company (folder) | CIK |
+|---|---|---|
+| Technology | microsoft | 0000789019 |
+| Technology | apple | 0000320193 |
+| Technology | alphabet | 0001652044 |
+| Technology | amazon | 0001018724 |
+| Technology | meta | 0001326801 |
+| Technology | nvidia | 0001045810 |
+| Financials | jpmorgan | 0000019617 |
+| Financials | bank_of_america | 0000070858 |
+| Financials | goldman_sachs | 0000886982 |
+| Financials | mastercard | 0001141391 |
+
+The parser finds sections by their "Item N" headings, so only filings that use
+them can be split. Morgan Stanley's 10-K has no Item headings (it uses an
+annual-report layout with a cross-reference index) and was left out; Citigroup
+and Wells Fargo likely have the same problem. JPMorgan's Item 7 and Item 8 are
+short "refer to" pages, so its MD&A and financial statement text is labelled
+Item 15. Before adding a company, check that `load_risk_section(company, year)`
+in `rag/risk_section.py` returns passages.
+
+The bank filings are much longer than the technology ones, so they hold about
+60% of the index; a search without a company filter mostly returns bank
+passages.
+
 ## SEC Company Facts tools (L7 step)
 
 `src/agent_desk/tools/edgar_tools.py` exposes LangChain tools backed only by the SEC
@@ -76,7 +108,8 @@ call SEC submissions, filing archives, or other SEC endpoints.
 
 Company Facts provides facts for a known CIK; it does not provide company
 discovery. `list_edgar_companies` therefore lists the small local company
-directory in the tool module (currently Apple, Microsoft and Alphabet). The fact-list and fact-lookup tools accept any CIK.
+directory in the tool module (`COMPANIES`, the ten companies listed under
+"Covered companies"). The fact-list and fact-lookup tools accept any CIK.
 
 Successful Company Facts responses are cached in `data/edgar_cache/` by CIK so
 repeat lookups do not make another request. Pass `force_refresh=True` to fetch
