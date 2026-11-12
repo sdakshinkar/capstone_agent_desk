@@ -31,7 +31,7 @@ Targets other than the 98% bar are set after the baseline run, not guessed now.
 
 ## 3. Scope, limits and non-goals
 
-In scope: US 10-K filings, 3 fiscal years per company, 30 companies in 3 sectors.
+In scope: US 10-K filings, 3 fiscal years per company, 20 companies in 2 sectors (big tech and banks).
 
 Stated limits (to be repeated in the evaluation report):
 - 10-K only. No 10-Q, 8-K, earnings calls, or news as evidence.
@@ -53,9 +53,9 @@ Expected window by year-end group (**[VERIFY]** each against EDGAR; the company'
 |---|---|---|
 | 31 December | Alphabet, Amazon, Meta, all 10 banks | FY2023, FY2024, FY2025 |
 | May to July | Oracle, Microsoft, Cisco | FY2024, FY2025, FY2026 |
-| August to September | Costco, Apple | FY2024 to FY2026 if the FY2026 10-K is filed, otherwise FY2023 to FY2025 (Apple's is typically filed around early November) |
+| September | Apple | FY2024 to FY2026 if the FY2026 10-K is filed, otherwise FY2023 to FY2025 (Apple's is typically filed around early November) |
 | November | Adobe | FY2023, FY2024, FY2025 |
-| January | Nvidia, Salesforce, and the 9 January-year-end retailers | Years ending Jan 2024, Jan 2025, Jan 2026. Labelled FY2024 to FY2026 by Nvidia, Salesforce and Walmart, but FY2023 to FY2025 by Target, Home Depot, Lowe's and most other retailers |
+| January | Nvidia, Salesforce | Years ending Jan 2024, Jan 2025, Jan 2026, labelled FY2024 to FY2026 by the companies **[VERIFY against the SEC `fy` field, which may differ]** |
 
 Consequences:
 - Three years give only **two consecutive year-pairs** per company for risk-factor comparison (for example FY2023 to FY2024, FY2024 to FY2025). Questions about changes over a longer span cannot be answered and the system must say so.
@@ -78,23 +78,7 @@ Fiscal year-ends below are from general knowledge and are **[VERIFY]** against e
 | Adobe | Friday nearest 30 November |
 | Cisco | last Saturday of July |
 
-Why: widest spread of year-ends in the set (Jan, May, Jun, Jul, Sep, Nov, Dec). Nvidia and Salesforce label the year they *end* in January as the prior or next year differently from the SEC `fy` field, a known trap.
-
-### Retail (10)
-| Company | Fiscal year-end |
-|---|---|
-| Walmart | 31 January |
-| Target | Saturday nearest 31 January |
-| Costco | Sunday nearest 31 August |
-| Home Depot | Sunday nearest 31 January |
-| Lowe's | Friday nearest 31 January |
-| Kroger | Saturday nearest 31 January |
-| TJX | Saturday nearest 31 January |
-| Best Buy | Saturday nearest 31 January |
-| Dollar General | Friday nearest 31 January |
-| Ross Stores | Saturday nearest 31 January |
-
-Why: "FY2025" ends in January 2025 for most of these, but the company's own label and the SEC `fy` field can disagree. Costco is the outlier at end of August. 52/53-week years mean some years have 53 weeks, which affects year-over-year comparisons. State this as a caveat when it matters.
+Why: widest spread of year-ends in the set (Jan, May, Jun, Jul, Sep, Nov, Dec). Nvidia and Salesforce end their year in January, so the company label and the SEC `fy` field can disagree, a known trap. Apple, Cisco, Adobe and Nvidia use 52/53-week years.
 
 ### Banks (10)
 | Company | Fiscal year-end |
@@ -112,16 +96,16 @@ Why: "FY2025" ends in January 2025 for most of these, but the company's own labe
 
 Why: same year-end, so differences come from business model. Banks do not report operating income or gross margin, which tests whether the system refuses a metric that does not apply instead of inventing one.
 
-**Cost note.** 30 companies x 3 years is about 90 filings to download, parse, chunk and embed, plus 30 x ~2 year-pairs for risk comparison. EDGAR limits automated users to 10 requests per second with a contact User-Agent; everything is cached locally.
+**Cost note.** 20 companies x 3 years is about 60 filings to download, parse, chunk and embed, plus 20 x ~2 year-pairs for risk comparison. EDGAR limits automated users to 10 requests per second with a contact User-Agent; everything is cached locally.
 
 ## 5. Metric definitions by sector (to be confirmed with the domain expert)
 
-| Metric | Tech | Retail | Banks |
-|---|---|---|---|
-| Revenue | Revenues / RevenueFromContractWithCustomerExcludingAssessedTax | same | Total revenue is not uniform; use net interest income + noninterest income **[VERIFY tags]** |
-| Operating margin | OperatingIncomeLoss / Revenue | same | **Not applicable.** System must say so. |
-| Profitability | Net income margin | Net income margin | Net income, return on equity |
-| Bank-specific | n/a | n/a | Efficiency ratio = noninterest expense / revenue, computed in sandbox |
+| Metric | Tech | Banks |
+|---|---|---|
+| Revenue | Revenues / RevenueFromContractWithCustomerExcludingAssessedTax | Total revenue is not uniform; use net interest income + noninterest income **[VERIFY tags]** |
+| Operating margin | OperatingIncomeLoss / Revenue | **Not applicable.** System must say so. |
+| Profitability | Net income margin | Net income, return on equity |
+| Bank-specific | n/a | Efficiency ratio = noninterest expense / revenue, computed in sandbox |
 
 Rule: every metric has one written formula and a list of accepted XBRL concepts. The quant agent uses only that list. A concept not on the list is reported as unavailable, not guessed.
 
@@ -146,9 +130,9 @@ Rule: every metric has one written formula and a list of accepted XBRL concepts.
 
 - EDGAR filings and XBRL are public. Cache locally; do not commit filings or caches to the repo (`data/` is gitignored).
 - FinanceBench open sample (150 questions, `patronus-ai/financebench`; the guide states CC BY-NC 4.0, **[VERIFY on Hugging Face: the GitHub repo shows no license file]**): external retrieval check only; do not redistribute. Limits of fit with this project:
-  - Its documents are mostly 2015 to 2022 and include 10-Qs, 8-Ks and earnings releases (see `doc_type`). Use only `10k` records, on a **separate index** from the 30-company window. It cannot test our year window.
+  - Its documents are mostly 2015 to 2022 and include 10-Qs, 8-Ks and earnings releases (see `doc_type`). Use only `10k` records, on a **separate index** from the 20-company window. It cannot test our year window.
   - Its documents are PDFs linked from company sites; our parser reads SEC HTML. Either parse the PDFs or fetch the same filings from EDGAR.
-  - Company overlap with our 30 is partial. Seen in the data: Adobe, Amazon, Apple, Best Buy, Costco **[VERIFY the rest, e.g. Microsoft, Oracle, Salesforce, Walmart, JPMorgan]**.
+  - Company overlap with our 20 is partial. Seen in the data: Adobe, Amazon, Apple **[VERIFY the rest, e.g. Microsoft, Oracle, Salesforce, JPMorgan]**.
   - Gold answers are not trusted blindly (see policy pack A8).
 - Keep collection date and source URL for every filing.
 
@@ -156,12 +140,12 @@ Rule: every metric has one written formula and a list of accepted XBRL concepts.
 
 | Need | Owner | Note |
 |---|---|---|
-| `edgar_tools.py` company directory is hardcoded to Apple, Microsoft, Alphabet | Tools engineer | Extend to the 30-company list in section 4 |
+| `edgar_tools.py` company directory is hardcoded to Apple, Microsoft, Alphabet | Tools engineer | Extend to the 20-company list in section 4 |
 | Filing downloads, Item split, table-aware parsing, hybrid search + reranker + query decomposition | Knowledge engineer | Current index is FAISS-only, flattens tables |
 | Concept map (section 5) enforced in the quant agent | Agents engineer | Domain lead supplies the map |
 | Golden set built from this brief | Evaluation engineer + domain lead | Domain lead writes content; evaluation owner holds held-out cases away from the tuner |
 
 ## 10. Open questions
-1. Is the 30-company scope (about 90 filings) affordable for embedding and eval cost? Revisit after the first ingestion run.
+1. Is the 20-company scope (about 60 filings) affordable for embedding and eval cost? Revisit after the first ingestion run.
 2. Which bank revenue concept does the domain expert prefer?
 3. Which 10 company-years get hand-labelled risk-change labels?
