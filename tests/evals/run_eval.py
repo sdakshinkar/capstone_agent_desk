@@ -173,7 +173,8 @@ def regrade(run_dir: Path) -> int:
     meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     by_id = {c["id"]: c for c in load_split(meta["split"])}
     has_tools = meta["config"]["system"] in SYSTEMS_WITH_TOOLS
-    has_sandbox = meta["config"]["system"] in SYSTEMS_WITH_SANDBOX
+    # Runs recorded before has_sandbox was stored: only the team had run_python then.
+    has_sandbox = meta.get("has_sandbox", meta["config"]["system"] == "c2_team")
     truth = load_truth()
     results_file = run_dir / "results.jsonl"
     records = read_results(results_file)
@@ -276,6 +277,7 @@ def main(argv: list[str] | None = None) -> int:
         meta = {
             "config": config, "split": split, "repeat": repeat,
             "case_ids": [c["id"] for c in cases], "caches": caches,
+            "has_sandbox": config["system"] in SYSTEMS_WITH_SANDBOX,
             "git_commit": git_commit(), "started": datetime.now().isoformat(timespec="seconds"),
         }
         (run_dir / "run.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")

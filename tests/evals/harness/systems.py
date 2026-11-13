@@ -3,7 +3,7 @@
     run_system(name, question, callbacks) -> {"answer", "contexts", "replans", "worker_reports"}
 
 c0_single_prompt  fixed retrieval + one LLM call            (agents/single_prompt_baseline.py)
-c1_single_agent   one ReAct agent with all five tools       (agents/single_agent.py)
+c1_single_agent   one ReAct agent with all six tools        (agents/single_agent.py)
 c2_team           research lead + supervisor + 3 workers    (agents/workflow.py, unchanged)
 
 Each call is wrapped in a RunnableLambda so the callbacks reach every nested model and tool
@@ -18,8 +18,8 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableLambda
 
 SYSTEMS_WITH_TOOLS = {"c1_single_agent", "c2_team"}
-# Only the team's quant worker has the run_python calculator (agents/quant_agent.py).
-SYSTEMS_WITH_SANDBOX = {"c2_team"}
+# Systems with the run_python calculator: the team's quant worker and, since 2026-11-13, C1.
+SYSTEMS_WITH_SANDBOX = {"c1_single_agent", "c2_team"}
 WORKERS = {"researcher_worker", "quant_worker", "risk_worker"}
 
 
