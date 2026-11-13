@@ -1,0 +1,53 @@
+{
+  "config": {
+    "name": "c2_team",
+    "system": "c2_team",
+    "model": "meta-llama/llama-3.3-70b-instruct",
+    "limits": {
+      "max_tokens_per_case": 300000,
+      "max_llm_calls_per_case": 80,
+      "timeout_s": 900,
+      "max_total_tokens": 1000000
+    },
+    "cache": {
+      "llm": true,
+      "risk_extraction": true
+    },
+    "prices": {
+      "input_per_mtok": 0.71,
+      "output_per_mtok": 0.71
+    },
+    "search_mode": "hybrid"
+  },
+  "split": "dev",
+  "repeat": 1,
+  "case_ids": [
+    "n01",
+    "n02",
+    "n03",
+    "n04",
+    "n05",
+    "n06",
+    "n07",
+    "n08",
+    "c01",
+    "c02",
+    "c03",
+    "t01",
+    "t02",
+    "t03",
+    "t04",
+    "k01",
+    "k02",
+    "k03",
+    "k04",
+    "m02",
+    "m07"
+  ],
+  "caches": {
+    "llm": true,
+    "risk_extraction": true
+  },
+  "git_commit": "1d90096",
+  "started": "2026-11-13T16:20:59"
+}
