@@ -55,11 +55,37 @@ with BeautifulSoup (`rag/filing_parser.py`), splits each Item passage with
 `sentence-transformers/all-MiniLM-L6-v2` (downloaded from Hugging Face on first
 use) and saves one combined FAISS index in `data/faiss_index/`. Every chunk has
 `company`, `year`, `item` and `source` metadata. `search_filing(query, company,
-year, k)` searches that index and can filter by company and/or year; it raises an
+year, k, mode)` searches that index and can filter by company and/or year; it raises an
 error if the index has not been built.
 
-This is the simple RAG foundation only: it flattens table contents to text, and does not yet include hybrid search,
-reranking, or query decomposition.
+### Retrieval modes
+
+`search_chunks(..., mode=...)` in `rag/filing_rag.py` (and the `mode` argument of the
+`search_filing` tool) supports three modes over the same chunks and filters:
+
+| Mode | How it ranks | Best for |
+|---|---|---|
+| `semantic` (default) | FAISS vector similarity of `all-MiniLM-L6-v2` embeddings | paraphrased questions, broad topics |
+| `keyword` | BM25 (LangChain `BM25Retriever`, `rank-bm25`) | exact names, terms and numbers ("First Republic", "166,000") |
+| `hybrid` | both, merged with Reciprocal Rank Fusion | general use |
+
+The BM25 index is built in memory from the chunks in the FAISS docstore the first
+time a keyword or hybrid search runs (one per company/year filter, rebuilt when the
+FAISS index changes), so there is no separate build step. Its tokenizer lowercases
+text, keeps numbers like `166,000` and `72.22` whole, and splits words on
+punctuation. Hybrid search takes `max(4·k, 20)` candidates from each retriever and
+scores each chunk as `Σ weight / (60 + rank)`; the weights (`HYBRID_WEIGHTS`, 0.5 / 0.5)
+and other constants are at the top of `filing_rag.py`. To change the default for
+every caller, set `DEFAULT_SEARCH_MODE`.
+
+Compare the modes on the retrieval eval set:
+
+```bat
+python tests/evals/run_retrieval_eval.py --mode all --k 5
+```
+
+Tables are still flattened to text, and there is no reranking or query
+decomposition yet.
 
 ### Covered companies
 
