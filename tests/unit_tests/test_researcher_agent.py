@@ -35,7 +35,7 @@ def test_researcher_runs_tool_loop(monkeypatch):
         metadata={"company": "apple", "year": "2025", "item": "Item 1A"},
     )
 
-    def fake_search_chunks(query, k, company=None, year=None):
+    def fake_search_chunks(query, k, company=None, year=None, mode="semantic"):
         assert query == "risk factors"
         assert k == 4
         return [document]
