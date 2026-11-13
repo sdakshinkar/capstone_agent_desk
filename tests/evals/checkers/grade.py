@@ -168,6 +168,65 @@ def check_tools(record: dict, expected_tools: list[str], config_has_tools: bool)
     return {"pass": not missing, "called": sorted(called), "missing": missing}
 
 
+RATIO_METRICS = {"operating_margin", "net_margin"}
+
+
+def _case_companies(expected: dict) -> set[str]:
+    return {f["company"] for f in expected.get("facts", [])} | {
+        d["company"] for d in expected.get("derived", [])
+    }
+
+
+def _candidates(truth: dict, companies: set[str]) -> tuple[list[float], list[float]]:
+    """Every reported amount and every percentage (margins, year-over-year growth) for these
+    companies, so a number counts as verified if it matches any real XBRL-based value."""
+    amounts: list[float] = []
+    percents: list[float] = []
+    for company in companies:
+        years = truth.get(company, {}).get("years", {})
+        for row in years.values():
+            for metric, fact in row.items():
+                (percents if fact.get("unit") == "percent" else amounts).extend(fact["accepted"])
+        ordered = sorted(years)
+        metrics = {m for row in years.values() for m in row} - RATIO_METRICS
+        for metric in metrics:
+            for i, y1 in enumerate(ordered):
+                for y2 in ordered[i + 1:]:
+                    a, b = years[y1].get(metric), years[y2].get(metric)
+                    if a and b:
+                        percents.extend((v2 - v1) / v1 * 100 for v1 in a["accepted"]
+                                        for v2 in b["accepted"] if v1)
+    return amounts, percents
+
+
+def check_numbers_verified(answer: str, expected: dict, truth: dict) -> dict:
+    """Signature challenge A: what share of the dollar and percent figures in the answer match a
+    real value? Plain numbers without $, a scale word or % (years, counts) are not counted.
+    Diagnostic only: an answer can be right and still quote an extra, unverifiable figure."""
+    amounts, percents = _candidates(truth, _case_companies(expected))
+    figures = {}
+    for n in extract_numbers(answer):
+        if n.is_percent or "$" in n.raw or any(c.isalpha() for c in n.raw):
+            figures.setdefault(n.raw, n)  # count each distinct figure once
+    verified = [raw for raw, n in figures.items()
+                if find_value([n], percents if n.is_percent else amounts, percent=n.is_percent)]
+    unverified = [raw for raw in figures if raw not in verified]
+    return {"pass": None, "verified": len(verified), "total": len(figures), "unverified": unverified[:10]}
+
+
+def check_calc_in_sandbox(record: dict, expected: dict, has_sandbox: bool) -> dict:
+    """Signature challenge A: a margin or growth figure should be computed in the run_python
+    sandbox, not by the model. None when the case needs no calculation or the system has no
+    sandbox."""
+    needs_calc = bool(expected.get("derived")) or any(
+        f["metric"] in RATIO_METRICS for f in expected.get("facts", [])
+    )
+    if not needs_calc or not has_sandbox:
+        return {"pass": None, "applies": False}
+    called = {c["name"] for c in record.get("trajectory", {}).get("tool_calls", [])}
+    return {"pass": None, "applies": True, "used": "run_python" in called}
+
+
 def check_run_health(record: dict) -> dict:
     traj = record.get("trajectory", {})
     worker_failures = sum("WORKER FAILED" in str(m) for m in traj.get("worker_reports", []))
@@ -183,7 +242,8 @@ def check_run_health(record: dict) -> dict:
 # ---------------------------------------------------------------- one case
 
 
-def grade(case: dict, record: dict, truth: dict, config_has_tools: bool = True) -> dict:
+def grade(case: dict, record: dict, truth: dict, config_has_tools: bool = True,
+          has_sandbox: bool = False) -> dict:
     answer = record.get("answer") or ""
     expected = case.get("expected", {})
     ctype = case["type"]
@@ -194,6 +254,8 @@ def grade(case: dict, record: dict, truth: dict, config_has_tools: bool = True) 
         checks["years"] = check_years(answer, expected["facts"])
         if expected.get("derived"):
             checks["derived"] = check_derived(answer, expected["derived"], truth)
+        checks["numbers_verified"] = check_numbers_verified(answer, expected, truth)
+        checks["calc_in_sandbox"] = check_calc_in_sandbox(record, expected, has_sandbox)
     elif ctype == "narrative":
         checks["must_include"] = check_must_include(answer, expected["must_include"])
         checks["evidence_retrieved"] = check_evidence_retrieved(record, expected.get("evidence"))
@@ -213,7 +275,7 @@ def grade(case: dict, record: dict, truth: dict, config_has_tools: bool = True) 
 
     # Informational checks (pass is None) never fail a case; evidence_retrieved and tools are
     # diagnostics of how the answer was produced, reported separately from task success.
-    diagnostic = {"evidence_retrieved", "tools", "cites_item"}
+    diagnostic = {"evidence_retrieved", "tools", "cites_item", "numbers_verified", "calc_in_sandbox"}
     code_pass = all(
         c["pass"] for name, c in checks.items() if name not in diagnostic and c["pass"] is not None
     )

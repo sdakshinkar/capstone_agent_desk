@@ -41,7 +41,7 @@ import yaml  # noqa: E402
 from evals.cases.loader import load_split, load_truth, validate  # noqa: E402
 from evals.checkers.grade import grade  # noqa: E402
 from evals.harness.recorder import BudgetExceeded, Recorder  # noqa: E402
-from evals.harness.systems import SYSTEMS_WITH_TOOLS, run_system  # noqa: E402
+from evals.harness.systems import SYSTEMS_WITH_SANDBOX, SYSTEMS_WITH_TOOLS, run_system  # noqa: E402
 
 CONFIG_DIR = EVALS_DIR / "configs"
 RUNS_DIR = EVALS_DIR / "runs"
@@ -147,7 +147,8 @@ def run_case(case: dict, config: dict, truth: dict, repeat_index: int) -> dict:
             "plan": output.get("plan"),
         },
     }
-    record["grade"] = grade(case, record, truth, config_has_tools=config["system"] in SYSTEMS_WITH_TOOLS)
+    record["grade"] = grade(case, record, truth, config_has_tools=config["system"] in SYSTEMS_WITH_TOOLS,
+                            has_sandbox=config["system"] in SYSTEMS_WITH_SANDBOX)
     return record
 
 
@@ -172,12 +173,14 @@ def regrade(run_dir: Path) -> int:
     meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     by_id = {c["id"]: c for c in load_split(meta["split"])}
     has_tools = meta["config"]["system"] in SYSTEMS_WITH_TOOLS
+    has_sandbox = meta["config"]["system"] in SYSTEMS_WITH_SANDBOX
     truth = load_truth()
     results_file = run_dir / "results.jsonl"
     records = read_results(results_file)
     for record in records:
         before = record["grade"]["code_pass"]
-        record["grade"] = grade(by_id[record["case_id"]], record, truth, config_has_tools=has_tools)
+        record["grade"] = grade(by_id[record["case_id"]], record, truth, config_has_tools=has_tools,
+                                has_sandbox=has_sandbox)
         if record["grade"]["code_pass"] != before:
             after = "PASS" if record["grade"]["code_pass"] else "FAIL"
             print(f"  {record['case_id']} r{record['repeat']}: {'PASS' if before else 'FAIL'} -> {after}")
@@ -201,6 +204,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--yes", action="store_true", help="actually call the models (spends credits)")
     parser.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
     parser.add_argument("--regrade", type=Path, help="re-run the code checks on a saved run (free)")
+    parser.add_argument("--search-mode", choices=["semantic", "keyword", "hybrid"],
+                        help="force this filing-search mode for every agent and baseline in the run")
     args = parser.parse_args(argv)
 
     if args.regrade:
@@ -235,6 +240,14 @@ def main(argv: list[str] | None = None) -> int:
         cases = select_cases(all_cases, args.ids, args.types, args.limit)
     if args.max_total_tokens:
         config.setdefault("limits", {})["max_total_tokens"] = args.max_total_tokens
+    if args.search_mode:
+        config["search_mode"] = args.search_mode
+    # Recorded in run.json (inside config) and shown in the summary, so runs with different
+    # retrieval modes are never mixed up. Unset means the code default (the agent's own choice).
+    if config.get("search_mode"):
+        os.environ["AGENT_DESK_SEARCH_MODE"] = config["search_mode"]
+    else:
+        os.environ.pop("AGENT_DESK_SEARCH_MODE", None)
 
     done = set()
     if run_dir:
@@ -242,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     todo = [(c, r) for r in range(1, repeat + 1) for c in cases if (c["id"], r) not in done]
 
     print(f"Config {config['name']} | split {split} | {len(cases)} cases x {repeat} repeat(s) "
-          f"| {len(todo)} runs to do")
+          f"| {len(todo)} runs to do | search mode: {config.get('search_mode') or 'default'}")
     for case, r in todo[:50]:
         print(f"  {case['id']:4} {case['type']:12} r{r}  {case['question'][:80]}")
     if len(todo) > 50:

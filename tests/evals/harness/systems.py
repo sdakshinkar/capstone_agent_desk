@@ -18,6 +18,8 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableLambda
 
 SYSTEMS_WITH_TOOLS = {"c1_single_agent", "c2_team"}
+# Only the team's quant worker has the run_python calculator (agents/quant_agent.py).
+SYSTEMS_WITH_SANDBOX = {"c2_team"}
 WORKERS = {"researcher_worker", "quant_worker", "risk_worker"}
 
 

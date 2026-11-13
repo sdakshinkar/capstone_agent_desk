@@ -144,3 +144,15 @@ def test_search_without_index_explains_how_to_build(tmp_path, monkeypatch):
     for mode in MODES:
         with pytest.raises(FileNotFoundError, match="create_embeddings"):
             filing_rag.search_chunks("risk", mode=mode)
+
+
+def test_env_var_forces_the_search_mode(monkeypatch):
+    calls = []
+    for name in ("semantic", "keyword", "hybrid"):
+        monkeypatch.setitem(filing_rag._SEARCHERS, name, lambda q, k, company=None, year=None, _n=name: calls.append(_n) or [])
+    monkeypatch.delenv(filing_rag.FORCE_MODE_ENV, raising=False)
+    filing_rag.search_chunks("q", mode="keyword")
+    monkeypatch.setenv(filing_rag.FORCE_MODE_ENV, "hybrid")
+    filing_rag.search_chunks("q")                  # the default would be semantic
+    filing_rag.search_chunks("q", mode="keyword")  # an explicit choice is overridden too
+    assert calls == ["keyword", "hybrid", "hybrid"]

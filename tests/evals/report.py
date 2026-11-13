@@ -63,6 +63,10 @@ def metrics(results: list[dict]) -> dict:
                      if r["grade"]["checks"].get("tools", {}).get("pass") is not None]
     evidence = [r["grade"]["checks"]["evidence_retrieved"]["pass"] for r in results
                 if r["grade"]["checks"].get("evidence_retrieved", {}).get("pass") is not None]
+    verified = [r["grade"]["checks"]["numbers_verified"] for r in results
+                if "numbers_verified" in r["grade"]["checks"]]
+    sandbox = [r["grade"]["checks"]["calc_in_sandbox"]["used"] for r in results
+               if r["grade"]["checks"].get("calc_in_sandbox", {}).get("applies")]
     repeats: dict[int, list[bool]] = defaultdict(list)
     for r in results:
         repeats[r["repeat"]].append(bool(r["final_pass"]))
@@ -86,6 +90,8 @@ def metrics(results: list[dict]) -> dict:
         "cost_known": len(costs),
         "tool_use_rate": (sum(tools_checked), len(tools_checked)),
         "evidence_rate": (sum(evidence), len(evidence)),
+        "numbers_verified": (sum(v["verified"] for v in verified), sum(v["total"] for v in verified)),
+        "sandbox_rate": (sum(sandbox), len(sandbox)),
         "per_repeat": per_repeat,
     }
 
@@ -97,6 +103,11 @@ def _fmt(value, spec: str = ".1f", none: str = "n/a") -> str:
 def _rate(pair: tuple[int, int]) -> str:
     hit, total = pair
     return f"{hit}/{total}" if total else "n/a"
+
+
+def _share(pair: tuple[int, int]) -> str:
+    hit, total = pair
+    return f"{hit}/{total} ({hit / total:.0%})" if total else "n/a"
 
 
 def _table(columns: list[tuple[str, dict]]) -> str:
@@ -125,6 +136,8 @@ def _table(columns: list[tuple[str, dict]]) -> str:
         + (f" ({m['cost_known']}/{m['cases']} known)" if m["cost_total"] is not None else ""))
     row("Expected tool called", lambda m: _rate(m["tool_use_rate"]))
     row("Evidence retrieved", lambda m: _rate(m["evidence_rate"]))
+    row("Figures verified vs XBRL", lambda m: _share(m["numbers_verified"]))
+    row("Calculations in sandbox", lambda m: _rate(m["sandbox_rate"]))
     row("Success per repeat", lambda m: ", ".join(f"r{k}: {v}" for k, v in m["per_repeat"].items()))
     return "\n".join([header, sep, *rows])
 
@@ -153,7 +166,8 @@ def summarize_run(run_dir: Path) -> str:
     return (
         f"# {name} on {meta['split']}\n\n"
         f"Model {meta['config'].get('model')} | commit {meta.get('git_commit')} | "
-        f"started {meta.get('started')} | caches: {caches}\n\n"
+        f"started {meta.get('started')} | caches: {caches} | "
+        f"search mode: {meta['config'].get('search_mode') or 'default'}\n\n"
         f"{_table([(name, m)])}\n\n## Failed cases\n\n{_failures(results)}\n"
     )
 

@@ -13,6 +13,7 @@ always in sync with the embeddings and needs no extra build step.
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Literal
@@ -31,6 +32,8 @@ CHUNK_OVERLAP = 150
 SearchMode = Literal["semantic", "keyword", "hybrid"]
 SEARCH_MODES: tuple[str, ...] = ("semantic", "keyword", "hybrid")
 DEFAULT_SEARCH_MODE: SearchMode = "semantic"
+# When set (for example by the eval harness), this mode is used for every search_chunks call.
+FORCE_MODE_ENV = "AGENT_DESK_SEARCH_MODE"
 
 # Hybrid search: how many candidates each retriever contributes before fusion, the RRF
 # damping constant (60 is the value from the original RRF paper), and per-retriever weights.
@@ -210,7 +213,14 @@ def search_chunks(
     """Return the k best chunks, optionally limited to one company and/or year.
 
     mode: "semantic" (embeddings), "keyword" (BM25) or "hybrid" (both, fused with RRF).
+
+    If the environment variable AGENT_DESK_SEARCH_MODE is set, it overrides `mode` for every
+    call. The eval harness sets it (run_eval.py --search-mode) so that all agents and baselines
+    search the same way in one run; normal app runs leave it unset.
     """
+    forced = os.getenv(FORCE_MODE_ENV, "").strip().lower()
+    if forced:
+        mode = forced  # type: ignore[assignment]
     searcher = _SEARCHERS.get(mode)
     if searcher is None:
         raise ValueError(f"mode must be one of {', '.join(SEARCH_MODES)}; got {mode!r}.")

@@ -188,3 +188,37 @@ def test_grade_partial_missing_case():
     answer = "Netflix is not covered. Meta's fiscal 2024 revenue was $164.5 billion."
     assert g.grade(case, _record(answer), TRUTH)["code_pass"]
     assert not g.grade(case, _record("Netflix is not covered."), TRUTH)["code_pass"]
+
+
+def test_numbers_verified_counts_real_and_unreal_figures():
+    expected = {"facts": [{"company": "apple", "year": 2025, "metric": "revenue"}]}
+    answer = ("Apple's fiscal 2025 revenue was $416.16 billion, up 6.4% from fiscal 2024. "
+              "It employs 166,000 people and spent $999.9 billion on snacks.")
+    result = g.check_numbers_verified(answer, expected, TRUTH)
+    assert result["pass"] is None  # diagnostic, never fails a case
+    # $416.16 billion and the 6.4% growth are real; the snack figure is not; 166,000 has no unit.
+    assert (result["verified"], result["total"]) == (2, 3)
+    assert result["unverified"] == ["$999.9 billion"]
+
+
+def test_recorded_margins_are_fully_verified():
+    facts = [{"company": "microsoft", "year": y, "metric": "operating_margin"} for y in (2023, 2024, 2025)]
+    result = g.check_numbers_verified(MSFT_MARGINS, {"facts": facts}, TRUTH)
+    assert result["verified"] == result["total"] > 0
+
+
+def test_calc_in_sandbox():
+    margin = {"facts": [{"company": "apple", "year": 2025, "metric": "operating_margin"}]}
+    revenue = {"facts": [{"company": "apple", "year": 2025, "metric": "revenue"}]}
+    used = _record("31.97%", tools=[("get_company_fact", "{}"), ("run_python", "31.97")])
+    skipped = _record("31.97%", tools=[("get_company_fact", "{}")])
+    assert g.check_calc_in_sandbox(used, margin, has_sandbox=True)["used"] is True
+    assert g.check_calc_in_sandbox(skipped, margin, has_sandbox=True)["used"] is False
+    assert g.check_calc_in_sandbox(skipped, revenue, has_sandbox=True)["applies"] is False  # no calculation needed
+    assert g.check_calc_in_sandbox(skipped, margin, has_sandbox=False)["applies"] is False  # C0 / C1
+
+
+def test_markdown_bullet_is_not_a_minus_sign():
+    assert extract_numbers("- 11.16%")[0].value == pytest.approx(11.16)
+    assert extract_numbers("-11.16%")[0].value == pytest.approx(-11.16)
+    assert extract_numbers("−$4.2 billion")[0].value == pytest.approx(-4.2e9)
