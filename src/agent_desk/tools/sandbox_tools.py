@@ -4,6 +4,7 @@ import json
 
 from langchain_core.tools import tool
 
+from ..evidence import current_register
 from ..sandbox.python_sandbox import run_code
 
 
@@ -21,4 +22,8 @@ def run_python(code: str) -> str:
     classes; 5 second time limit; 4000 characters of output. Use f-strings for formatting.
     Example: print(round(88523 / 211915 * 100, 1))
     """
-    return json.dumps(run_code(code), ensure_ascii=False, indent=2)
+    result = run_code(code)
+    register = current_register()
+    if register is not None and result.get("ok"):
+        result["calc_id"] = register.add_calc(code, result.get("output", ""))
+    return json.dumps(result, ensure_ascii=False, indent=2)

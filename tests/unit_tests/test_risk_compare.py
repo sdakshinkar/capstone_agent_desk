@@ -192,7 +192,9 @@ def test_compare_company_years_orders_years_and_loads_both(monkeypatch):
         return OLD if year == 2024 else NEW
 
     monkeypatch.setattr(rc, "load_risk_section", fake_load)
-    monkeypatch.setattr(rc, "extract_risks", lambda passages, llm: OLD_RISKS if passages is OLD else NEW_RISKS)
+    monkeypatch.setattr(
+        rc, "extract_risks_cached", lambda company, year, passages, llm: OLD_RISKS if passages is OLD else NEW_RISKS
+    )
     monkeypatch.setattr(rc, "compare_risks", lambda *args, **kwargs: compared.update(args=args) or "diff")
 
     assert rc.compare_company_years(" Microsoft ", "2025", 2024) == "diff"

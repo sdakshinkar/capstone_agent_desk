@@ -21,7 +21,9 @@ from langgraph.graph import END, StateGraph
 from langgraph.types import interrupt
 
 from .quant_agent import run_quant_agent
+from ..evidence import Register, current_register, use_register
 from ..llm.llm import get_tool_llm
+from .compliance_critic import _TAG_RE, critique, unknown_ids
 from .research_lead_agent import run_research_lead
 from .researcher_agent import run_researcher
 from .risk_diff_agent import run_risk_diff_agent
@@ -189,12 +191,27 @@ def researcher_worker_node(state: TeamState) -> dict:
 # 2025: Operating income of $129,039,000,000 and revenue of $402,836,000,000, resulting in an operating margin of 32.0% (fiscal year 2025, form 10-K, period 2025-01-01 to 2025-12-31).\n\n
 # Note: The operating margin is calculated by dividing the operating income by the revenue for each fiscal year."]
 def quant_worker_node(state: TeamState) -> dict:
+    task = state["task"]
+    register = current_register()
     try:
-        facts = run_quant_agent(state["task"])
+        facts = run_quant_agent(task)
+        # The quant agent sometimes cites an id no tool returned (for example a calculation id
+        # without having called run_python). Ask once more; if it happens again the supervisor is
+        # told the worker failed and can retry or replan.
+        unknown = unknown_ids(facts, register) if register else []
+        if unknown:
+            facts = run_quant_agent(
+                f"{task}\n\nYour previous answer cited {', '.join(unknown)}, which no tool returned. "
+                "Answer again: call run_python for every calculation and cite only ids that the "
+                "tools returned."
+            )
+            unknown = unknown_ids(facts, register)
     except Exception as exc:
         return _failed("quant_worker", exc)
+    if unknown:
+        return _failed("quant_worker", ValueError(f"the answer cited ids no tool returned: {', '.join(unknown)}"))
     return {
-        "facts": [_entry(state["task"], facts)],
+        "facts": [_entry(task, facts)],
         "messages": [HumanMessage(content=facts, name="quant_worker")],
     }
 
@@ -218,42 +235,51 @@ workers returned (each as Q: and A:), and the supervisor's notes.
 
 Rules:
 - Use only facts and numbers that appear in the findings. Do not add outside knowledge.
+- Findings carry evidence ids in square brackets, such as [F1] (a reported fact), [D1] (a
+  calculation) and [P3] or [microsoft-2025-1A-37] (a filing passage). Every figure you write
+  must keep the id it has in the findings, written right after it, for example "operating
+  margin 45.6% [D1]". Every claim taken from a filing passage must end with that passage's id.
+  Copy ids exactly; never invent, merge or move an id.
+- A claim from filing passages is followed by at most 3 passage ids: the 3 that best support it,
+  even when the findings list many more. Keep one claim per sentence.
+- Do not calculate new numbers. Make comparisons in words using figures the findings already
+  contain. If a comparison needs a figure no worker produced, say it was not calculated.
 - Answer the question directly and make the comparison it asks for, across companies, across
-  years, or both. You may do simple arithmetic on numbers in the findings; show it.
+  years, or both.
 - Follow the outline's headings where they fit.
 - If something the question asks for is missing, or a finding says it was not available, say so
   plainly. Do not fill the gap with a guess.
 - If the notes say an attempt was superseded (for example a year was not available so another
   year is reported), state which year the numbers are for.
-- Be concise. Do not repeat the findings verbatim; they are attached separately."""
+- Do not promise returns, recommend buying, selling or holding, or give price targets.
+- Be concise. Do not repeat the findings verbatim; they are attached separately.
+
+If a previous draft and a list of issues are given, return a corrected version of that draft:
+fix every issue, change nothing else, and keep the same rules. If an issue says the draft was cut
+off, write the whole note again, shorter."""
 
 
 # Formats everything the writer needs into one user message: question, outline, supervisor notes
 # and the worker findings. `evidence` is the already-built "Quant findings: ..." text blocks.
+# On a revision it also carries the previous draft and the critic's issues.
 def _writer_input(state: TeamState, notes: str, evidence: list[str]) -> str:
     outline = "\n".join(f"- {h}" for h in (state.get("plan") or {}).get("outline", []))
-    return (
+    message = (
         f"Question:\n{state.get('question', '')}\n\n"
         f"Suggested answer structure:\n{outline or '(none)'}\n\n"
         f"Supervisor notes:\n{notes or '(none)'}\n\n"
         "Findings:\n\n" + "\n\n".join(evidence)
     )
+    if state.get("draft") and state.get("critic_issues"):
+        issues = "\n".join(
+            f"- {i['type']}: \"{i['text']}\": {i['detail']}" for i in state["critic_issues"]
+        )
+        message += f"\n\nPrevious draft:\n{state['draft']}\n\nIssues to fix:\n{issues}"
+    return message
 
 
-# The final node. It runs once, after the supervisor chooses FINISH (supervisor -> writer -> END),
-# and builds state["final_answer"] in two parts:
-#   1. A written answer: one model call that reads the question, the plan's outline, every worker
-#      entry (Q:/A:) and the supervisor's FINISH report (kept in state["task"]; it explains
-#      superseded attempts such as "FY2026 not available, used FY2025") and writes the comparison
-#      the user asked for, e.g. Microsoft's margins against Alphabet's.
-#   2. "Supporting findings": the worker entries, appended unchanged by code. The model never
-#      rewrites them, so every number in the answer can be checked against its source.
-# The model is called every time there are findings. With no worker output there is nothing to
-# write from, so the supervisor's report is the answer. If the call fails, the answer falls back
-# to the supervisor's report plus the findings, so a model error cannot lose the results.
-def writer_node(state: TeamState) -> dict:
-    notes = state.get("task", "") if state.get("next") == "FINISH" else ""
-
+# The worker findings as text blocks, one per kind of worker that returned something.
+def _evidence(state: TeamState) -> list[str]:
     evidence: list[str] = []
     if state.get("narrative"):
         evidence.append("Narrative findings:\n" + "\n\n".join(state["narrative"]))
@@ -261,26 +287,129 @@ def writer_node(state: TeamState) -> dict:
         evidence.append("Quant findings:\n" + "\n\n".join(state["facts"]))
     if state.get("risk"):
         evidence.append("Risk comparison:\n" + "\n\n".join(state["risk"]))
+    return evidence
 
-    written = notes
-    if evidence:
-        try:
-            reply = get_tool_llm().invoke(
-                [("system", WRITER_PROMPT), ("user", _writer_input(state, notes, evidence))]
-            )
-            written = str(reply.content).strip() or notes
-        except Exception:
-            written = notes
 
+# The answer the user sees: the written draft, then the findings attached unchanged.
+def _assemble(written: str, evidence: list[str]) -> str:
     parts: list[str] = []
     if written:
         parts.append(written)
     if evidence:
         parts.append("Supporting findings:\n\n" + "\n\n".join(evidence))
-    return {"final_answer": "\n\n".join(parts)}
+    return "\n\n".join(parts)
 
 
-# Builds the graph: research_lead -> approve_plan -> supervisor <-> workers -> writer.
+# The writer node. It runs after the supervisor chooses FINISH (supervisor -> writer -> critic),
+# and again after each critic rejection, and sets two things:
+#   draft:        one model call that reads the question, the plan's outline, every worker entry
+#                 (Q:/A:) and the supervisor's FINISH report (kept in state["task"]; it explains
+#                 superseded attempts such as "FY2026 not available, used FY2025") and writes the
+#                 comparison the user asked for. On a revision the call also gets the previous
+#                 draft and the critic's issues.
+#   final_answer: the draft plus "Supporting findings", the worker entries appended unchanged by
+#                 code. The model never rewrites them, so every number in the draft can be checked
+#                 against its source.
+# The model is called every time there are findings. With no worker output there is nothing to
+# write from, so the supervisor's report is the draft. If the call fails, the draft falls back to
+# the supervisor's report, so a model error cannot lose the results.
+def writer_node(state: TeamState) -> dict:
+    notes = state.get("task", "") if state.get("next") == "FINISH" else ""
+    evidence = _evidence(state)
+
+    written = notes
+    truncated = False
+    if evidence:
+        try:
+            reply = get_tool_llm(max_tokens=WRITER_MAX_TOKENS).invoke(
+                [("system", WRITER_PROMPT), ("user", _writer_input(state, notes, evidence))]
+            )
+            written = _cap_ids_per_tag(str(reply.content).strip()) or notes
+            # finish_reason "length" means the reply hit the output limit and stops mid-text.
+            truncated = (getattr(reply, "response_metadata", None) or {}).get("finish_reason") == "length"
+        except Exception:
+            written = notes
+
+    # A draft already exists and the critic rejected it, so this call is a revision.
+    revising = bool(state.get("draft") and state.get("critic_issues"))
+    return {
+        "draft": written,
+        "draft_truncated": truncated,
+        "final_answer": _assemble(written, evidence),
+        "revision": state.get("revision", 0) + (1 if revising else 0),
+    }
+
+
+MAX_REVISIONS = 2
+# Output limit for the writer's reply; a note that needs more is treated as cut off.
+WRITER_MAX_TOKENS = 3000
+# The writer is told to cite at most this many passages per claim but often lists dozens, which
+# bloats the note and risks the output limit, so the draft is trimmed in code.
+MAX_IDS_PER_TAG = 3
+
+
+def _cap_ids_per_tag(text: str) -> str:
+    """Keep at most MAX_IDS_PER_TAG ids in each evidence tag, spread across the list.
+
+    The old year's ids come first in a risk comparison and the new year's last, so picking the
+    first, middle and last keeps both years.
+    Example: "[a-2023-1A-1, a-2023-1A-2, a-2024-1A-1, a-2024-1A-2, a-2024-1A-3]"
+             -> "[a-2023-1A-1, a-2024-1A-1, a-2024-1A-3]"
+    """
+    def trim(match) -> str:
+        ids = [i.strip() for i in match.group(1).split(",")]
+        if len(ids) <= MAX_IDS_PER_TAG:
+            return match.group(0)
+        last = len(ids) - 1
+        picks = sorted({round(n * last / (MAX_IDS_PER_TAG - 1)) for n in range(MAX_IDS_PER_TAG)})
+        return "[" + ", ".join(ids[p] for p in picks) + "]"
+
+    return _TAG_RE.sub(trim, text)
+
+
+# The compliance critic node. It checks the draft against the evidence register (see
+# agents/compliance_critic.py). A draft that passes ends the run. A draft that fails goes back to
+# the writer with the issues, up to MAX_REVISIONS times. After the last revision the answer is
+# returned anyway, with the unresolved issues listed above the findings, so a failing note is
+# never passed off as checked. Without an active register there is nothing to check against and
+# the critic does nothing.
+def critic_node(state: TeamState) -> dict:
+    register = current_register()
+    if register is None:
+        # Nothing to check against: report "not checked" (None), never a pass.
+        return {"critic_passed": None, "critic_issues": []}
+
+    verdict = critique(state.get("draft", ""), register)
+    issues = list(verdict["issues"])
+    if state.get("draft_truncated"):
+        # The check cannot judge text that was never written, so a cut-off draft always fails.
+        issues.insert(0, {
+            "type": "truncated", "text": "", "start": 0,
+            "detail": "The draft was cut off before the end. Write the whole note again, shorter.",
+        })
+    update: dict = {"critic_passed": not issues, "critic_issues": issues}
+    if not issues or state.get("revision", 0) < MAX_REVISIONS:
+        return update
+
+    unresolved = "\n".join(f"- {i['detail']} (\"{i['text']}\")" if i["text"] else f"- {i['detail']}"
+                           for i in issues)
+    flagged = (
+        f"{state.get('draft', '')}\n\n**Compliance review: this note did not pass after "
+        f"{MAX_REVISIONS} revisions. Unresolved issues:**\n{unresolved}"
+    )
+    update["final_answer"] = _assemble(flagged, _evidence(state))
+    return update
+
+
+# After the critic: back to the writer for a revision, or finished (passed, or out of revisions).
+def after_critic(state: TeamState) -> str:
+    if state.get("critic_passed") is False and state.get("revision", 0) < MAX_REVISIONS:
+        return "writer"
+    return END
+
+
+# Builds the graph: research_lead -> approve_plan -> supervisor <-> workers -> writer -> critic,
+# with the critic sending a failing draft back to the writer (at most MAX_REVISIONS times).
 # After a supervisor REPLAN the new plan goes through approval again.
 # The approval step needs a `checkpointer` (for example langgraph.checkpoint.memory.InMemorySaver()):
 # it saves the run's state so interrupt() can pause and a later call can resume, and every run
@@ -296,6 +425,7 @@ def build_team_workflow(checkpointer: Any | None = None):
     workflow.add_node("quant_worker", quant_worker_node)
     workflow.add_node("risk_worker", risk_worker_node)
     workflow.add_node("writer", writer_node)
+    workflow.add_node("critic", critic_node)
 
     workflow.set_entry_point("research_lead")
     if checkpointer is None:
@@ -320,7 +450,8 @@ def build_team_workflow(checkpointer: Any | None = None):
     workflow.add_edge("researcher_worker", "supervisor")
     workflow.add_edge("quant_worker", "supervisor")
     workflow.add_edge("risk_worker", "supervisor")
-    workflow.add_edge("writer", END)
+    workflow.add_edge("writer", "critic")
+    workflow.add_conditional_edges("critic", after_critic, {"writer": "writer", END: END})
 
     return workflow.compile(checkpointer=checkpointer)
 
@@ -341,6 +472,11 @@ def initial_state(question: str) -> TeamState:
         "narrative": [],
         "facts": [],
         "risk": [],
+        "draft": "",
+        "draft_truncated": False,
+        "revision": 0,
+        "critic_issues": [],
+        "critic_passed": False,
         "final_answer": "",
     }
 
@@ -350,7 +486,10 @@ def initial_state(question: str) -> TeamState:
 # rounds of a plan with many sub-questions and for one replan.
 #question='Compare Microsoft’s and Alphabet’s operating margins over the last three fiscal years,
 #  and tell me what changed in their risk factors.'
-def run_team_workflow(question: str) -> str:
+def run_team_workflow(question: str, register: Register | None = None) -> str:
+    # The tools record their evidence in the active register. Pass one to keep the records
+    # afterwards (for example for the critic); otherwise a fresh one is used for this run.
+    use_register(register if register is not None else Register())
     app = build_team_workflow()
-    result = app.invoke(initial_state(question), {"recursion_limit": 40})
+    result = app.invoke(initial_state(question), {"recursion_limit": 50})
     return result["final_answer"]

@@ -4,6 +4,7 @@ import json
 
 from langchain_core.tools import tool
 
+from ..evidence import current_register
 from ..rag.filing_rag import search_chunks
 
 
@@ -26,11 +27,11 @@ def search_filing(
     if year is not None and not 1990 <= year <= 2100:
         raise ValueError("year must be a four-digit fiscal year, for example 2025.")
 
-    return json.dumps(
-        [
-            {"text": match.page_content, "metadata": match.metadata}
-            for match in search_chunks(query, k, company=company, year=year)
-        ],
-        ensure_ascii=False,
-        indent=2,
-    )
+    register = current_register()
+    results = []
+    for match in search_chunks(query, k, company=company, year=year):
+        entry = {"text": match.page_content, "metadata": match.metadata}
+        if register is not None:
+            entry["passage_id"] = register.add_passage(match.page_content, dict(match.metadata))
+        results.append(entry)
+    return json.dumps(results, ensure_ascii=False, indent=2)

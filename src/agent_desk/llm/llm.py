@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 BASE_URL = "https://openrouter.ai/api/v1"
 TOOL_MODEL = "meta-llama/llama-3.3-70b-instruct"  # reliable at tool calls
 FAST_MODEL = "meta-llama/llama-3.1-8b-instruct"  # cheap, routing / plain chat
+JUDGE_MODEL = "openai/gpt-4o-mini"  # a different model family from the writer, used by the critic
 
 load_dotenv(PROJECT_ROOT / ".env")
 
@@ -34,3 +35,7 @@ def get_tool_llm(max_tokens: int | None = None) -> ChatOpenAI:
 
 def get_fast_llm() -> ChatOpenAI:
     return get_llm(FAST_MODEL)
+
+
+def get_judge_llm(max_tokens: int | None = None) -> ChatOpenAI:
+    return get_llm(JUDGE_MODEL, max_tokens=max_tokens)

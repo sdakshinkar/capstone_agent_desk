@@ -11,6 +11,8 @@ import requests
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 
+from ..evidence import current_register
+
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CACHE_DIR = PROJECT_ROOT / "data" / "edgar_cache" / "companyfacts"
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
@@ -327,6 +329,21 @@ def get_company_fact(
         key=lambda item: (item.get("end") or "", item.get("filed") or ""),
         reverse=True,
     )
+    returned = observations[:result_limit]
+    register = current_register()
+    if register is not None:
+        # Each returned row gets a fact id so the answer can cite it and a critic can check it.
+        for observation in returned:
+            observation["fact_id"] = register.add_fact(
+                {
+                    **observation,
+                    "cik": normalized_cik,
+                    "entity": company_facts.get("entityName"),
+                    "taxonomy": taxonomy,
+                    "concept": concept,
+                    "label": fact.get("label", concept),
+                }
+            )
     return _json_result(
         ok=True,
         cik=normalized_cik,
@@ -336,6 +353,6 @@ def get_company_fact(
         label=fact.get("label", concept),
         form=requested_form or "any",
         latest_annual_fiscal_year=latest_annual_fiscal_year,
-        observations=observations[:result_limit],
+        observations=returned,
         total_observations=len(observations),
     )

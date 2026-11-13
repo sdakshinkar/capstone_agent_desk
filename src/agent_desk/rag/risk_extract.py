@@ -18,10 +18,18 @@ changed).
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+from pathlib import Path
 from typing import Any, TypedDict
 
+from ..llm import llm as llm_module
 from ..llm.llm import get_tool_llm
-from .risk_section import RiskPassage, load_risk_section
+from .risk_section import PROJECT_ROOT, RiskPassage, load_risk_section
+
+# Where extracted risk lists are kept, one file per company and year (data/ is git-ignored).
+CACHE_DIR = PROJECT_ROOT / "data" / "risk_cache"
 
 # How many words of the first cited passage become Risk["quote"].
 QUOTE_WORDS = 20
@@ -52,7 +60,8 @@ class Risk(TypedDict):
     passage_ids: list[str]
     quote: str  # first words of the first cited passage, so a reader can find it in the filing
 
-
+
+
 # Prompt for pass 1. The granularity rule ("25 to 40 risks") is there because the first version of
 # this prompt produced only 16 broad groups for Microsoft FY2025, which hides year-over-year
 # changes inside big categories like "Cybersecurity Risks".
@@ -204,11 +213,79 @@ def extract_risks(passages: list[RiskPassage], llm: Any | None = None) -> list[R
 
 
 # Convenience wrapper used by the risk-diff tools: load the filing's Item 1A section from
-# data/filings/<company>/<year>/ and extract its risks in one call.
+# data/filings/<company>/<year>/ and extract its risks in one call (through the cache).
 # Raises FileNotFoundError (from load_risk_section) if that company or year has no filing, e.g.
 # "No apple 10-K for fiscal year 2024. Available years: 2025." The caller can pass that message
 # straight back to the supervisor instead of guessing.
 # Example: extract_company_year_risks("microsoft", 2025) -> list of Risk for Microsoft's FY2025 10-K.
 def extract_company_year_risks(company: str, year: int | str, llm: Any | None = None) -> list[Risk]:
     """Load the filing's Item 1A section and extract its risk list."""
-    return extract_risks(load_risk_section(company, year), llm)
+    return extract_risks_cached(company, year, load_risk_section(company, year), llm)
+
+
+# ---- Cache -----------------------------------------------------------------------------------
+# Extraction is the slow part of a comparison (1-2 model calls over a whole Item 1A), and the same
+# year is extracted again whenever it appears in another comparison (FY2024 sits in both
+# 2023->2024 and 2024->2025). A cached list is reused only while everything that produced it is
+# unchanged: the passages' ids and text, both prompts and the model. Anything else (an edited
+# filing, a changed prompt, another model) makes the stored fingerprint differ, so it is rebuilt.
+
+
+def _fingerprint(passages: list[RiskPassage]) -> str:
+    """A hash of everything that decides what extract_risks returns for these passages."""
+    digest = hashlib.sha256()
+    for part in (SYSTEM_PROMPT, GAP_PROMPT_SUFFIX, llm_module.TOOL_MODEL, str(QUOTE_WORDS)):
+        digest.update(part.encode("utf-8") + b"\x00")
+    for passage in passages:
+        digest.update(f"{passage.id}\x01{passage.text}\x00".encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _valid_risks(value: Any) -> bool:
+    return isinstance(value, list) and all(
+        isinstance(r, dict)
+        and isinstance(r.get("title"), str)
+        and isinstance(r.get("summary"), str)
+        and isinstance(r.get("quote"), str)
+        and isinstance(r.get("passage_ids"), list)
+        and r["passage_ids"]
+        for r in value
+    )
+
+
+def _cache_path(company: str, year: int | str) -> Path:
+    return CACHE_DIR / f"{company.strip().lower()}-{int(year)}.json"
+
+
+# extract_risks with a disk cache, one file per company and year (data/risk_cache/microsoft-2025.json).
+#   - A stored list is used only if its fingerprint matches; a corrupt or wrong-shaped file is
+#     ignored and replaced.
+#   - An empty result is never stored, so a failed extraction is retried next time.
+#   - A model passed in as `llm` (tests) bypasses the cache in both directions.
+#   - A cache that cannot be read or written never breaks extraction.
+# To force a fresh extraction, delete the file or the data/risk_cache folder.
+def extract_risks_cached(
+    company: str, year: int | str, passages: list[RiskPassage], llm: Any | None = None
+) -> list[Risk]:
+    if llm is not None:
+        return extract_risks(passages, llm)
+
+    fingerprint = _fingerprint(passages)
+    path = _cache_path(company, year)
+    try:
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        if stored.get("fingerprint") == fingerprint and _valid_risks(stored.get("risks")):
+            return stored["risks"]
+    except (OSError, ValueError, AttributeError):
+        pass
+
+    risks = extract_risks(passages)
+    if risks:
+        try:
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            temp = path.with_name(path.name + f".{os.getpid()}.tmp")
+            temp.write_text(json.dumps({"fingerprint": fingerprint, "risks": risks}, ensure_ascii=False), encoding="utf-8")
+            os.replace(temp, path)
+        except OSError:
+            pass
+    return risks

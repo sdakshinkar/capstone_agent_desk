@@ -4,7 +4,28 @@ import json
 
 from langchain_core.tools import tool
 
+from ..evidence import Register, current_register
 from ..rag.risk_compare import compare_company_years
+from ..rag.risk_section import load_risk_section
+
+
+def _record_cited_passages(register: Register, diff: dict) -> None:
+    """Store the text of every passage the findings cite, under the ids the findings use."""
+    cited: set[str] = set()
+    for kind in ("added", "removed", "changed"):
+        for finding in diff[kind]:
+            cited.update(finding["passage_ids"])
+            for pair in finding["evidence"]:
+                cited.update(i for i in (pair.get("old_id"), pair.get("new_id")) if i)
+
+    for year in (diff["year_from"], diff["year_to"]):
+        for passage in load_risk_section(diff["company"], year):
+            if passage.id in cited:
+                register.add_passage(
+                    passage.text,
+                    {"company": diff["company"], "year": str(year), "item": "1A"},
+                    passage_id=passage.id,
+                )
 
 
 @tool
@@ -25,6 +46,10 @@ def compare_risk_factors(company: str, year_from: int, year_to: int) -> str:
         diff = compare_company_years(company, year_from, year_to)
     except (FileNotFoundError, ValueError) as exc:
         return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False, indent=2)
+
+    register = current_register()
+    if register is not None:
+        _record_cited_passages(register, diff)
 
     result = {
         "ok": True,

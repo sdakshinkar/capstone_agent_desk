@@ -8,7 +8,7 @@ Flow, for Microsoft FY2024 -> FY2025:
 
     compare_company_years("microsoft", 2024, 2025)
         load_risk_section(...) x2        passages of each year            rag/risk_section.py
-        extract_risks(...)       x2      risk list of each year           rag/risk_extract.py
+        extract_risks_cached(...)  x2    risk list of each year (disk-cached) rag/risk_extract.py
         compare_risks(...)
             1. _propose:  one LLM call over both risk lists -> added / removed / changed claims
             2. embed every passage; S[i][j] = similarity of new passage i to old passage j
@@ -31,7 +31,7 @@ import numpy as np
 
 from ..llm.llm import get_tool_llm
 from .filing_rag import _get_embeddings
-from .risk_extract import Risk, _quote, extract_risks
+from .risk_extract import Risk, _quote, extract_risks_cached
 from .risk_section import RiskPassage, load_risk_section
 
 # Cosine similarity at or above this means two passages say the same thing (reworded at most).
@@ -311,7 +311,7 @@ def compare_company_years(
         year_to,
         old_passages,
         new_passages,
-        extract_risks(old_passages, llm),
-        extract_risks(new_passages, llm),
+        extract_risks_cached(company, year_from, old_passages, llm),
+        extract_risks_cached(company, year_to, new_passages, llm),
         llm,
     )
