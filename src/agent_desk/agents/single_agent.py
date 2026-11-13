@@ -31,7 +31,11 @@ Tools:
   ids it returns.
 
 Fiscal years are named by the year their period ends (Microsoft's ends in June, Alphabet's in
-December). If data for a company or year is not available, say so plainly; never guess."""
+December). If data for a company or year is not available, say so plainly; never guess.
+
+Call tools only through the tool-calling interface. Never write a tool call such as
+compare_risk_factors(...) as text in your reply: text is treated as your final answer and the tool
+does not run. Your final answer must be prose based on the tool results."""
 
 
 def build_single_agent(llm=None):
