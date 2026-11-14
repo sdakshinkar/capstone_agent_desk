@@ -42,10 +42,12 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 | 32 | 11-14 | `154010_c0_single_prompt_dev` *evidence* | dd0444a | hybrid | dev 21 | 7 / 7 | (cached) | Final C0 after the fix; identical to run 25 (C0 does not pass company names to tools). |
 | 33 | 11-14 | `154057_c1_single_agent_dev` *evidence* | dd0444a | hybrid | dev 21 | 16 / 14 | (partly cached) | Final C1: t03 now passes; k03 runs (judge fail, as k01); n07 lost (run-to-run variation). Calculator used in 4/4 calculation cases; figures 12/12 verified. |
 | 34 | 11-14 | `154349_c2_team_dev` *evidence* | dd0444a | hybrid | dev 21 | 19 / 15 | (partly cached) | Final C2: t03 now passes. Judge fails k01, k03, k04 (risk content) and c03 (cited `D1` for a growth rate computed without the sandbox). Critic 12 / 1 / 8 (first pass / after revision / still failing). Rows 32–34 together cost USD 0.43 of account usage (reported 0.62; cached calls replayed). Latency and cost in the report come from runs 25–27. |
+| 35 | 11-14 | calibration re-score | 555205b | — | 26 hand labels | κ = 0.92 | 0.000 | The labeller relabelled C2 k04 (calibration set) from pass to fail on review; 25/26 agreement, the judge passed that answer. |
+| 36 | 11-14 | `160508_c2_team_dev` ×2 repeats *evidence* | 555205b | hybrid | dev 21 ×2, caches off | 15 and 16 | 0.87 (account, incl. judge) | Fresh C2 repeats. Numeric, comparison and missing all pass in both; narrative 2/4 and 3/4; risk change 0/4 and 0/4 because 13 of 21 risk comparisons failed with "400 Provider returned error" (strict structured output not supported by every provider OpenRouter routes to) and 2 hit the length limit. Earlier risk results relied on cached risk lists. p50 21.4 s, p95 196.4 s, USD 0.0205 per case. |
 
 ## Next
 
-- Held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
+- Fix risk extraction without the cache (provider routing or retries), then held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
 - For the team: let the critic
   accept a passage id after figures taken from filing text; ask the domain lead to review the
   held-out cases.

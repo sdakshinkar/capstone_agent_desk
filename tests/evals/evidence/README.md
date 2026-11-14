@@ -21,8 +21,9 @@ calibrate the judge.
 | `20261114-154010_c0_single_prompt_dev` | **Final** E1 dev, C0, after the company-name fix (judged) |
 | `20261114-154057_c1_single_agent_dev` | **Final** E1 dev, C1, after the company-name fix (judged) |
 | `20261114-154349_c2_team_dev` | **Final** E1 dev, C2, after the company-name fix (judged) |
+| `20261114-160508_c2_team_dev` | Two fresh C2 repeats on dev, LLM and risk caches off (judged); exposed the risk-extraction provider errors |
 
 Judge calibration: 26 hand-labelled outputs (13 per calibration set), judge
-`google/gemini-3.1-flash-lite`, raw agreement 26/26, Cohen's kappa 1.00:
+`google/gemini-3.1-flash-lite`, raw agreement 25/26, Cohen's kappa 0.92 (one label revised on review):
 
     python tests/evals/judge/calibrate.py score tests/evals/evidence/runs/20261111-185914_c2_team_dev tests/evals/evidence/runs/20261113-144116_c1_single_agent_dev
