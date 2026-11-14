@@ -8,6 +8,25 @@ from agent_desk.rag import filing_rag
 MODES = ["semantic", "keyword", "hybrid"]
 
 
+class FakeReranker:
+    """Scores a (query, text) pair by how many query words the text contains."""
+
+    def __init__(self):
+        self.calls = []
+
+    def predict(self, pairs):
+        self.calls.append(pairs)
+        return [sum(w in text.lower() for w in query.lower().split()) for query, text in pairs]
+
+
+@pytest.fixture(autouse=True)
+def fake_reranker(monkeypatch):
+    """Never download the real cross-encoder in unit tests."""
+    reranker = FakeReranker()
+    monkeypatch.setattr(filing_rag, "_reranker", reranker)
+    return reranker
+
+
 def _build_index(tmp_path, monkeypatch, docs):
     embeddings = FakeEmbeddings(size=16)
     FAISS.from_documents(docs, embeddings).save_local(str(tmp_path))
@@ -76,8 +95,37 @@ def test_unknown_mode_is_rejected(index_dir):
 
 def test_tokenize_keeps_numbers_and_splits_punctuation():
     assert filing_rag.tokenize("Meta's 78,865 ride-hailing $72.22B") == [
-        "meta", "s", "78,865", "ride", "hailing", "72.22", "b",
+        "meta", "78,865", "ride", "hail", "72.22", "b",
     ]
+
+
+def test_tokenize_drops_stopwords():
+    assert filing_rag.tokenize("How many employees does the Company have?") == [
+        "many", "employ", "company",
+    ]
+
+
+@pytest.mark.parametrize(
+    "words, stem",
+    [
+        (["employ", "employed", "employees", "employs"], "employ"),
+        (["segment", "segments"], "segment"),
+        (["company", "companies"], "company"),
+        (["acquisition", "acquisitions"], "acquisition"),
+    ],
+)
+def test_stem_maps_word_forms_to_one_token(words, stem):
+    assert {filing_rag.stem(w) for w in words} == {stem}
+
+
+def test_stem_leaves_numbers_and_short_words():
+    assert [filing_rag.stem(w) for w in ("166,000", "2025", "uses", "gas")] == ["166,000", "2025", "uses", "gas"]
+
+
+def test_keyword_search_matches_other_word_forms(text_index):
+    # The query says "employ"; the chunk says "employees".
+    top = filing_rag.keyword_search("How many people does Apple employ?", k=1)
+    assert "166,000" in top[0].page_content
 
 
 def test_keyword_search_ranks_exact_terms_first(text_index):
@@ -114,6 +162,29 @@ def test_hybrid_returns_unique_chunks_including_keyword_hit(text_index):
     contents = [d.page_content for d in results]
     assert len(contents) == len(set(contents)) == 3
     assert any("$588 million" in c for c in contents)
+
+
+def test_hybrid_reranks_fused_candidates(text_index, fake_reranker):
+    results = filing_rag.hybrid_search("First Republic gain", k=1, company="jpmorgan")
+
+    assert len(fake_reranker.calls) == 1
+    assert all(query == "First Republic gain" for query, _ in fake_reranker.calls[0])
+    # The fake reranker scores the chunk with all three query words highest.
+    assert results[0].page_content.startswith("We recorded a $588 million First Republic")
+
+
+def test_hybrid_without_rerank_skips_reranker(text_index, fake_reranker, monkeypatch):
+    monkeypatch.setattr(filing_rag, "HYBRID_RERANK", False)
+
+    assert len(filing_rag.hybrid_search("First Republic gain", k=2, company="jpmorgan")) == 2
+    assert fake_reranker.calls == []
+
+
+def test_rerank_orders_by_score_and_cuts_to_k():
+    docs = [_d("gain"), _d("first republic gain"), _d("first gain")]
+    reranked = filing_rag.rerank("first republic gain", docs, k=2)
+    assert [d.page_content for d in reranked] == ["first republic gain", "first gain"]
+    assert filing_rag.rerank("anything", [], k=3) == []
 
 
 def _d(text):
