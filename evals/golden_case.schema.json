@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Analyst Desk golden case",
+  "type": "object",
+  "required": [
+    "id", "family_id", "split", "category", "question", "companies",
+    "expected", "check", "policy_refs", "author", "reviewer", "expected_written_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[NCRUW]-\\d{3}$" },
+    "family_id": { "type": "string", "minLength": 1 },
+    "split": { "enum": ["dev", "heldout"] },
+    "category": { "enum": ["N", "C", "R", "U", "W"] },
+    "question": { "type": "string", "minLength": 5 },
+    "companies": { "type": "array", "items": { "type": "string" }, "minItems": 0 },
+    "periods": { "type": "array", "items": { "type": "string", "description": "Period-end date YYYY-MM-DD" } },
+    "expected": {
+      "type": "object",
+      "properties": {
+        "facts": { "type": "array", "items": { "type": "string", "description": "company|concept|period_end|accession" } },
+        "value_usd_millions": { "type": "number" },
+        "ratio": { "type": "number" },
+        "tolerance": { "type": "number", "minimum": 0 },
+        "derivation": { "type": "string" },
+        "periods_must_be_stated": { "type": "boolean" },
+        "added": { "type": "array", "items": { "type": "string" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "changed": { "type": "array", "items": { "type": "string" } },
+        "labelled_by": { "type": "array", "items": { "type": "string" } },
+        "must_say_unavailable": { "type": "boolean" },
+        "must_list_held_years": { "type": "boolean" },
+        "must_name_alternative_metric": { "type": "boolean" },
+        "must_refuse_advice": { "type": "boolean" },
+        "allowed_content": { "type": "string" }
+      }
+    },
+    "check": { "enum": ["code", "code+judge", "human"] },
+    "policy_refs": { "type": "array", "items": { "type": "string", "pattern": "^[A-F]\\d*$" } },
+    "forbidden": { "type": "array", "items": { "type": "string" } },
+    "author": { "type": "string" },
+    "reviewer": { "type": "string" },
+    "expected_written_at": { "type": "string", "format": "date-time" },
+    "reasoning_type": { "enum": ["information_extraction", "numerical", "logical", "comparison"] },
+    "evidence": {
+      "type": "array",
+      "description": "Where the answer is found, written before any run",
+      "items": {
+        "type": "object",
+        "required": ["doc", "location"],
+        "properties": {
+          "doc": { "type": "string", "description": "company|fiscal period|accession" },
+          "location": { "type": "string", "description": "Item and page or table, or passage ID" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "justification": { "type": "string", "description": "How the expected answer follows from the evidence" },
+    "notes": { "type": "string" }
+  }
+}
