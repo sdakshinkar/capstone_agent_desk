@@ -48,10 +48,3 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 | 38 | 11-14 | `171327_c0_single_prompt_heldout` *evidence* | 215131a | hybrid | held-out 41 | 12 / 12 | ~0.05 | First held-out run, once per system (credit limit). |
 | 39 | 11-14 | `171719_c1_single_agent_heldout` *evidence* | 215131a | hybrid | held-out 41 | 27 / 25 | ~0.60 | A network outage made 9 cases fail on the first call ("Connection error"); those records were removed and the cases re-run with `--resume`. 3 risk cases ended with "400 – Provider returned error" (counted as failures). |
 | 40 | 11-14 | `175641_c2_team_heldout` *evidence* | 215131a | hybrid | held-out 41 | 29 / 25 | ~0.90 | 19 cases hit the same outage at the start and were re-run with `--resume`. Critic 25 / 8 / 8. Judge fails k07, k08 and others on risk content, c04 (fiscal-year mismatch not made clear), m01 (Tesla not declined as uncovered). |
-
-## Next
-
-- Two more held-out repeats per system, to report the spread the brief asks for (about USD 3).
-- For the team: let the critic
-  accept a passage id after figures taken from filing text; ask the domain lead to review the
-  held-out cases.
