@@ -1,9 +1,8 @@
 # Agent Desk — Evaluation Report
 
-*Status: 2026-11-14. Final development-split runs are complete (Section 4), including the company-name fix and two fresh C2 repeats without caches (Section 4.1). The held-out comparison
-(three repeats per system) has not been run, and its tables are marked **TBD**. Experiment E2
-(defences and red team) is reported separately by the security owner. E3 and E4 are not run
-(Section 7).*
+*Status: 2026-11-14. Development and held-out runs are complete (Sections 4 and 5). Held-out was
+run once per system, not three times. Experiment E2 (defences and red team) is reported separately
+by the security owner. E3 and E4 are not run (Section 7).*
 
 All numbers can be reproduced from `tests/evals/evidence/` (answers, trajectories, grades, judge
 verdicts and summaries of every cited run). The run-by-run history is in `docs/experiment_log.md`.
@@ -290,23 +289,67 @@ retrieval, chunking, the critic, the writer's citation rules and C1's tools — 
 C2 (18 → 15) cannot be attributed to any one of them; Section 6 lists the cases that changed and
 why. These runs are in the evidence folder and the experiment log.
 
-## 5. Results — held-out split (TBD)
+## 5. Results — held-out split
 
-Planned: C0, C1 and C2 on all 41 held-out cases, **three repeats each**, LLM and risk caches off,
-hybrid search, judged as above. Estimated cost USD 5–6 with the critic and reranker.
+All three systems were run **once** on the 41 held-out cases (Microsoft, Alphabet, Meta, NVIDIA,
+Bank of America, Goldman Sachs, plus an uncovered company), with the final configuration: hybrid
+search, C2 with the compliance critic, C1 with all six tools, judged as in Section 3. The brief asks
+for three repeats; for credit reasons this is a single run, so it gives no spread and differences of
+a few cases are within run-to-run noise (Section 8). No change was made to the system or the
+checkers after seeing these results.
 
-| Metric | C0 | C1 | C2 |
+| Metric | C0 single prompt | C1 single agent | C2 team |
 |---|---|---|---|
-| Task success, mean of 3 (range) | TBD | TBD | TBD |
-| by type (numeric / comparison / narrative / risk / missing) | TBD | TBD | TBD |
-| Errors / timeouts | TBD | TBD | TBD |
-| Latency p50 / p95 (s) | TBD | TBD | TBD |
-| Cost per case (USD) | TBD | TBD | TBD |
-| Figures verified vs XBRL | TBD | TBD | TBD |
-| Critic: first-pass / revised / still failing | — | — | TBD |
+| **Task success (code + judge)** | **12/41** | **25/41** | **25/41** |
+| code checks passed | 12/41 | 27/41 | 29/41 |
+| numeric | 2/15 | 14/15 | 13/15 |
+| comparison | 0/7 | 3/7 | 4/7 |
+| narrative | 5/8 | 3/8 | 4/8 |
+| risk change | 0/6 | 1/6 | 1/6 |
+| missing data | 5/5 | 4/5 | 3/5 |
+| Errors / timeouts | 0 / 0 | 3 / 0 | 0 / 0 |
+| Replans | — | — | 11 |
+| Latency p50 / p95 (s) | 4.2 / 9.4 | 6.5 / 79.2 | 25.8 / 96.9 |
+| LLM calls per case | 1.0 | 5.0 | 15.6 |
+| Tokens per case | 1,627 | 22,127 | 34,184 |
+| Cost per case (USD) | 0.0010 | 0.0143 | 0.0220 |
+| Figures verified vs XBRL | 15/28 (54%) | 31/33 (94%) | 56/58 (97%) |
+| Calculations in sandbox | — | 6/7 | 1/7 |
+| Critic: first pass / after revision / still failing | — | — | 25 / 8 / 8 |
 
-Any change made after seeing held-out results will be reported, and the affected cases treated as
-development cases.
+Runs: `20261114-171327_c0_single_prompt_heldout`, `20261114-171719_c1_single_agent_heldout`,
+`20261114-175641_c2_team_heldout` (commit 215131a). The held-out questions had never been run, so
+model calls were fresh. A network outage between the test machine and OpenRouter during the run
+made 9 C1 cases and 19 C2 cases fail on their first model call with "Connection error" before any
+work was done; those records were removed and the same cases re-run with `--resume`. C1's three
+errors are risk comparisons that ended with "400 – Provider returned error" from OpenRouter; they
+are counted as failures.
+
+**What the held-out run shows.**
+
+- **Tools account for most of the gain, as on dev.** C0 answers text and "not available"
+  questions from its fixed passages but gets 2 of 15 numbers right; C1 and C2 get 14 and 13.
+- **The team is not more successful than the single agent on held-out (25 vs 25),** at about 1.5×
+  the cost per case and 4× the median latency. C2 passes two more code checks (29 vs 27), and the
+  judge then fails four of its code-passing answers (three risk changes and one comparison) against
+  two of C1's.
+- **Both tool-using systems state almost only verified figures** (C2 97%, C1 94%; C0 54%). Every C2
+  figure also carries an evidence id linking it to an XBRL fact or a calculation; the critic
+  revised 8 of 41 notes successfully and left 8 flagged, all for number citations.
+- **Risk-change questions remain the weakest type** (1 of 6 for both). Where a comparison ran, the
+  answers missed most of the labelled changes (for example the January 2025 AI Diffusion rule for
+  NVIDIA, or Goldman Sachs reducing its climate-risk discussion).
+- **Narrative questions on employee counts and specific figures** (Microsoft 223,000 employees,
+  Meta 78,865, Alphabet's USD 72.22 billion) failed in both agents: the answers gave another
+  figure or said the information could not be found.
+- **Missing-data handling is weaker in C2 (3/5):** for Tesla (not covered) C2 did not say the
+  company is outside the coverage, and for a partly answerable question it returned an internal
+  error message instead of the available Meta revenue.
+
+**E1 answer, on this evidence.** Giving the model tools is clearly worth its cost (12 → 25 of 41).
+The team of agents, in its current form, does not improve task success over a single agent with the
+same tools; what it adds is traceability (an evidence id on every figure, checked by the critic)
+at a higher cost and latency. Three held-out repeats would be needed to state this with a spread.
 
 ## 6. Failure analysis and changes made because of the evaluation
 
@@ -329,7 +372,8 @@ development cases.
 
 ## 7. Not yet evaluated
 
-- **Held-out comparison, three repeats** — Section 5.
+- **Held-out repeats** — held-out was run once per system (Section 5); the brief's three repeats
+  and their spread are not done.
 - **E2, defences on and off** — reported by the security owner.
 - **E3, lessons before and after** — the Reflexion loop and playbook are not built.
 - **E4, critic on/off and table-aware vs plain-text parsing** — the critic exists, but the team
@@ -342,9 +386,11 @@ development cases.
 
 ## 8. Threats to validity
 
-- **Single runs on dev.** Re-running C1 earlier gave the same score with different cases failing.
-  Dev differences of a few cases (including C2 15 vs C1 14) are within noise; the held-out repeats
-  address this.
+- **Single runs.** Re-running C1 on dev gave the same score with different cases failing, and two
+  fresh C2 repeats gave 15 and 16. Differences of a few cases, on dev (C2 15 vs C1 14) and on
+  held-out (25 vs 25), are within that noise; held-out was run once, not three times.
+- **Network outage during the held-out run.** 28 cases (9 C1, 19 C2) failed on their first call
+  with a connection error and were re-run; the re-runs are ordinary single runs of the same cases.
 - **Several changes between the first and final runs** (retrieval, chunking, critic, writer rules,
   C1's tools), so before/after differences are not attributed to a single change.
 - **Changes made after seeing dev results.** The company-name fix and the comparison-rubric
@@ -373,11 +419,11 @@ development cases.
 
 ## 9. Cost of evaluation
 
-All runs to date, including smoke tests and the judge: about **USD 3.40** of OpenRouter usage
+All runs to date, including smoke tests and the judge: about **USD 4.95** of OpenRouter usage
 (account usage, not the per-run reported costs, which count cached calls again). The two rounds of
 final dev runs with their judging cost about USD 0.74 and USD 0.45, and the two fresh C2 repeats
-with judging about USD 0.87. Fresh C2 runs cost about USD 0.02 per case, so a held-out run of the
-three systems with three repeats is estimated at USD 5–6. Retrieval evaluation, regrading and calibration scoring use no LLM.
+with judging about USD 0.87, and the held-out run of the three systems with judging about
+USD 1.55. Two further held-out repeats would cost about USD 3. Retrieval evaluation, regrading and calibration scoring use no LLM.
 
 ## 10. Reproducing
 

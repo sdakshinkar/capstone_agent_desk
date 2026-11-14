@@ -44,10 +44,14 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 | 34 | 11-14 | `154349_c2_team_dev` *evidence* | dd0444a | hybrid | dev 21 | 19 / 15 | (partly cached) | Final C2: t03 now passes. Judge fails k01, k03, k04 (risk content) and c03 (cited `D1` for a growth rate computed without the sandbox). Critic 12 / 1 / 8 (first pass / after revision / still failing). Rows 32–34 together cost USD 0.43 of account usage (reported 0.62; cached calls replayed). Latency and cost in the report come from runs 25–27. |
 | 35 | 11-14 | calibration re-score | 555205b | — | 26 hand labels | κ = 0.92 | 0.000 | The labeller relabelled C2 k04 (calibration set) from pass to fail on review; 25/26 agreement, the judge passed that answer. |
 | 36 | 11-14 | `160508_c2_team_dev` ×2 repeats *evidence* | 555205b | hybrid | dev 21 ×2, caches off | 15 and 16 | 0.87 (account, incl. judge) | Fresh C2 repeats. Numeric, comparison and missing all pass in both; narrative 2/4 and 3/4; risk change 0/4 and 0/4 because 13 of 21 risk comparisons failed with "400 Provider returned error" (strict structured output not supported by every provider OpenRouter routes to) and 2 hit the length limit. Earlier risk results relied on cached risk lists. p50 21.4 s, p95 196.4 s, USD 0.0205 per case. |
+| 37 | 11-14 | merge develop | 215131a | — | — | — | 0.000 | Brings in the red-team suite and guardrails (PR #4, #11) and PR #6; no conflicts; our 273 tests and their 41 pass. |
+| 38 | 11-14 | `171327_c0_single_prompt_heldout` *evidence* | 215131a | hybrid | held-out 41 | 12 / 12 | ~0.05 | First held-out run, once per system (credit limit). |
+| 39 | 11-14 | `171719_c1_single_agent_heldout` *evidence* | 215131a | hybrid | held-out 41 | 27 / 25 | ~0.60 | A network outage made 9 cases fail on the first call ("Connection error"); those records were removed and the cases re-run with `--resume`. 3 risk cases ended with "400 – Provider returned error" (counted as failures). |
+| 40 | 11-14 | `175641_c2_team_heldout` *evidence* | 215131a | hybrid | held-out 41 | 29 / 25 | ~0.90 | 19 cases hit the same outage at the start and were re-run with `--resume`. Critic 25 / 8 / 8. Judge fails k07, k08 and others on risk content, c04 (fiscal-year mismatch not made clear), m01 (Tesla not declined as uncovered). |
 
 ## Next
 
-- Held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
+- Two more held-out repeats per system, to report the spread the brief asks for (about USD 3).
 - For the team: let the critic
   accept a passage id after figures taken from filing text; ask the domain lead to review the
   held-out cases.

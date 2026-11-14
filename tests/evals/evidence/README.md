@@ -22,6 +22,9 @@ calibrate the judge.
 | `20261114-154057_c1_single_agent_dev` | **Final** E1 dev, C1, after the company-name fix (judged) |
 | `20261114-154349_c2_team_dev` | **Final** E1 dev, C2, after the company-name fix (judged) |
 | `20261114-160508_c2_team_dev` | Two fresh C2 repeats on dev, LLM and risk caches off (judged); exposed the risk-extraction provider errors |
+| `20261114-171327_c0_single_prompt_heldout` | **Held-out**, C0, single run (judged) |
+| `20261114-171719_c1_single_agent_heldout` | **Held-out**, C1, single run; 9 cases re-run after a network outage (judged) |
+| `20261114-175641_c2_team_heldout` | **Held-out**, C2, single run; 19 cases re-run after a network outage (judged) |
 
 Judge calibration: 26 hand-labelled outputs (13 per calibration set), judge
 `google/gemini-3.1-flash-lite`, raw agreement 25/26, Cohen's kappa 0.92 (one label revised on review):

@@ -1,0 +1,74 @@
+{
+  "config": {
+    "name": "c1_single_agent",
+    "system": "c1_single_agent",
+    "model": "meta-llama/llama-3.3-70b-instruct",
+    "limits": {
+      "max_tokens_per_case": 300000,
+      "max_llm_calls_per_case": 80,
+      "timeout_s": 900,
+      "max_total_tokens": 2000000
+    },
+    "cache": {
+      "llm": true,
+      "risk_extraction": true
+    },
+    "prices": {
+      "input_per_mtok": 0.71,
+      "output_per_mtok": 0.71
+    },
+    "search_mode": "hybrid"
+  },
+  "split": "heldout",
+  "repeat": 1,
+  "case_ids": [
+    "n09",
+    "n10",
+    "n11",
+    "n12",
+    "n13",
+    "n14",
+    "n15",
+    "n16",
+    "n17",
+    "n18",
+    "n19",
+    "n20",
+    "n21",
+    "n22",
+    "n23",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10",
+    "t05",
+    "t06",
+    "t07",
+    "t08",
+    "t09",
+    "t10",
+    "t11",
+    "t12",
+    "k05",
+    "k06",
+    "k07",
+    "k08",
+    "k09",
+    "k10",
+    "m03",
+    "m04",
+    "m05",
+    "m06",
+    "m01"
+  ],
+  "caches": {
+    "llm": true,
+    "risk_extraction": true
+  },
+  "has_sandbox": true,
+  "git_commit": "215131a",
+  "started": "2026-11-14T17:17:19"
+}
