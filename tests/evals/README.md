@@ -47,7 +47,8 @@ value up in the truth file. The risk-change labels were drafted from a diff of e
   call; a run-wide token budget stops before the next case.
 - The LLM cache (`data/eval_llm_cache.sqlite`) makes re-running an unchanged case free; it is
   switched off for `--repeat` runs, which must measure real variation.
-- Risk extraction is cached per company-year (`data/risk_cache/`).
+- Risk extraction is cached per company-year (`data/risk_cache/`) by default;
+  the config's `risk_extraction` setting enables or disables it for an eval run.
 - Answers are saved, so checkers, reports and the judge re-run without calling the agent.
 - The judge skips numeric cases and, by default, cases that already failed code checks.
 

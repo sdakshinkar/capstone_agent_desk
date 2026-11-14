@@ -88,8 +88,7 @@ def enable_caches(config: dict, repeat: int) -> dict:
 
         LLM_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         set_llm_cache(SQLiteCache(database_path=str(LLM_CACHE_FILE)))
-    if cache.get("risk_extraction"):
-        os.environ["AGENT_DESK_RISK_CACHE"] = "1"
+    os.environ["AGENT_DESK_RISK_CACHE"] = "1" if cache.get("risk_extraction") else "0"
     return {"llm": use_llm_cache, "risk_extraction": bool(cache.get("risk_extraction"))}
 
 

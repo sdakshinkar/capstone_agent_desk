@@ -20,12 +20,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Any, TypedDict
 
+from ..llm import llm as llm_module
 from ..llm.llm import get_tool_llm
-from .risk_section import RiskPassage, load_risk_section
+from .risk_section import PROJECT_ROOT, RiskPassage, load_risk_section
+
+logger = logging.getLogger(__name__)
+CACHE_DIR = PROJECT_ROOT / "data" / "risk_cache"
 
 # How many words of the first cited passage become Risk["quote"].
 QUOTE_WORDS = 20
@@ -56,7 +62,8 @@ class Risk(TypedDict):
     passage_ids: list[str]
     quote: str  # first words of the first cited passage, so a reader can find it in the filing
 
-
+
+
 # Prompt for pass 1. The granularity rule ("25 to 40 risks") is there because the first version of
 # this prompt produced only 16 broad groups for Microsoft FY2025, which hides year-over-year
 # changes inside big categories like "Cybersecurity Risks".
@@ -177,42 +184,8 @@ def _merge(
 #   [Risk(title="Competition", passage_ids=["microsoft-2025-1A-2", "microsoft-2025-1A-3"], ...),
 #    Risk(title="Cyberattacks", passage_ids=["microsoft-2025-1A-36", ...], ...), ...]
 def extract_risks(passages: list[RiskPassage], llm: Any | None = None) -> list[Risk]:
-    """Group passages into risks, fill in unassigned passages, and attach code-derived quotes.
-
-    With the default model and AGENT_DESK_RISK_CACHE=1, the result is cached on disk (see
-    _cache_path), so the same filing's Item 1A is extracted only once.
-    """
-    cache_file = _cache_path(passages) if llm is None and _cache_enabled() else None
-    if cache_file and cache_file.exists():
-        return json.loads(cache_file.read_text(encoding="utf-8"))
-    risks = _extract_risks(passages, llm or get_tool_llm())
-    if cache_file:
-        cache_file.parent.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(risks), encoding="utf-8")
-    return risks
-
-
-# Risk extraction reads about 100 passages per filing with an LLM, and every risk comparison
-# needs two years, so FY2024 -> FY2025 and FY2025 -> FY2026 both re-extract FY2025. The cache
-# is keyed by the model, both prompts and the exact passage text: changing any of them misses.
-# It is opt-in (the eval harness turns it on) so normal runs behave as before.
-RISK_CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "risk_cache"
-
-
-def _cache_enabled() -> bool:
-    return os.getenv("AGENT_DESK_RISK_CACHE", "").strip() == "1"
-
-
-def _cache_path(passages: list[RiskPassage]) -> Path:
-    from ..llm.llm import TOOL_MODEL
-
-    digest = hashlib.sha256()
-    for part in (TOOL_MODEL, SYSTEM_PROMPT, GAP_PROMPT_SUFFIX):
-        digest.update(part.encode("utf-8"))
-    for p in passages:
-        digest.update(f"\n{p.id}\n{p.text}".encode("utf-8"))
-    name = passages[0].id.rsplit("-1A-", 1)[0] if passages else "empty"
-    return RISK_CACHE_DIR / f"{name}-{digest.hexdigest()[:16]}.json"
+    """Group passages into risks, fill in gaps, and attach code-derived quotes."""
+    return _extract_risks(passages, llm if llm is not None else get_tool_llm())
 
 
 def _extract_risks(passages: list[RiskPassage], llm: Any) -> list[Risk]:
@@ -252,4 +225,73 @@ def _extract_risks(passages: list[RiskPassage], llm: Any) -> list[Risk]:
 # Example: extract_company_year_risks("microsoft", 2025) -> list of Risk for Microsoft's FY2025 10-K.
 def extract_company_year_risks(company: str, year: int | str, llm: Any | None = None) -> list[Risk]:
     """Load the filing's Item 1A section and extract its risk list."""
-    return extract_risks(load_risk_section(company, year), llm)
+    return extract_risks_cached(company, year, load_risk_section(company, year), llm)
+
+
+def _fingerprint(passages: list[RiskPassage]) -> str:
+    digest = hashlib.sha256()
+    for part in (SYSTEM_PROMPT, GAP_PROMPT_SUFFIX, llm_module.TOOL_MODEL, str(QUOTE_WORDS)):
+        digest.update(part.encode("utf-8") + b"\x00")
+    for passage in passages:
+        digest.update(f"{passage.id}\x01{passage.text}\x00".encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _valid_risks(value: Any) -> bool:
+    return isinstance(value, list) and all(
+        isinstance(risk, dict)
+        and isinstance(risk.get("title"), str)
+        and isinstance(risk.get("summary"), str)
+        and isinstance(risk.get("quote"), str)
+        and isinstance(risk.get("passage_ids"), list)
+        and bool(risk["passage_ids"])
+        and all(isinstance(passage_id, str) for passage_id in risk["passage_ids"])
+        for risk in value
+    )
+
+
+def _cache_path(company: str, year: int | str) -> Path:
+    return CACHE_DIR / f"{company.strip().lower()}-{int(year)}.json"
+
+
+def extract_risks_cached(
+    company: str, year: int | str, passages: list[RiskPassage], llm: Any | None = None
+) -> list[Risk]:
+    """Reuse a fingerprinted company/year extraction unless caching is disabled."""
+    if llm is not None or os.getenv("AGENT_DESK_RISK_CACHE", "1").strip() == "0":
+        return extract_risks(passages, llm)
+
+    fingerprint = _fingerprint(passages)
+    path = _cache_path(company, year)
+    try:
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(stored, dict) and stored.get("fingerprint") == fingerprint:
+            if _valid_risks(stored.get("risks")) and stored["risks"]:
+                return stored["risks"]
+            logger.warning("Invalid risk cache contents in %s; extracting again", path)
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError) as exc:
+        logger.warning("Could not read risk cache %s: %s", path, exc)
+
+    risks = extract_risks(passages)
+    if risks:
+        temp_path = None
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=path.parent, prefix=path.name + ".", suffix=".tmp",
+                delete=False,
+            ) as temp:
+                temp_path = Path(temp.name)
+                json.dump({"fingerprint": fingerprint, "risks": risks}, temp, ensure_ascii=False)
+            os.replace(temp_path, path)
+        except OSError as exc:
+            logger.warning("Could not write risk cache %s: %s", path, exc)
+        finally:
+            if temp_path is not None and temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError as exc:
+                    logger.warning("Could not remove temporary risk cache %s: %s", temp_path, exc)
+    return risks

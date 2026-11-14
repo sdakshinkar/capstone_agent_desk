@@ -12,4 +12,6 @@ faiss-cpu
 rank-bm25
 streamlit
 pytest
+langsmith
+streamlit
 huggingface-hub>=0.33.4,<2.0.0

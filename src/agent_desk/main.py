@@ -20,21 +20,24 @@ QUESTION3 = (
     "and tell me what changed in their risk factors."
 )
 
+# The question main() runs, and the one that is traced.
+QUESTION = QUESTION3
 
+
+# Tracing is on when LANGSMITH_API_KEY is set (in .env or the environment); it is forced off
+# otherwise, so a stray LANGSMITH_TRACING=true without a key does not produce failed uploads.
+# The project comes from LANGSMITH_PROJECT.
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:
-        if os.getenv("LANGSMITH_API_KEY"):
-            with tracing_context(
-                enabled=True,
-                project_name=os.getenv("LANGCHAIN_PROJECT", "agent-desk"),
-                metadata={"question": QUESTION1},
-            ):
-                # print(run_langgraph_workflow(QUESTION1))
-                print(run_team_workflow(QUESTION1))
-        else:
+        with tracing_context(
+            enabled=bool(os.getenv("LANGSMITH_API_KEY")),
+            project_name=os.getenv("LANGSMITH_PROJECT", "agent-desk"),
+            tags=["agent-desk"],
+            metadata={"question": QUESTION},
+        ):
             # print(run_langgraph_workflow(QUESTION))
-            print(run_team_workflow(QUESTION3))
+            print(run_team_workflow(QUESTION))
         return 0
     except Exception as exc:  # pragma: no cover - debugger path
         print(f"Workflow failed: {exc}")

@@ -24,6 +24,12 @@ growth rate, sum or average, call run_python with the exact values returned by g
 print each result, and report the printed value. Show the formula and the inputs next to each
 result. If run_python returns an error, fix the code and call it again.
 
+Evidence ids: get_company_fact rows carry a fact_id (F1, F2, ...) and run_python results carry a
+calc_id (D1, D2, ...). Write the id in square brackets right after every number you report, for
+example "operating income $128.5B [F1]" and "operating margin 45.6% [D1]". Copy ids exactly as the
+tools returned them; never invent or reuse an id for a different number. A number without an id
+from a tool may not be reported.
+
 How the data works:
 - Each 10-K contains the current year plus prior years (3 years for income statement and cash
   flow items, 2 for balance sheet items). get_company_fact returns each year as a separate row,
