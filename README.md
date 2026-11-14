@@ -235,7 +235,9 @@ is still parsed and the comparison still runs.
 
 The cache stores structured risks, not complete passage text or final
 comparisons. Empty results are not cached. Remove a specific company/year cache
-file to force that extraction to refresh. Cached runs can still take minutes;
+file to force that extraction to refresh. Caching is enabled by default; set
+`AGENT_DESK_RISK_CACHE=0` to bypass it. Evaluation runs set this switch from
+their `risk_extraction` cache configuration. Cached runs can still take minutes;
 runtime depends on the plan, model latency, and revisions.
 
 ## Evidence, citations, and compliance review
