@@ -79,7 +79,8 @@ def git_commit() -> str | None:
 
 
 def enable_caches(config: dict, repeat: int) -> dict:
-    """Turn on the caches the config asks for; repeats always bypass the LLM cache."""
+    """Turn on the caches the config asks for; repeats bypass both caches, so each repeat
+    measures fresh model output (the risk cache would otherwise reuse one risk extraction)."""
     cache = config.get("cache", {})
     use_llm_cache = bool(cache.get("llm")) and repeat == 1
     if use_llm_cache:
@@ -88,8 +89,9 @@ def enable_caches(config: dict, repeat: int) -> dict:
 
         LLM_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         set_llm_cache(SQLiteCache(database_path=str(LLM_CACHE_FILE)))
-    os.environ["AGENT_DESK_RISK_CACHE"] = "1" if cache.get("risk_extraction") else "0"
-    return {"llm": use_llm_cache, "risk_extraction": bool(cache.get("risk_extraction"))}
+    use_risk_cache = bool(cache.get("risk_extraction")) and repeat == 1
+    os.environ["AGENT_DESK_RISK_CACHE"] = "1" if use_risk_cache else "0"
+    return {"llm": use_llm_cache, "risk_extraction": use_risk_cache}
 
 
 def estimate_cost(recorder: Recorder, prices: dict) -> float | None:
@@ -144,6 +146,8 @@ def run_case(case: dict, config: dict, truth: dict, repeat_index: int) -> dict:
             "replans": output.get("replans", 0),
             "worker_reports": output.get("worker_reports", []),
             "plan": output.get("plan"),
+            # C2 only: the compliance critic's final verdict, revisions used and open issues.
+            "critic": output.get("critic"),
         },
     }
     record["grade"] = grade(case, record, truth, config_has_tools=config["system"] in SYSTEMS_WITH_TOOLS,

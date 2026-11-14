@@ -17,7 +17,10 @@ from typing import Any
 
 from langchain_core.callbacks import BaseCallbackHandler
 
-GRAPH_NODES = {"research_lead", "supervisor", "researcher_worker", "quant_worker", "risk_worker", "writer"}
+GRAPH_NODES = {
+    "research_lead", "approve_plan", "supervisor", "researcher_worker", "quant_worker", "risk_worker",
+    "writer", "critic",
+}
 MAX_OUTPUT_CHARS = 60_000  # tool outputs are kept for the evidence check, capped per call
 
 

@@ -222,3 +222,14 @@ def test_markdown_bullet_is_not_a_minus_sign():
     assert extract_numbers("- 11.16%")[0].value == pytest.approx(11.16)
     assert extract_numbers("-11.16%")[0].value == pytest.approx(-11.16)
     assert extract_numbers("−$4.2 billion")[0].value == pytest.approx(-4.2e9)
+
+
+def test_answers_with_evidence_ids_are_graded_normally():
+    # C2's writer now puts evidence ids after every figure and claim.
+    answer = ("Apple's fiscal 2025 revenue was $416.16 billion [F1] and its operating margin "
+              "31.97% [D1]. New risks cover age verification [apple-2025-1A-12] [P3].")
+    facts = [{"company": "apple", "year": 2025, "metric": "revenue"},
+             {"company": "apple", "year": 2025, "metric": "operating_margin"}]
+    assert g.check_facts(answer, facts, TRUTH)["pass"]
+    verified = g.check_numbers_verified(answer, {"facts": facts}, TRUTH)
+    assert (verified["verified"], verified["total"]) == (2, 2)  # ids and the passage year are not figures

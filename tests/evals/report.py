@@ -67,6 +67,13 @@ def metrics(results: list[dict]) -> dict:
                 if "numbers_verified" in r["grade"]["checks"]]
     sandbox = [r["grade"]["checks"]["calc_in_sandbox"]["used"] for r in results
                if r["grade"]["checks"].get("calc_in_sandbox", {}).get("applies")]
+    critic = [r["trajectory"]["critic"] for r in results
+              if (r["trajectory"].get("critic") or {}).get("passed") is not None]
+    open_issues: dict[str, int] = defaultdict(int)
+    for c in critic:
+        if c["passed"] is False:
+            for issue in c.get("issues", []):
+                open_issues[issue.get("type") or "?"] += 1
     repeats: dict[int, list[bool]] = defaultdict(list)
     for r in results:
         repeats[r["repeat"]].append(bool(r["final_pass"]))
@@ -92,6 +99,13 @@ def metrics(results: list[dict]) -> dict:
         "evidence_rate": (sum(evidence), len(evidence)),
         "numbers_verified": (sum(v["verified"] for v in verified), sum(v["total"] for v in verified)),
         "sandbox_rate": (sum(sandbox), len(sandbox)),
+        # Compliance critic (C2): first-draft passes, passes after revision, notes still failing.
+        "critic_runs": len(critic),
+        "critic_first_pass": sum(c["passed"] and c.get("revisions", 0) == 0 for c in critic),
+        "critic_revised_pass": sum(c["passed"] and c.get("revisions", 0) > 0 for c in critic),
+        "critic_failed": sum(c["passed"] is False for c in critic),
+        "critic_revisions_mean": statistics.mean(c.get("revisions", 0) for c in critic) if critic else None,
+        "critic_open_issues": dict(open_issues),
         "per_repeat": per_repeat,
     }
 
@@ -138,6 +152,12 @@ def _table(columns: list[tuple[str, dict]]) -> str:
     row("Evidence retrieved", lambda m: _rate(m["evidence_rate"]))
     row("Figures verified vs XBRL", lambda m: _share(m["numbers_verified"]))
     row("Calculations in sandbox", lambda m: _rate(m["sandbox_rate"]))
+    row("Critic: passed first draft", lambda m: _rate((m["critic_first_pass"], m["critic_runs"])))
+    row("Critic: passed after revision", lambda m: _rate((m["critic_revised_pass"], m["critic_runs"])))
+    row("Critic: still failing (flagged)", lambda m: _rate((m["critic_failed"], m["critic_runs"])))
+    row("Critic revisions / case", lambda m: _fmt(m["critic_revisions_mean"], ".2f"))
+    row("Critic open issues by type", lambda m: ", ".join(
+        f"{k} {v}" for k, v in sorted(m["critic_open_issues"].items())) or ("none" if m["critic_runs"] else "n/a"))
     row("Success per repeat", lambda m: ", ".join(f"r{k}: {v}" for k, v in m["per_repeat"].items()))
     return "\n".join([header, sep, *rows])
 
