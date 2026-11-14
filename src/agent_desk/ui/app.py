@@ -33,10 +33,14 @@ from langgraph.checkpoint.memory import InMemorySaver  # noqa: E402
 from langgraph.types import Command  # noqa: E402
 
 from agent_desk.agents.workflow import build_team_workflow, initial_state  # noqa: E402
+from agent_desk.citations import number_references  # noqa: E402
+from agent_desk.evidence import Register, use_register  # noqa: E402
 from agent_desk.rag.risk_section import available_filings  # noqa: E402
 
 # The writer's answer and the worker findings are joined with this text in writer_node.
 EVIDENCE_MARKER = "\n\nSupporting findings:\n\n"
+# workflow.critic_node appends this block to a note that failed its compliance review.
+REVIEW_MARKER = "\n\n**Compliance review:"
 
 DEFAULTS = {
     "phase": "ask",
@@ -51,6 +55,7 @@ DEFAULTS = {
     "editing": False,
     "pending": None,  # the answer to resume the graph with, set by Approve and run
     "answer": "",
+    "compliance": None,  # {"passed", "revisions", "issues"} from the compliance critic
     "approved": False,
     "replanned": False,
     "error": "",
@@ -136,6 +141,7 @@ def load_plan(plan: dict) -> None:
 def run_graph(payload) -> dict | None:
     s = st.session_state
     try:
+        use_register(s.register)
         return s.graph.invoke(payload, s.config)
     except Exception as exc:
         s.error = f"{type(exc).__name__}: {exc}"
@@ -152,6 +158,11 @@ def handle_result(result: dict) -> None:
         s.phase = "plan"
     else:
         s.answer = result.get("final_answer", "")
+        s.compliance = {
+            "passed": result.get("critic_passed"),
+            "revisions": result.get("revision", 0),
+            "issues": result.get("critic_issues", []),
+        }
         s.phase = "answer"
 
 
@@ -177,8 +188,9 @@ def render_question() -> None:
             st.warning("Type a question first.")
         else:
             s.question = question
+            s.register = Register()
             s.graph = build_team_workflow(InMemorySaver())
-            s.config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 40}
+            s.config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 50}
             with st.spinner("Creating the plan..."):
                 result = run_graph(initial_state(question))
             if result is not None:
@@ -263,6 +275,27 @@ def render_working() -> None:
     st.rerun()
 
 
+# The compliance critic's result: a green line when the note passed, otherwise a warning listing
+# what is still wrong.
+def render_compliance() -> None:
+    result = st.session_state.compliance
+    if not result or result["passed"] is None:
+        return
+    revisions = result["revisions"]
+    if result["passed"]:
+        extra = f" after {revisions} revision{'s' if revisions != 1 else ''}" if revisions else ""
+        st.success(f"✓ Compliance check passed{extra}: numbers match their facts, claims are supported, wording is clean.")
+        return
+    lines = [
+        f"- {i['detail']}" + (f" (\"{i['text']}\")" if i.get("text") else "")
+        for i in result["issues"]
+    ]
+    st.warning(
+        f"Compliance check failed after {revisions} revision{'s' if revisions != 1 else ''}. "
+        "Do not publish this note until these are fixed:\n\n" + "\n".join(lines)
+    )
+
+
 # The writer's text first, the worker findings behind a collapsible section.
 def render_answer() -> None:
     s = st.session_state
@@ -275,7 +308,17 @@ def render_answer() -> None:
         written, evidence = "", s.answer.split("\n\n", 1)[1]
     else:
         written, _, evidence = s.answer.partition(EVIDENCE_MARKER)
+    # The failed-review block is shown as a warning below, not as part of the note.
+    written = written.partition(REVIEW_MARKER)[0]
+    # Evidence tags are shown as numbered references; the Sources expander says what each one is.
+    written, sources = number_references(written, s.get("register"))
+    render_compliance()
     st.markdown(written or "(The run produced no answer text.)")
+    if sources:
+        with st.expander("Sources"):
+            for source in sources:
+                # An escaped $ keeps two dollar amounts from being read as a formula.
+                st.markdown(f"**[{source['number']}]** " + source["text"].replace("$", "\\$"))
     if evidence:
         with st.expander("Supporting findings"):
             st.text(evidence)

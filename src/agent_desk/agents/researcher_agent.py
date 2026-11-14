@@ -14,6 +14,10 @@ strategy, legal proceedings, liquidity and other textual content.
 Do not use the EDGAR Company Facts tools. Do not answer numeric-company-fact questions with
 this agent.
 Call tools one at a time. Cite the Item and fiscal year for every filing passage you use.
+Each search result carries a passage_id (P1, P2, ...). Write the id in square brackets right
+after every claim taken from that passage, for example "Azure demand depends on capacity [P3]".
+Copy ids exactly as the tool returned them; never invent an id, and never cite a passage that
+was not returned.
 If the question mentions a company or year, pass them to search_filing. Only claim a filing was
 searched if the tool returned passages for it."""
 

@@ -72,16 +72,18 @@ def test_company_detection():
 
 def test_risk_extraction_cache(monkeypatch, tmp_path):
     calls = []
-    monkeypatch.setattr(risk_extract, "RISK_CACHE_DIR", tmp_path)
-    monkeypatch.setattr(risk_extract, "get_tool_llm", lambda: object())
-    monkeypatch.setattr(risk_extract, "_extract_risks", lambda p, llm: calls.append(1) or [{"title": "t"}])
-    passages = [RiskPassage("apple-2025-1A-1", "Supply chain risk.")]
-    monkeypatch.setenv("AGENT_DESK_RISK_CACHE", "1")
-    assert risk_extract.extract_risks(passages) == [{"title": "t"}]
-    assert risk_extract.extract_risks(passages) == [{"title": "t"}]
-    assert len(calls) == 1  # second call came from disk
     monkeypatch.setenv("AGENT_DESK_RISK_CACHE", "0")
-    risk_extract.extract_risks(passages)
+    monkeypatch.setattr(risk_extract, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(risk_extract, "get_tool_llm", lambda: object())
+    passages = [RiskPassage("apple-2025-1A-1", "Supply chain risk.")]
+    risks = [{"title": "Supply", "summary": "Risk", "passage_ids": [passages[0].id], "quote": passages[0].text}]
+    monkeypatch.setattr(risk_extract, "_extract_risks", lambda p, llm: calls.append(1) or risks)
+    assert run_eval.enable_caches({"cache": {"risk_extraction": True}}, 1)["risk_extraction"]
+    assert risk_extract.extract_risks_cached("apple", 2025, passages) == risks
+    assert risk_extract.extract_risks_cached("apple", 2025, passages) == risks
+    assert len(calls) == 1  # second call came from disk
+    assert not run_eval.enable_caches({"cache": {"risk_extraction": False}}, 1)["risk_extraction"]
+    risk_extract.extract_risks_cached("apple", 2025, passages)
     assert len(calls) == 2  # cache off: extracts again
 
 

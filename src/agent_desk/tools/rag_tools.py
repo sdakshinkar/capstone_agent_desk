@@ -4,6 +4,7 @@ import json
 
 from langchain_core.tools import tool
 
+from ..evidence import current_register
 from ..rag.filing_rag import DEFAULT_SEARCH_MODE, SEARCH_MODES, SearchMode, search_chunks
 
 
@@ -32,11 +33,13 @@ def search_filing(
     if mode not in SEARCH_MODES:
         raise ValueError(f"mode must be one of {', '.join(SEARCH_MODES)}.")
 
-    return json.dumps(
-        [
-            {"text": match.page_content, "metadata": match.metadata}
-            for match in search_chunks(query, k, company=company, year=year, mode=mode)
-        ],
-        ensure_ascii=False,
-        indent=2,
-    )
+    # With an evidence register active (team runs), each passage is recorded and gets an id such
+    # as P3 that the writer cites and the compliance critic checks claims against.
+    register = current_register()
+    results = []
+    for match in search_chunks(query, k, company=company, year=year, mode=mode):
+        entry = {"text": match.page_content, "metadata": match.metadata}
+        if register is not None:
+            entry["passage_id"] = register.add_passage(match.page_content, dict(match.metadata))
+        results.append(entry)
+    return json.dumps(results, ensure_ascii=False, indent=2)

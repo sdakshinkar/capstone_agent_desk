@@ -59,3 +59,21 @@ def test_search_filing_tool_passes_mode(monkeypatch, mode):
 def test_search_filing_rejects_invalid_input(query, year, k, mode, message):
     with pytest.raises(ValueError, match=message):
         rag_tools.search_filing.func(query, year=year, k=k, mode=mode)
+
+
+def test_search_filing_records_passage_ids_only_with_a_register(monkeypatch):
+    from agent_desk.evidence import Register, use_register
+
+    document = Document(page_content="We employed 166,000 people.",
+                        metadata={"company": "apple", "year": "2025", "item": "Item 1"})
+    monkeypatch.setattr(rag_tools, "search_chunks",
+                        lambda query, k, company=None, year=None, mode="semantic": [document])
+    args = {"query": "employees", "company": "apple", "year": 2025, "k": 1, "mode": "hybrid"}
+
+    assert "passage_id" not in json.loads(rag_tools.search_filing.invoke(args))[0]
+
+    register = Register()
+    use_register(register)
+    entry = json.loads(rag_tools.search_filing.invoke(args))[0]
+    assert entry["passage_id"] == "P1"
+    assert register.get("P1") is not None  # the critic can look the passage up

@@ -33,7 +33,8 @@ class Run:
             def invoke(self, messages):
                 return Reply()
 
-        monkeypatch.setattr(w, "get_tool_llm", lambda: Llm())
+        monkeypatch.setattr(w, "get_tool_llm", lambda max_tokens=None: Llm())
+        monkeypatch.setattr(w, "critique", lambda draft, register: {"passed": True, "issues": []})
 
     def _lead(self, question, feedback=None, llm=None):
         self.lead_feedback.append(feedback)
@@ -310,7 +311,7 @@ def test_the_answer_text_is_shown_and_the_findings_sit_in_an_expander(monkeypatc
         def invoke(self, messages):
             return Reply()
 
-    monkeypatch.setattr(w, "get_tool_llm", lambda: Llm())
+    monkeypatch.setattr(w, "get_tool_llm", lambda max_tokens=None: Llm())
     page = to_plan(new_page())
 
     button(page, "Approve and run").click().run()
@@ -320,6 +321,44 @@ def test_the_answer_text_is_shown_and_the_findings_sit_in_an_expander(monkeypatc
     assert [e.label for e in page.expander] == ["Supporting findings"]
     assert "Q: a" in page.expander[0].text[0].value
     assert any("Final answer" in s.value and "waiting for your approval" in s.value for s in page.subheader)
+
+
+def test_a_passed_review_shows_a_green_line_and_a_failed_one_lists_the_issues(monkeypatch):
+    Run(monkeypatch)
+    page = to_plan(new_page())
+    button(page, "Approve and run").click().run()
+    assert any("Compliance check passed" in s.value for s in page.success) and not page.warning
+
+    issues = [{"type": "number", "text": "47.2%", "start": 0, "detail": "D1 printed '45.6', which does not match."}]
+    monkeypatch.setattr(w, "critique", lambda draft, register: {"passed": False, "issues": issues})
+    page = to_plan(new_page())
+    button(page, "Approve and run").click().run()
+
+    assert page.session_state.compliance["revisions"] == 2
+    assert "Compliance check failed after 2 revisions" in page.warning[0].value
+    assert "47.2%" in page.warning[0].value
+    assert not any("Compliance review" in m.value for m in page.markdown)
+
+
+def test_evidence_tags_show_as_numbers_with_a_sources_expander(monkeypatch):
+    Run(monkeypatch)
+
+    class Reply:
+        content = "Margin was 45.6% [D1] on $281.7B [F9]. Again [D1]."
+
+    class Llm:
+        def invoke(self, messages):
+            return Reply()
+
+    monkeypatch.setattr(w, "get_tool_llm", lambda max_tokens=None: Llm())
+    page = to_plan(new_page())
+    button(page, "Approve and run").click().run()
+
+    text = " ".join(m.value for m in page.markdown)
+    assert "45.6% [1] on $281.7B [2]. Again [1]." in text and "[D1]" not in text and "[F9]" not in text
+    assert [e.label for e in page.expander][0] == "Sources"
+    sources = " ".join(m.value for m in page.expander[0].markdown)
+    assert "[1]" in sources and "[2]" in sources and "not in the evidence register" in sources
 
 
 def test_approving_the_answer_marks_it_and_a_new_question_starts_clean(monkeypatch):

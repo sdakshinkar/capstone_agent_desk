@@ -36,4 +36,13 @@ class TeamState(TypedDict):
     narrative: Annotated[list[str], accumulate_or_reset]
     facts: Annotated[list[str], accumulate_or_reset]
     risk: Annotated[list[str], accumulate_or_reset]
+    # The writer's answer without the "Supporting findings" block; this is what the critic checks.
+    draft: str
+    # True when the writer's reply was cut off by the output limit; the critic then rejects it.
+    draft_truncated: bool
+    # Compliance loop: revisions done so far (the critic allows at most 2), the issues from the
+    # latest check (the writer's brief for a revision) and whether the latest draft passed.
+    revision: int
+    critic_issues: list[dict]
+    critic_passed: bool | None  # None: the critic did not run (no evidence register)
     final_answer: str

@@ -7,6 +7,14 @@ from typing import TypedDict
 
 from langgraph.graph import END, StateGraph
 
+try:
+    from langsmith import traceable
+except ImportError:  # pragma: no cover - optional in local dev
+    def traceable(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
 from .quant_agent import run_quant_agent
 from .research_lead_agent import run_research_lead
 from .researcher_agent import run_researcher
@@ -23,6 +31,7 @@ class WorkflowState(TypedDict):
     final_answer: str
 
 
+@traceable(run_type="chain", name="research_lead")
 def research_lead_node(state: WorkflowState) -> WorkflowState:
     brief = run_research_lead(state["question"])
     try:
@@ -48,6 +57,9 @@ def research_lead_node(state: WorkflowState) -> WorkflowState:
     return state
 
 
+# Reserved for later: this node is intentionally not connected yet.
+# Re-enable it when we want a human approval step between research lead and routing.
+@traceable(run_type="chain", name="analyst_interrupt")
 def analyst_interrupt_node(state: WorkflowState) -> WorkflowState:
     print("Research lead plan:")
     print(json.dumps(state["plan"], indent=2))
@@ -61,31 +73,35 @@ def analyst_interrupt_node(state: WorkflowState) -> WorkflowState:
             state["plan"] = json.loads(edited)
             state["route"] = state["plan"].get("route", state.get("route", "both"))
         except json.JSONDecodeError:
-            pass
+            pass    # Placeholder kept for future use; the workflow is currently simplified to a direct lead -> router path.
     return state
 
 
+@traceable(run_type="chain", name="router")
 def router_node(state: WorkflowState) -> WorkflowState:
-    route = state.get("route", "both")
-    state["route"] = route
+    state["route"] = state.get("route", "both")
     return state
 
 
+@traceable(run_type="chain", name="researcher_worker")
 def researcher_worker_node(state: WorkflowState) -> WorkflowState:
     state["narrative"] = run_researcher(state["question"])
     return state
 
 
+@traceable(run_type="chain", name="quant_worker")
 def quant_worker_node(state: WorkflowState) -> WorkflowState:
     state["facts"] = run_quant_agent(state["question"])
     return state
 
 
+@traceable(run_type="chain", name="risk_worker")
 def risk_worker_node(state: WorkflowState) -> WorkflowState:
     state["risk"] = run_risk_diff_agent(state["question"])
     return state
 
 
+@traceable(run_type="chain", name="aggregate")
 def aggregate_node(state: WorkflowState) -> WorkflowState:
     parts: list[str] = []
     if state.get("narrative"):
@@ -109,21 +125,10 @@ def build_workflow():
     workflow.add_node("aggregate", aggregate_node)
 
     workflow.set_entry_point("research_lead")
-    workflow.add_edge("research_lead", "analyst_interrupt")
-    workflow.add_edge("analyst_interrupt", "router")
-
-    workflow.add_conditional_edges(
-        "router",
-        lambda state: state.get("route", "both"),
-        {
-            "filing_retrieval": "researcher_worker",
-            "company_facts": "quant_worker",
-            "both": "researcher_worker",
-        },
-    )
-
-    workflow.add_edge("researcher_worker", "aggregate")
-    workflow.add_edge("quant_worker", "aggregate")
+    workflow.add_edge("research_lead", "router")
+    workflow.add_edge("router", "researcher_worker")
+    workflow.add_edge("researcher_worker", "quant_worker")
+    workflow.add_edge("quant_worker", "risk_worker")
     workflow.add_edge("risk_worker", "aggregate")
 
     workflow.add_conditional_edges(
