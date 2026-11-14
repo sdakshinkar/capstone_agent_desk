@@ -1,6 +1,6 @@
 # Agent Desk — Evaluation Report
 
-*Status: 2026-11-14. Final development-split runs are complete (Section 4). The held-out comparison
+*Status: 2026-11-14. Final development-split runs are complete (Section 4), including the company-name fix. The held-out comparison
 (three repeats per system) has not been run, and its tables are marked **TBD**. Experiment E2
 (defences and red team) is reported separately by the security owner. E3 and E4 are not run
 (Section 7).*
@@ -152,46 +152,51 @@ any run had been judged, because the account's OpenRouter guardrail blocked Qwen
 Dev results guided changes to the checkers, the C1 prompt and retrieval, so they are not an
 unbiased estimate; the held-out run (Section 5) is. Each system was run once per configuration.
 
-### 4.1 E1, final dev runs (hybrid search, C2 with critic, C1 with calculator)
+### 4.1 E1, final dev runs (hybrid search, C2 with critic, C1 with calculator, company-name fix)
 
 | Metric | C0 single prompt | C1 single agent | C2 team |
 |---|---|---|---|
 | **Task success (code + judge)** | **7/21** | **14/21** | **15/21** |
-| code checks passed | 7/21 | 15/21 | 18/21 |
-| numeric | 2/8 | 8/8 | 8/8 |
-| comparison | 0/3 | 1/3 | 3/3 |
-| narrative | 3/4 | 1/4 | 2/4 |
+| code checks passed | 7/21 | 16/21 | 19/21 |
+| numeric | 2/8 | 7/8 | 8/8 |
+| comparison | 0/3 | 1/3 | 2/3 |
+| narrative | 3/4 | 2/4 | 3/4 |
 | risk change | 0/4 | 2/4 | 1/4 |
 | missing data | 2/2 | 2/2 | 1/2 |
 | Errors / timeouts | 0 / 0 | 0 / 0 | 0 / 0 |
-| Replans | — | — | 5 |
-| Latency p50 / p95 (s) | 4.4 / 15.8 | 9.2 / 26.6 | 23.6 / 59.0 |
-| LLM calls per case | 1.0 | 5.7 | 14.1 |
-| Tokens per case | 1,614 | 27,107 | 27,287 |
-| Cost per case (USD) | 0.0010 | 0.0172 | 0.0149 |
-| Cost, 21 cases (USD) | 0.020 | 0.362 | 0.314 |
-| Figures verified vs XBRL | 11/15 (73%) | 13/15 (87%) | **26/26 (100%)** |
-| Calculations in sandbox | — | 3/4 | 1/4 |
-| Evidence sentence retrieved (narrative) | 3/4 | 1/4 | 2/4 |
+| Figures verified vs XBRL | 11/15 (73%) | 12/12 (100%) | **26/26 (100%)** |
+| Calculations in sandbox | — | 4/4 | 1/4 |
+| Evidence sentence retrieved (narrative) | 3/4 | 1/4 | 3/4 |
+| *Latency p50 / p95 (s)* ¹ | 4.4 / 15.8 | 9.2 / 26.6 | 23.6 / 59.0 |
+| *LLM calls per case* ¹ | 1.0 | 5.7 | 14.1 |
+| *Tokens per case* ¹ | 1,614 | 27,107 | 27,287 |
+| *Cost per case (USD)* ¹ | 0.0010 | 0.0172 | 0.0149 |
 
-Runs: `20261114-143717_c0_single_prompt_dev`, `20261114-143941_c1_single_agent_dev`,
-`20261114-144348_c2_team_dev` (commit 3fa917f). Policy-violation, attack-success and false-block
-counts belong to E2.
+Quality rows: `20261114-154010_c0_single_prompt_dev`, `20261114-154057_c1_single_agent_dev`,
+`20261114-154349_c2_team_dev` (commit dd0444a, after the company-name fix).
+¹ Latency, calls, tokens and cost come from the previous full runs of the same configurations
+(`20261114-143717_c0_single_prompt_dev`, `20261114-143941_c1_single_agent_dev`,
+`20261114-144348_c2_team_dev`, commit 3fa917f), whose model calls were almost all fresh. The final
+runs replayed most calls from the LLM cache (unchanged prompts give identical calls), so their
+timings are not real and their reported cost (USD 0.62) overstates the USD 0.43 actually spent.
+Policy-violation, attack-success and false-block counts belong to E2.
 
 **Reading the table.**
 
 - **Tools account for most of the gain.** C0 cannot look up XBRL facts and answers from a fixed
   set of passages; it doubled from 3 to 7 with the better retrieval, all of the gain on text
   questions, but it gets only 2 of 8 numbers right.
-- **On this single dev run the team is one case ahead of the single agent (15 vs 14).** C2
-  passes more code checks (18 vs 15); the judge failed three of its risk-change answers and one of
-  C1's. C2 is cheaper per case than C1 here (USD 0.015 vs 0.017: C1's single context grows long)
+- **On this single dev run the team is one case ahead of the single agent (15 vs 14).** C2 passes
+  more code checks (19 vs 16); the judge failed four of C2's answers (three risk changes, and one
+  growth answer that cited a calculation id that did not exist) and two of C1's (both risk
+  changes). C2 is cheaper per case than C1 (USD 0.015 vs 0.017: C1's single context grows long)
   but about 2.6× slower at the median.
-- **C2's numbers are the most trustworthy.** Every figure it stated matched XBRL (26/26), against
-  87% for C1 and 73% for C0. For an analyst note, where one wrong number undermines the whole note
-  (the brief), this is the clearest advantage of the team.
+- **Both tool-using systems now state only verified figures** (C1 12/12, C2 26/26; C0 73%). C1
+  gives fewer figures per answer, and with the calculator it computed all four of its ratios in the
+  sandbox, while C2's quant worker did so in one of four.
 - **Twenty-one cases and one run cannot separate a difference of a few cases from run-to-run
-  noise** (Section 8). The E1 conclusion waits for the held-out repeats.
+  noise** (Section 8): between the two final runs C1 lost a numeric case (n07) and gained the
+  company-name cases. The E1 conclusion waits for the held-out repeats.
 
 ### 4.2 Compliance critic (C2)
 
@@ -201,7 +206,7 @@ counts belong to E2.
 | Passed after revision | 1/21 |
 | Still failing after two revisions (returned with a warning) | 8/21 |
 | Revisions per case | 0.81 |
-| Open issues at the end, by type | 22 number, 2 claim |
+| Open issues at the end, by type | 26 number, 4 claim |
 
 The critic's open issues are almost all about **citation form, not wrong values**: all 26 figures
 in C2's numeric and comparison answers matched XBRL. Two patterns account for most of them:
@@ -209,22 +214,25 @@ in C2's numeric and comparison answers matched XBRL. Two patterns account for mo
 - **Figures from filing text are rejected.** Employee counts (166,000; 1,556,000) come from a
   filing passage, so the writer cites `[P1]`; the critic's number rule accepts only a fact (`F`) or
   a calculation (`D`) id after a figure.
-- **Figures without an id**, and an id the register never issued (`D1` in one note).
+- **Figures without an id**, and ids the register never issued. In c03 the note cited `D1` for a
+  growth rate that the quant worker had computed itself, without the sandbox; the judge failed that
+  answer for citing a source that does not exist.
 
-Revisions rarely help (1 of 9 failing drafts was fixed). As configured, the critic therefore flags
-38% of dev notes, mostly for citation form, and adds latency (two extra rounds on 9 cases). The
-critic did not stop any wrong figure on this split because there were none to stop; whether it
-catches planted wrong numbers (the brief's demo) is not measured here.
+Revisions rarely help (1 of 9 failing drafts was fixed). As configured, the critic flags 38% of dev
+notes, mostly for citation form, and adds latency (two extra rounds on 9 cases). It did not stop any
+wrong figure on this split because there were none to stop; whether it catches planted wrong
+numbers (the brief's demo) is not measured here.
 
 ### 4.3 Numbers you can trust (signature challenge A)
 
-- C2: 26/26 figures verified, and every figure now carries an evidence id that links it to an XBRL
-  fact or a sandbox calculation (the critic enforces the presence and value of the id).
+- C2: 26/26 figures verified, and every figure carries an evidence id that links it to an XBRL fact
+  or a sandbox calculation (the critic enforces the presence and value of the id).
 - The quant worker still computes most ratios itself: `run_python` was called in **1 of 4** margin
-  and growth cases (the same rate as before the critic). The brief's rule "do not calculate numbers
-  inside the LLM" is requested in the prompt but not enforced; the critic accepts a ratio only with
-  a `D` id, which is why some ratios end up flagged rather than computed in the sandbox.
-- C1, which has had the calculator since 2026-11-13, used it in 3 of 4 calculation cases.
+  and growth cases. The brief's rule "do not calculate numbers inside the LLM" is requested in the
+  prompt but not enforced; the critic accepts a ratio only with a `D` id, which is why such ratios
+  end up flagged, or cited to a `D` id that does not exist, instead of being computed in the
+  sandbox.
+- C1, with the same calculator and the same instruction, used it in 4 of 4 calculation cases.
 
 ### 4.4 Retrieval
 
@@ -244,10 +252,12 @@ that joins each Item's paragraphs before splitting (57,808 chunks, many a lone h
 became 21,186 chunks of median 833 characters; hybrid 0.75 → 0.81). The JPMorgan First Republic
 passage that every earlier mode missed is now found (rank 5 hybrid, rank 3 keyword).
 
-**From retrieval to answers.** Better retrieval did not translate fully into agent answers. C2 still
-failed the First Republic question (t03) because the researcher called `search_filing` with
-`company="jpmorgan chase"`, which matches no indexed company (`jpmorgan`), so the filtered search
-returned nothing; the retrieval eval uses the indexed name and does not see this.
+**From retrieval to answers.** The retrieval eval always passes the indexed company name, so it did
+not reveal that agents call the tools with other names: in the first final runs the researcher
+searched with `company="jpmorgan chase"`, which matched no indexed company (`jpmorgan`), and the
+First Republic question (t03) failed in both C1 and C2. After the company-name fix (Section 6) t03
+passes in both, and C1's JPMorgan risk comparison (k03) runs instead of reporting that JPMorgan has
+no filings.
 
 ### 4.5 Before the retrieval changes and the critic (history)
 
@@ -280,9 +290,10 @@ development cases.
 
 | Finding | Evidence | Action |
 |---|---|---|
-| **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returns nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returns an error and C1 gives up | **Fixed after the final runs** (`agent_desk/companies.py`): names, legal forms and tickers map to the indexed names in the search filter, filing lookup, risk passage ids and risk cache. C2's exact t03 search now returns the $588 million First Republic passage. Not yet re-measured in an agent run |
+| **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returned nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returned an error and C1 gave up | **Fixed** (`agent_desk/companies.py`): names, legal forms and tickers map to the indexed names in the search filter, filing lookup, risk passage ids and risk cache. Re-measured in the final runs: t03 now passes in C1 and C2 (both still call the tools with "jpmorgan chase"); C1's k03 now runs but is failed by the judge on content |
 | **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Not fixed; candidate lesson for the improvement loop |
 | **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner; proposed: allow a passage id after a figure that comes from filing text |
+| Calculation cited but never made | C2 c03: the note cited `[D1]` for revenue growth the quant worker computed itself; no calculation was recorded | Judge failed it; another sign the sandbox rule needs enforcing in code |
 | Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Checker limitation; not changed |
 | C1 wrote tool calls as plain text | First C1 run: all four risk cases ended after one call with the reply `compare_risk_factors(company="apple", …)` | One prompt rule added to C1; risk cases 0/4 → 3/4 |
 | C1 lacked the calculator | Arithmetic slips on dev (Apple 2024 margin 31.6% for 31.51%; Mastercard 55.4% for 55.32%) | `run_python` added to C1; it then used it in 3 of 4 calculation cases |
@@ -314,9 +325,12 @@ development cases.
   address this.
 - **Several changes between the first and final runs** (retrieval, chunking, critic, writer rules,
   C1's tools), so before/after differences are not attributed to a single change.
-- **Changes made after the final dev runs.** The company-name fix (which should help t03 and C1's
-  k03) is not reflected in the final dev numbers; the comparison rubric was clarified after seeing
-  them (Section 3). Both are dev-side changes made before any held-out run.
+- **Changes made after seeing dev results.** The company-name fix and the comparison-rubric
+  clarification (Section 3) were both made after dev runs, and the final dev runs were repeated
+  with the fix. Both are dev-side changes made before any held-out run.
+- **Cached re-runs.** The final dev runs replayed most model calls from the LLM cache; their
+  quality numbers are valid single runs, but latency and cost are taken from the previous, fresh
+  runs (Section 4.1).
 - **Provider drift.** OpenRouter can serve the model from different providers, some at reduced
   precision, and chooses per request; we observed one run with markedly different behaviour and
   price. We did not pin a provider.
@@ -335,9 +349,9 @@ development cases.
 
 ## 9. Cost of evaluation
 
-All runs to date, including smoke tests and the judge: about **USD 2.05** of OpenRouter usage
-(costs reported by OpenRouter per call), of which the final dev runs and their judging were about
-USD 0.74. Retrieval evaluation, regrading and calibration scoring use no LLM.
+All runs to date, including smoke tests and the judge: about **USD 2.55** of OpenRouter usage
+(account usage, not the per-run reported costs, which count cached calls again). The two rounds of
+final dev runs with their judging cost about USD 0.74 and USD 0.45. Retrieval evaluation, regrading and calibration scoring use no LLM.
 
 ## 10. Reproducing
 
