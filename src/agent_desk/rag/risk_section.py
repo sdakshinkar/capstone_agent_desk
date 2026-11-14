@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .filing_parser import load_passages
+from ..companies import normalize_company
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 FILINGS_DIR = PROJECT_ROOT / "data" / "filings"
@@ -48,7 +49,7 @@ def available_filings() -> dict[str, list[int]]:
 
 def find_filing(company: str, year: int | str) -> Path:
     """Return the 10-K file for data/filings/<company>/<year>/, or raise with what exists."""
-    name = company.strip().lower()
+    name = normalize_company(company)
     files = _filing_files(FILINGS_DIR / name / str(year))
     if files:
         return files[0]
@@ -70,7 +71,7 @@ def find_filing(company: str, year: int | str) -> Path:
 def load_risk_section(company: str, year: int | str) -> list[RiskPassage]:
     """Return every Item 1A passage of the filing, numbered in document order."""
     path = find_filing(company, year)
-    name = company.strip().lower()
+    name = normalize_company(company)
     texts = [p.text for p in load_passages(path) if p.item.startswith("Item 1A")]
     if not texts:
         raise ValueError(f"No Item 1A passages found in {path.name}.")

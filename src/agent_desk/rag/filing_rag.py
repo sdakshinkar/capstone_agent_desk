@@ -24,6 +24,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
+from ..companies import normalize_company
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 INDEX_DIR = PROJECT_ROOT / "data" / "faiss_index"
@@ -114,7 +115,7 @@ def _load_store() -> FAISS:
 def _metadata_filter(company: str | None, year: int | str | None) -> dict[str, str]:
     metadata_filter: dict[str, str] = {}
     if company:
-        metadata_filter["company"] = company.strip().lower()
+        metadata_filter["company"] = normalize_company(company)
     if year:
         metadata_filter["year"] = str(year)
     return metadata_filter
