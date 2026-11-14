@@ -29,7 +29,7 @@ def _doc(text):
 
 
 def _fake_c1(monkeypatch, answer="Apple had about 166,000 employees (fiscal 2025, Item 1)."):
-    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k, company=None, year=None: [
+    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k, company=None, year=None, mode="semantic": [
         _doc("the Company had approximately 166,000 full-time equivalent employees")])
     call = AIMessage(content="", usage_metadata=USAGE, tool_calls=[
         {"name": "search_filing", "args": {"query": "employees", "company": "apple", "year": 2025}, "id": "c1"}])
