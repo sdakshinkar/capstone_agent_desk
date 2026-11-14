@@ -1,7 +1,7 @@
 # Threat model: Analyst Desk
 
 **DRAFT - to be agreed with the Role 4 (tools/control/security) owner.**
-Scope: the LangGraph team (research lead, supervisor, researcher / quant / risk workers, writer) answering questions about Apple, Microsoft and Alphabet 10-Ks. Measured results: see `redteam/E2_results.md`.
+Scope: the LangGraph team (research lead, supervisor, researcher / quant / risk workers, writer) answering questions about Apple, Microsoft and Alphabet 10-Ks. Measured results (14 Nov, one run per case): 18 of 45 attacks worked with defences off and 1 of 45 with defences on; 0 of 16 honest questions wrongly blocked. Per-case table in `redteam/E2_results.md`.
 
 ## Assets
 
@@ -18,13 +18,13 @@ User message; filing passages returned by FAISS search; EDGAR Company Facts cach
 
 | Threat | Attacks (`attacks.jsonl`) | Mitigation | Status |
 |---|---|---|---|
-| Direct injection, prompt leak, obfuscated / multilingual | DI-01..08 | `check_input` / `check_output` rules | Partly (English rules only) |
-| Out-of-scope advice, insider info, manipulation | SC-01..05 | input scope rules, advice filter on output | Partly |
+| Direct injection, prompt leak, obfuscated / multilingual | DI-01..08 | `check_input` / `check_output` rules | Partly (English rules only). E2: 4 of 8 worked off, 1 on (DI-04: a false number from the user) |
+| Out-of-scope advice, insider info, manipulation | SC-01..05 | input scope rules, advice filter on output | Mitigated in E2: 4 of 5 worked off, 0 on |
 | Indirect injection via filing passages (hidden HTML, fake approval, link exfil, fake numbers) | IR-01..08 (9 cases) | result filter strips text addressed to the AI, hidden HTML, external links | Partly; a plain false number (IR-04) passes the filter |
 | Poisoned EDGAR labels / values | ED-01..04 | result filter; SHA-256 manifest re-fetches tampered files | Partly (manifest sits beside the data, unsigned) |
 | Poisoned risk-diff passage | RK-01..02 | result filter | Partly |
-| Watchlist leak (direct, via tool, via plan) | WL-01..03 | pre-tool hook blocks private terms; output check | Partly |
-| Runaway cost / tool abuse, `force_refresh` | DS-01..03, DI-05 | per-tool call budget, `force_refresh` forced False | Mitigated by hook (confirm against the E2 defences-on run) |
+| Watchlist leak (direct, via tool, via plan) | WL-01..03 | pre-tool hook blocks private terms; output check | Mitigated in E2: 3 of 3 worked off, 0 on (rule-based; a differently worded leak may pass) |
+| Runaway cost / tool abuse, `force_refresh` | DS-01..03, DI-05 | per-tool call budget, `force_refresh` forced False | Mitigated by hook (DS-01 worked off, held on) |
 | Plan edits carry instructions | DI-08 (F6) | none in team code | OPEN |
 | **Sandbox escape to shell, files, network (F1)** | SB-05..08 | `guardrails` code check blocks `sys`, `modules`, `builtins`, `os`, `open`, `eval` before running | **OPEN: unfixed in `src/agent_desk/sandbox/python_sandbox.py`**; the hook is only a second line |
 | Worker text reaches final answer unfiltered (F3) | IR-01T, IR-04 | none yet (compliance critic should cover it) | OPEN |

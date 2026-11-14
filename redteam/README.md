@@ -21,6 +21,8 @@ put into a search query, and sandbox code reaching the network. All three are in
 | Runs a question against team / researcher / quant / risk / sandbox and records tool calls, tokens, latency | `targets.py` |
 | CLI, summaries, E2 off-vs-on comparison | `run_redteam.py` |
 | What we found, with suggested fixes | `FINDINGS.md` |
+| E2 result: 18 of 45 attacks worked with defences off, 1 of 45 with defences on, 0 of 16 honest questions blocked. One row per case with the question sent | `E2_results.md` (built by `make_e2_report.py`) |
+| Commands cheat sheet | `RUN_COMMANDS.md` |
 | First sandbox run (11 Nov): 4 of 11 attacks succeed on Windows, including network access | `results/` on Ria's laptop |
 | Harness tests (fake models, no key needed) | `tests/test_redteam.py` |
 

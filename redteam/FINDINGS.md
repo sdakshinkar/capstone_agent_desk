@@ -45,7 +45,9 @@ says it is "not an isolation boundary". This finding shows that the gap can actu
 
 **Status (12 Nov):** partly addressed by `guardrails/` (rule-based input/output guard plus
 tool-boundary hooks), which plug in from outside `src/`. It is rules only; a model-based classifier
-(Llama Guard 4 / Prompt Guard 2) is not added. Measured in E2_results.md.
+(Llama Guard 4 / Prompt Guard 2) is not added. **Measured (14 Nov):** attacks that worked fell from 18 of 45 (40%)
+to 1 of 45 (2%), with 0 of 16 honest questions wrongly blocked; only DI-04 (a false number supplied by the user)
+still works. See `E2_results.md` (per-case table) and `guardrails/RESULTS.md`.
 
 
 There is no guardrail, hook, scope check or advice filter anywhere in `src/`. Every DI-, SC-, IR-,

@@ -34,6 +34,16 @@ Results go to `redteam/results/<timestamp>_defences-off|on/`
 python -m redteam.run_redteam compare redteam\results\<off folder> redteam\results\<on folder>
 ```
 
+## 4b. Build the full report (one row per test case, with the question sent)
+
+```
+python -m redteam.make_e2_report redteam/results/<off folder> redteam/results/<on folder>
+esults\<off folder> redteam
+esults\<on folder>
+```
+
+Writes `redteam/E2_results.md`.
+
 ## 5. Optional
 
 ```
