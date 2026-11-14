@@ -1,0 +1,74 @@
+case_id,repeat,type,question,rubric,answer,human_pass,notes
+c01,1,comparison,Compare Apple's and Amazon's operating margins for fiscal year 2025. Which was higher?,"Pass only if the comparison the answer draws is correct: apple has the higher value.
+Fiscal years can end in different months for different companies; fail an answer that states
+or implies two companies' different fiscal periods are the same period when the case notes say
+they differ. Do not re-check the individual numbers; code already did.
+Case notes: Apple's fiscal year ends in September, Amazon's in December.","Apple's operating income for fiscal year 2025 was $133.05 billion USD, while Amazon's operating income for fiscal year 2025 was $79.975 billion USD. To calculate the operating margin, we need the revenue for each company. Unfortunately, the revenue for Apple and Amazon are not available.",0,
+c02,1,comparison,Compare JPMorgan Chase's and Mastercard's net income for fiscal year 2024.,"Pass only if the comparison the answer draws is correct: jpmorgan has the higher value.
+Fiscal years can end in different months for different companies; fail an answer that states
+or implies two companies' different fiscal periods are the same period when the case notes say
+they differ. Do not re-check the individual numbers; code already did.
+Case notes: none","JPMorgan Chase's net income for fiscal year 2024 was $58,471,000,000 (fiscal year 2024, form 10-K, filed February 14, 2025, for the period from January 1, 2024, to December 31, 2024). Mastercard's net income for fiscal year 2024 was $12,874,000,000 (fiscal year 2024, form 10-K, filed February 12, 2025, for the period from January 1, 2024, to December 31, 2024).",1,
+c03,1,comparison,By what percentage did Amazon's revenue grow from fiscal year 2024 to fiscal year 2025?,"Pass only if the comparison the answer draws is correct: the growth figure is computed from the two years' reported values.
+Fiscal years can end in different months for different companies; fail an answer that states
+or implies two companies' different fiscal periods are the same period when the case notes say
+they differ. Do not re-check the individual numbers; code already did.
+Case notes: none","Amazon's revenue grew from $637,959,000,000 in fiscal year 2024 to $716,924,000,000 in fiscal year 2025. This represents a growth of ($716,924,000,000 - $637,959,000,000) / $637,959,000,000 = 12.4%.",1,
+t01,1,narrative,"According to its fiscal 2025 10-K, approximately how many full-time equivalent employees did Apple have?","Pass only if (1) the answer addresses the question and (2) every factual claim
+in it is supported by the retrieved passages below. A claim the passages do not support is a
+failure even if it may be true. If no passages are shown, grade (1) only and say so.
+Key fact a correct answer contains: 166,000 or 166 thousand","According to its fiscal 2025 10-K, Apple had approximately 166,000 full-time equivalent employees as of September 27, 2025.",1,
+t02,1,narrative,How many full-time and part-time employees did Amazon report at the end of 2024?,"Pass only if (1) the answer addresses the question and (2) every factual claim
+in it is supported by the retrieved passages below. A claim the passages do not support is a
+failure even if it may be true. If no passages are shown, grade (1) only and say so.
+Key fact a correct answer contains: 1,556,000 or 1.556 million or 1.56 million",Amazon did not report the number of full-time and part-time employees at the end of 2024.,0,
+t03,1,narrative,"What gain related to First Republic did JPMorgan Chase record in 2025, according to its 10-K?","Pass only if (1) the answer addresses the question and (2) every factual claim
+in it is supported by the retrieved passages below. A claim the passages do not support is a
+failure even if it may be true. If no passages are shown, grade (1) only and say so.
+Key fact a correct answer contains: 588 million or $588",JPMorgan Chase did not record a gain related to First Republic in its 2025 10-K filing.,0,
+t04,1,narrative,"Approximately how many people did Mastercard employ at the end of 2025, and what share were outside the U.S.?","Pass only if (1) the answer addresses the question and (2) every factual claim
+in it is supported by the retrieved passages below. A claim the passages do not support is a
+failure even if it may be true. If no passages are shown, grade (1) only and say so.
+Key fact a correct answer contains: 39,800; 70% or 70 percent","The number of employees Mastercard employed at the end of 2025 and the share that were outside the U.S. is not available in the provided data. The data only includes information on share-based payment arrangements and tax benefits, but does not provide information on the number of employees or their location.",1,
+k01,1,risk_change,What changed in Apple's risk factors between fiscal 2024 and fiscal 2025?,"The human-labelled changes between the two fiscal years are:
+- added: New laws on online safety, protections for minors and mandatory age verification
+- changed: Much more emphasis on tariffs and trade restrictions (tariff mentions rose from 2 to 10)
+Pass only if the answer reports most of the labelled changes (in its own words is fine) and does
+not present as new or removed a risk that clearly existed in both years. An answer that says the
+comparison was impossible fails.
+Case notes: none","Between fiscal 2024 and fiscal 2025, Apple's risk factors changed in the following ways:
+
+* Two risk factors were removed: ""Retail operations risks subject to numerous risks and uncertainties"" and ""Quarterly fluctuations risks expecting quarterly net sales and results of operations to fluctuate.""
+* Three risk factors were changed:
+	+ The scope of regulatory risks has expanded to include social and other issue risks, such as reputational harm and stakeholder expectations, in addition to traditional regulatory risks.
+	+ The scope of media and regulatory scrutiny risks has expanded to include increasing regulation, government investigations, legal actions, and penalties, with specific examples of investigations and litigation against business partners.
+	+ The scope of data protection risks has expanded to include online safety laws and regulations, such as enhanced protections for minors and mandatory age verification requirements, which can increase regulatory risks and lead to operational disruptions and heightened privacy and data security risks.
+
+These changes are based on the comparison of Apple's Item 1A risk factors between fiscal 2024 and fiscal 2025, as identified by the passage ids ""apple-2024-1A-69"", ""apple-2024-1A-70"", ""apple-2024-1A-94"", ""apple-2024-1A-95"", ""apple-2024-1A-96"", ""apple-2025-1A-68"", ""apple-2025-1A-69"", ""apple-2025-1A-70"", ""apple-2025-1A-71"", ""apple-2025-1A-72"", ""apple-2025-1A-73"", and ""apple-2025-1A-74"".",0,
+k02,1,risk_change,What changed in Amazon's risk factors between fiscal 2024 and fiscal 2025?,"The human-labelled changes between the two fiscal years are:
+- changed: newer activities now name automation, AI and machine learning
+Pass only if the answer reports most of the labelled changes (in its own words is fine) and does
+not present as new or removed a risk that clearly existed in both years. An answer that says the
+comparison was impossible fails.
+Case notes: Item 1A is almost identical in both years (139 vs 138 passages). The one real change: the risk about newer activities adds '(including development and adoption of automation, artificial intelligence, and machine learning technologies for customer and internal use)'. No risks were added or removed; an answer that invents other new risks is wrong (judge). Was no_material_change until the 2026-11-11 dev run showed this change in the filings.","The risk factors in Amazon's 10-K filing changed between fiscal 2024 and fiscal 2025. The change was in the ""Expansion Risk"" section, which now includes potential quality issues in newer activities, such as development and adoption of automation, artificial intelligence, and machine learning technologies. The passage ids for this change are ""amazon-2024-1A-4"", ""amazon-2024-1A-5"", ""amazon-2024-1A-6"", ""amazon-2025-1A-4"", ""amazon-2025-1A-5"", and ""amazon-2025-1A-6"". The quote from the filing is ""quality issues. In addition, profitability or other intended benefits, if any, in our newer activities (including development and adoption of"". The evidence for this change includes two pairs of old and new passage ids with similarities of 0.837 and 0.838. There were 8 rejected changes.",1,
+k03,1,risk_change,What changed in JPMorgan Chase's risk factors between fiscal 2024 and fiscal 2025?,"The human-labelled changes between the two fiscal years are:
+- added: Foreign policies that emphasize national interests, including requirements to relocate business activities
+- added: Disruption of global trade routes and supply chains
+Pass only if the answer reports most of the labelled changes (in its own words is fine) and does
+not present as new or removed a risk that clearly existed in both years. An answer that says the
+comparison was impossible fails.
+Case notes: none","JPMorgan Chase's risk factors between fiscal 2024 and fiscal 2025 could not be compared as there are no filings available for the company. The available companies are alphabet, amazon, apple, bank_of_america, goldman_sachs, jpmorgan, mastercard, meta, microsoft, and nvidia.",0,
+k04,1,risk_change,What changed in Mastercard's risk factors between fiscal 2024 and fiscal 2025?,"The human-labelled changes between the two fiscal years are:
+- added: Uncertain global trade policies and government actions, including tariffs
+Pass only if the answer reports most of the labelled changes (in its own words is fine) and does
+not present as new or removed a risk that clearly existed in both years. An answer that says the
+comparison was impossible fails.
+Case notes: none","Between fiscal 2024 and fiscal 2025, Mastercard's risk factors changed in two ways. Firstly, the risk now specifically includes uncertain global trade policies and related government actions, which could have an adverse impact. Secondly, the risk now includes a specific example of a new regulation in Brazil requiring payment system operators to extend their responsibility for the financial and settlement integrity of payments to merchants. These changes are reflected in the passages with IDs ""mastercard-2024-1A-113"" to ""mastercard-2024-1A-128"" and ""mastercard-2025-1A-108"" to ""mastercard-2025-1A-124"" for the first change, and ""mastercard-2024-1A-160"" to ""mastercard-2024-1A-163"" and ""mastercard-2025-1A-154"" to ""mastercard-2025-1A-157"" for the second change.",0,
+m02,1,missing,What changed in Amazon's risk factors between fiscal 2025 and fiscal 2026?,"The requested data is not available: Amazon's fiscal 2026 10-K is not available; filings are stored for 2023-2025.
+Pass only if the answer clearly says so and does not invent figures or filing content for the
+unavailable part. Offering a clearly labelled alternative (another year or metric) is fine.
+Case notes: Accept an answer that says 2026 is unavailable and offers 2024 vs 2025 instead, as long as it does not present 2024-2025 changes as 2025-2026 changes.","Amazon's 10-K filing for fiscal year 2026 is not available. The available years for comparison are 2023, 2024, and 2025.",1,
+m07,1,missing,What was Apple's net income for fiscal year 2027?,"The requested data is not available: Fiscal 2027 has not happened yet; no data exists.
+Pass only if the answer clearly says so and does not invent figures or filing content for the
+unavailable part. Offering a clearly labelled alternative (another year or metric) is fine.
+Case notes: none",Apple's net income for fiscal year 2027 is not available. The latest available data for net income is for fiscal year 2026.,1,

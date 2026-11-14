@@ -1,61 +1,160 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Analyst Desk golden case",
+  "title": "Agent Desk golden case",
+  "description": "One line of tests/evals/cases/{dev,heldout}/golden.jsonl, the format the eval harness reads (tests/evals/cases/loader.py, tests/evals/checkers/grade.py). Expected numbers are not stored in a case: a fact names (company, year, metric) and the checker looks the value up in tests/evals/truth/xbrl_truth.json. tests/unit_tests/test_golden_schema.py validates every case against this schema.",
   "type": "object",
-  "required": [
-    "id", "family_id", "split", "category", "question", "companies",
-    "expected", "check", "policy_refs", "author", "reviewer", "expected_written_at"
-  ],
+  "required": ["id", "group", "type", "question", "expected", "expected_tools"],
   "additionalProperties": false,
   "properties": {
-    "id": { "type": "string", "pattern": "^[NCRUW]-\\d{3}$" },
-    "family_id": { "type": "string", "minLength": 1 },
-    "split": { "enum": ["dev", "heldout"] },
-    "category": { "enum": ["N", "C", "R", "U", "W"] },
-    "question": { "type": "string", "minLength": 5 },
-    "companies": { "type": "array", "items": { "type": "string" }, "minItems": 0 },
-    "periods": { "type": "array", "items": { "type": "string", "description": "Period-end date YYYY-MM-DD" } },
-    "expected": {
+    "id": {
+      "type": "string",
+      "pattern": "^[nctkm]\\d{2}$",
+      "description": "Letter = type (n numeric, c comparison, t narrative text, k risk change, m missing data), then a number, e.g. n01, k07."
+    },
+    "group": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Family of related cases (e.g. apple-num, msft-googl-cmp). A group sits entirely in dev or in held-out; loader.validate() rejects a group found in both."
+    },
+    "type": { "enum": ["numeric", "comparison", "narrative", "risk_change", "missing"] },
+    "question": { "type": "string", "minLength": 5, "description": "Exactly what is sent to the system." },
+    "expected": { "type": "object" },
+    "expected_tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "uniqueItems": true,
+      "description": "Tools a good run should call. Diagnostic only: reported, never fails a case."
+    },
+    "notes": { "type": "string", "description": "Why the expected outcome is what it is (for reviewers and the judge rubric)." }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "enum": ["numeric", "comparison"] } } },
+      "then": { "properties": { "expected": { "$ref": "#/$defs/expected_numbers" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "narrative" } } },
+      "then": { "properties": { "expected": { "$ref": "#/$defs/expected_narrative" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "risk_change" } } },
+      "then": { "properties": { "expected": { "$ref": "#/$defs/expected_risk" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "missing" } } },
+      "then": { "properties": { "expected": { "$ref": "#/$defs/expected_missing" } } }
+    }
+  ],
+  "$defs": {
+    "company": {
+      "enum": ["microsoft", "apple", "alphabet", "amazon", "meta", "nvidia",
+               "jpmorgan", "bank_of_america", "goldman_sachs", "mastercard"],
+      "description": "Folder name under data/filings/ and key in xbrl_truth.json."
+    },
+    "metric": {
+      "enum": ["revenue", "operating_income", "net_income", "rd_expense", "eps_diluted",
+               "total_assets", "operating_margin", "net_margin"],
+      "description": "Metrics in xbrl_truth.json; margins are computed there by code."
+    },
+    "year": { "type": "integer", "minimum": 2000, "maximum": 2100, "description": "Fiscal year = calendar year in which the fiscal period ends." },
+    "tool": { "enum": ["get_company_fact", "list_company_facts", "list_edgar_companies", "search_filing", "compare_risk_factors", "run_python"] },
+    "fact": {
       "type": "object",
+      "required": ["company", "year", "metric"],
+      "additionalProperties": false,
       "properties": {
-        "facts": { "type": "array", "items": { "type": "string", "description": "company|concept|period_end|accession" } },
-        "value_usd_millions": { "type": "number" },
-        "ratio": { "type": "number" },
-        "tolerance": { "type": "number", "minimum": 0 },
-        "derivation": { "type": "string" },
-        "periods_must_be_stated": { "type": "boolean" },
-        "added": { "type": "array", "items": { "type": "string" } },
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "changed": { "type": "array", "items": { "type": "string" } },
-        "labelled_by": { "type": "array", "items": { "type": "string" } },
-        "must_say_unavailable": { "type": "boolean" },
-        "must_list_held_years": { "type": "boolean" },
-        "must_name_alternative_metric": { "type": "boolean" },
-        "must_refuse_advice": { "type": "boolean" },
-        "allowed_content": { "type": "string" }
+        "company": { "$ref": "#/$defs/company" },
+        "year": { "$ref": "#/$defs/year" },
+        "metric": { "$ref": "#/$defs/metric" }
+      },
+      "description": "The answer must state this value at the precision it writes (checkers/numbers.py); restated values are also accepted."
+    },
+    "expected_numbers": {
+      "type": "object",
+      "required": ["facts"],
+      "additionalProperties": false,
+      "properties": {
+        "facts": { "type": "array", "items": { "$ref": "#/$defs/fact" }, "minItems": 1 },
+        "derived": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "company", "metric", "from", "to"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "growth" },
+              "company": { "$ref": "#/$defs/company" },
+              "metric": { "$ref": "#/$defs/metric" },
+              "from": { "$ref": "#/$defs/year" },
+              "to": { "$ref": "#/$defs/year" }
+            }
+          },
+          "description": "Values computed by code from the truth, e.g. growth in percent from one year to another."
+        },
+        "answer_company": { "$ref": "#/$defs/company", "description": "For 'which is higher' questions: the company that should come out higher." }
       }
     },
-    "check": { "enum": ["code", "code+judge", "human"] },
-    "policy_refs": { "type": "array", "items": { "type": "string", "pattern": "^[A-F]\\d*$" } },
-    "forbidden": { "type": "array", "items": { "type": "string" } },
-    "author": { "type": "string" },
-    "reviewer": { "type": "string" },
-    "expected_written_at": { "type": "string", "format": "date-time" },
-    "reasoning_type": { "enum": ["information_extraction", "numerical", "logical", "comparison"] },
-    "evidence": {
-      "type": "array",
-      "description": "Where the answer is found, written before any run",
-      "items": {
-        "type": "object",
-        "required": ["doc", "location"],
-        "properties": {
-          "doc": { "type": "string", "description": "company|fiscal period|accession" },
-          "location": { "type": "string", "description": "Item and page or table, or passage ID" },
-          "text": { "type": "string" }
+    "expected_narrative": {
+      "type": "object",
+      "required": ["must_include"],
+      "additionalProperties": false,
+      "properties": {
+        "must_include": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "description": "Every group must appear in the answer; within a group any one wording is enough."
+        },
+        "evidence": {
+          "type": "object",
+          "required": ["company", "year", "text"],
+          "additionalProperties": false,
+          "properties": {
+            "company": { "$ref": "#/$defs/company" },
+            "year": { "$ref": "#/$defs/year" },
+            "text": { "type": "string", "minLength": 10, "description": "Exact sentence from the 10-K that supports the answer." }
+          }
         }
       }
     },
-    "justification": { "type": "string", "description": "How the expected answer follows from the evidence" },
-    "notes": { "type": "string" }
+    "expected_risk": {
+      "type": "object",
+      "required": ["company", "year_from", "year_to"],
+      "additionalProperties": false,
+      "properties": {
+        "company": { "$ref": "#/$defs/company" },
+        "year_from": { "$ref": "#/$defs/year" },
+        "year_to": { "$ref": "#/$defs/year" },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "label", "keywords"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["added", "removed", "changed"] },
+              "label": { "type": "string", "minLength": 3 },
+              "keywords": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+            }
+          },
+          "description": "Hand-labelled changes in Item 1A between the two years; at least half must be covered."
+        },
+        "no_material_change": { "type": "boolean", "description": "true when the two years' risk factors are essentially the same." }
+      },
+      "anyOf": [
+        { "required": ["labels"], "properties": { "labels": { "minItems": 1 } } },
+        { "required": ["no_material_change"], "properties": { "no_material_change": { "const": true } } }
+      ]
+    },
+    "expected_missing": {
+      "type": "object",
+      "required": ["refuse", "refuse_about"],
+      "additionalProperties": false,
+      "properties": {
+        "refuse": { "const": true },
+        "refuse_about": { "type": "string", "minLength": 3, "description": "What is unavailable and why." },
+        "facts": { "type": "array", "items": { "$ref": "#/$defs/fact" }, "description": "For partly answerable questions: the available part that must still be answered." }
+      }
+    }
   }
 }

@@ -56,9 +56,12 @@ in it is supported by the retrieved passages below. A claim the passages do not 
 failure even if it may be true. If no passages are shown, grade (1) only and say so.
 Key fact a correct answer contains: {key}""",
     "comparison": """Pass only if the comparison the answer draws is correct: {direction}
-Fiscal years can end in different months for different companies; fail an answer that states
-or implies two companies' different fiscal periods are the same period when the case notes say
-they differ. Do not re-check the individual numbers; code already did.
+Fiscal year-ends: apply this rule only when the case notes below say the companies' fiscal years
+end in different months; otherwise ignore it. In that case, naming each company's own fiscal year
+the way the question does (for example "fiscal 2025" for both) is correct and need not mention the
+different year-end dates; fail only an answer that says or implies the two companies' figures cover
+the same months, for example by calling them the same calendar period.
+Do not re-check the individual numbers; code already did.
 Case notes: {notes}""",
     "risk_change": """The human-labelled changes between the two fiscal years are:
 {labels}

@@ -30,6 +30,7 @@ from typing import Any, Callable, TypedDict
 import numpy as np
 
 from ..llm.llm import get_tool_llm
+from ..companies import normalize_company
 from .filing_rag import _get_embeddings
 from .risk_extract import Risk, _quote, extract_risks_cached
 from .risk_section import RiskPassage, load_risk_section
@@ -306,7 +307,7 @@ def compare_company_years(
     old_passages = load_risk_section(company, year_from)
     new_passages = load_risk_section(company, year_to)
     return compare_risks(
-        company.strip().lower(),
+        normalize_company(company),
         year_from,
         year_to,
         old_passages,

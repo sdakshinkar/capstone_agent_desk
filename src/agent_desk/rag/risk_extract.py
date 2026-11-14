@@ -28,6 +28,7 @@ from typing import Any, TypedDict
 
 from ..llm import llm as llm_module
 from ..llm.llm import get_tool_llm
+from ..companies import normalize_company
 from .risk_section import PROJECT_ROOT, RiskPassage, load_risk_section
 
 logger = logging.getLogger(__name__)
@@ -251,7 +252,7 @@ def _valid_risks(value: Any) -> bool:
 
 
 def _cache_path(company: str, year: int | str) -> Path:
-    return CACHE_DIR / f"{company.strip().lower()}-{int(year)}.json"
+    return CACHE_DIR / f"{normalize_company(company)}-{int(year)}.json"
 
 
 def extract_risks_cached(

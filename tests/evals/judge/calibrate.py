@@ -7,8 +7,8 @@
    WITHOUT looking at the judge's verdict (it is deliberately not in the sheet).
    The brief asks for 20+ labelled outputs; judge with --all first so failures are included.
 
-2. Score agreement:
-       python tests/evals/judge/calibrate.py score <run dir>
+2. Score agreement (pass several run dirs to pool their labels into one kappa):
+       python tests/evals/judge/calibrate.py score <run dir> [<run dir> ...]
    Prints raw agreement, Cohen's kappa and the confusion matrix, and lists the disagreements
    to read. Kappa corrects agreement for chance: about 0.6+ is usually taken as substantial,
    0.4-0.6 as moderate; below that, fix the rubric or the judge prompt before trusting it.
@@ -66,19 +66,28 @@ def export(run_dir: Path) -> int:
     return 0
 
 
-def score(run_dir: Path) -> int:
+def _labelled_rows(run_dir: Path) -> list[tuple[tuple[str, int], int, dict]]:
+    """(case key, human label, judge verdict) for every labelled row of one run."""
     judged = {(j["case_id"], j["repeat"]): j for j in _read_jsonl(run_dir / "judgments.jsonl")
               if j.get("pass") is not None}
-    human, machine, rows = [], [], []
-    with (run_dir / LABELS_FILE).open(encoding="utf-8") as fh:
+    rows = []
+    with (run_dir / LABELS_FILE).open(encoding="utf-8-sig") as fh:  # -sig: Excel adds a BOM
         for row in csv.DictReader(fh):
             label = row["human_pass"].strip()
             key = (row["case_id"], int(row["repeat"]))
-            if label not in {"0", "1"} or key not in judged:
-                continue
-            human.append(int(label))
-            machine.append(int(judged[key]["pass"]))
-            rows.append((key, int(label), judged[key]))
+            if label in {"0", "1"} and key in judged:
+                rows.append((key, int(label), judged[key]))
+    return rows
+
+
+def score(*run_dirs: Path) -> int:
+    """Agreement over the labelled rows of one run, or of several runs pooled together."""
+    rows = []
+    for run_dir in run_dirs:
+        prefix = f"{run_dir.name.split('_', 1)[-1]}:" if len(run_dirs) > 1 else ""
+        rows += [((prefix + cid, rep), h, j) for (cid, rep), h, j in _labelled_rows(run_dir)]
+    human = [h for _, h, _ in rows]
+    machine = [int(j["pass"]) for _, _, j in rows]
     if not human:
         print("No labelled rows yet.")
         return 1
@@ -102,11 +111,13 @@ def score(run_dir: Path) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 2 or argv[0] not in {"export", "score"}:
+    if len(argv) < 2 or argv[0] not in {"export", "score"}:
         print(__doc__)
         return 1
-    run_dir = Path(argv[1])
-    return export(run_dir) if argv[0] == "export" else score(run_dir)
+    run_dirs = [Path(a) for a in argv[1:]]
+    if argv[0] == "score":
+        return score(*run_dirs)  # several run dirs are pooled into one kappa
+    return max(export(d) for d in run_dirs)
 
 
 if __name__ == "__main__":

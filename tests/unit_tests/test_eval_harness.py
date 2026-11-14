@@ -141,3 +141,32 @@ def test_end_to_end_run_with_fake_system(monkeypatch, tmp_path):
     assert run_eval.main(["--resume", str(run_dir), "--yes"]) == 0
     (run_dir / "judgments.jsonl").write_text(json.dumps({"case_id": "n01", "repeat": 1, "pass": False}) + "\n")
     assert "**0/2**" in report.summarize_run(run_dir)
+
+
+def test_c2_runs_with_an_evidence_register_and_records_the_critic(monkeypatch):
+    from agent_desk.agents import workflow
+    from agent_desk.evidence import current_register
+
+    seen = {}
+
+    class FakeApp:
+        def invoke(self, state, config):
+            seen["register"] = current_register()
+            seen["limit"] = config["recursion_limit"]
+            seen["has_critic_fields"] = "critic_passed" in state and "revision" in state
+            return {**state, "final_answer": "note", "critic_passed": False, "revision": 2,
+                    "critic_issues": [{"type": "number", "text": "45%", "detail": "no id"}]}
+
+    monkeypatch.setattr(workflow, "build_team_workflow", lambda checkpointer=None: FakeApp())
+    out = systems._c2("q")
+    assert seen["register"] is not None  # without it the critic would skip itself
+    assert seen["limit"] == 50 and seen["has_critic_fields"]
+    assert out["critic"] == {"passed": False, "revisions": 2, "issues": [{"type": "number", "detail": "no id"}]}
+
+
+def test_repeats_turn_off_both_caches(monkeypatch):
+    config = {"cache": {"llm": False, "risk_extraction": True}}
+    assert run_eval.enable_caches(config, 1)["risk_extraction"] is True
+    assert run_eval.enable_caches(config, 3)["risk_extraction"] is False
+    import os
+    assert os.environ["AGENT_DESK_RISK_CACHE"] == "0"

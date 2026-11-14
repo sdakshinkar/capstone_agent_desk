@@ -39,6 +39,23 @@ def _find_filings(company: str | None = None) -> list[Path]:
     return files
 
 
+def _merge_passages_by_item(path: Path) -> list[tuple[str, str]]:
+    """Join consecutive passages of the same Item into one text (paragraphs kept apart by \\n\\n).
+
+    The parser returns every paragraph, table row and page header separately; splitting them
+    one by one left most chunks far below CHUNK_SIZE (often a lone header such as
+    "The Goldman Sachs Group, Inc. and Subsidiaries"), which crowded real answers out of the
+    search results. Merging first lets the splitter build full-size chunks per Item.
+    """
+    groups: list[tuple[str, list[str]]] = []
+    for passage in load_passages(path):
+        if groups and groups[-1][0] == passage.item:
+            groups[-1][1].append(passage.text)
+        else:
+            groups.append((passage.item, [passage.text]))
+    return [(item, "\n\n".join(texts)) for item, texts in groups]
+
+
 def _chunk_filing(path: Path) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
@@ -47,15 +64,15 @@ def _chunk_filing(path: Path) -> list[Document]:
     )
     documents = [
         Document(
-            page_content=passage.text,
+            page_content=text,
             metadata={
                 "company": path.parent.parent.name.lower(),
                 "year": path.parent.name,
-                "item": passage.item,
+                "item": item,
                 "source": str(path.resolve()),
             },
         )
-        for passage in load_passages(path)
+        for item, text in _merge_passages_by_item(path)
     ]
     return splitter.split_documents(documents)
 

@@ -56,6 +56,50 @@ The environment file and generated data are ignored by Git. Do not commit API
 keys. Model calls require network access and may incur provider charges.
 Prepare local filings and their FAISS index before asking narrative questions.
 
+Embeddings are never built during a search. `create_embeddings.py` extracts text
+with BeautifulSoup (`rag/filing_parser.py`), joins consecutive paragraphs of the same
+Item, splits each Item's text with
+`RecursiveCharacterTextSplitter` (1,000-character chunks, 150 overlap), embeds with
+`sentence-transformers/all-MiniLM-L6-v2` (downloaded from Hugging Face on first
+use) and saves one combined FAISS index in `data/faiss_index/`. Every chunk has
+`company`, `year`, `item` and `source` metadata. `search_filing(query, company,
+year, k, mode)` searches that index and can filter by company and/or year; it raises an
+error if the index has not been built.
+
+### Retrieval modes
+
+`search_chunks(..., mode=...)` in `rag/filing_rag.py` (and the `mode` argument of the
+`search_filing` tool) supports three modes over the same chunks and filters:
+
+| Mode | How it ranks | Best for |
+|---|---|---|
+| `semantic` (default) | FAISS vector similarity of `all-MiniLM-L6-v2` embeddings | paraphrased questions, broad topics |
+| `keyword` | BM25 (LangChain `BM25Retriever`, `rank-bm25`) | exact names, terms and numbers ("First Republic", "166,000") |
+| `hybrid` | both, merged with Reciprocal Rank Fusion, then reranked by a cross-encoder | general use (best recall) |
+
+The BM25 index is built in memory from the chunks in the FAISS docstore the first
+time a keyword or hybrid search runs (one per company/year filter, rebuilt when the
+FAISS index changes), so there is no separate build step. Its tokenizer lowercases
+text, keeps numbers like `166,000` and `72.22` whole, splits words on punctuation,
+drops common stopwords ("how", "does", "the", …) and applies a light suffix stemmer,
+so "employ", "employed" and "employees" all match.
+
+Hybrid search fuses the semantic and keyword rankings (`Σ weight / (60 + rank)`,
+weights in `HYBRID_WEIGHTS`, 0.5 / 0.5), keeps the top 30 (`RERANK_CANDIDATES`) and
+re-scores them with the local cross-encoder `cross-encoder/ms-marco-MiniLM-L-6-v2`
+(part of `sentence-transformers`, downloaded from Hugging Face on first use, runs on
+CPU). Set `HYBRID_RERANK = False` to skip the reranker for faster but less accurate
+results. All constants are at the top of `filing_rag.py`; to change the default mode
+for every caller, set `DEFAULT_SEARCH_MODE`.
+
+Compare the modes on the retrieval eval set:
+
+```bat
+python tests/evals/run_retrieval_eval.py --mode all --k 5
+```
+
+Tables are still flattened to text, and there is no query decomposition yet.
+
 ## Run the Streamlit UI
 
 ```powershell

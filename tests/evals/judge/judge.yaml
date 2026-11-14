@@ -1,5 +1,8 @@
 # Judge model: must be a different model family from the agents (Llama 3.3 70B).
-model: qwen/qwen-2.5-72b-instruct
+# google/gemini-3.1-flash-lite is the judge the brief suggests. It replaced
+# qwen/qwen-2.5-72b-instruct on 2026-11-13, when the account's OpenRouter guardrail started
+# blocking Qwen's only provider (no run had been judged with Qwen yet).
+model: google/gemini-3.1-flash-lite
 max_tokens: 300
 # Reuse identical judge calls from the local cache (data/eval_llm_cache.sqlite).
 llm_cache: true
