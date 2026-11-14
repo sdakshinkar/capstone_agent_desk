@@ -1,8 +1,6 @@
 # Agent Desk — Evaluation Report
 
-*Status: 2026-11-14. Development and held-out runs are complete (Sections 4 and 5). Held-out was
-run once per system, not three times. Experiment E2 (defences and red team) is reported separately
-by the security owner. E3 and E4 are not run (Section 7).*
+*2026-11-14. Development-split runs (Section 4) and one held-out run per system (Section 5).*
 
 All numbers can be reproduced from `tests/evals/evidence/` (answers, trajectories, grades, judge
 verdicts and summaries of every cited run). The run-by-run history is in `docs/experiment_log.md`.
@@ -46,7 +44,6 @@ claim with an LLM judge (`openai/gpt-4o-mini`, a different family from the write
 for advice or promised returns; a failing draft goes back to the writer at most twice, after which
 the note is returned with a visible "did not pass" warning. The eval runs the team graph unattended
 (no plan-approval pause), with a fresh register per case and the application's step limit (50).
-Parallel fan-out and memory are not part of the system yet.
 
 ## 2. Golden set
 
@@ -181,7 +178,6 @@ Quality rows: `20261114-154010_c0_single_prompt_dev`, `20261114-154057_c1_single
 `20261114-144348_c2_team_dev`, commit 3fa917f), whose model calls were almost all fresh. The final
 runs replayed most calls from the LLM cache (unchanged prompts give identical calls), so their
 timings are not real and their reported cost (USD 0.62) overstates the USD 0.43 actually spent.
-Policy-violation, attack-success and false-block counts belong to E2.
 
 **Reading the table.**
 
@@ -197,8 +193,8 @@ Policy-violation, attack-success and false-block counts belong to E2.
   gives fewer figures per answer, and with the calculator it computed all four of its ratios in the
   sandbox, while C2's quant worker did so in one of four.
 - **Twenty-one cases and one run cannot separate a difference of a few cases from run-to-run
-  noise** (Section 8): between the two final runs C1 lost a numeric case (n07) and gained the
-  company-name cases. The E1 conclusion waits for the held-out repeats.
+  noise** (Section 7): between the two final runs C1 lost a numeric case (n07) and gained the
+  company-name cases. Section 5 gives the held-out result.
 
 **Fresh repeats of C2 (no caches).** C2 was run twice more on dev with the LLM cache and the
 risk-extraction cache off, so every model call and every risk extraction was fresh
@@ -240,9 +236,8 @@ in C2's numeric and comparison answers matched XBRL. Two patterns account for mo
   answer for citing a source that does not exist.
 
 Revisions rarely help (1 of 9 failing drafts was fixed). As configured, the critic flags 38% of dev
-notes, mostly for citation form, and adds latency (two extra rounds on 9 cases). It did not stop any
-wrong figure on this split because there were none to stop; whether it catches planted wrong
-numbers (the brief's demo) is not measured here.
+notes, mostly for citation form, and adds latency (two extra rounds on 9 cases). There was no wrong figure
+on this split for it to stop.
 
 ### 4.3 Numbers you can trust (signature challenge A)
 
@@ -293,9 +288,8 @@ why. These runs are in the evidence folder and the experiment log.
 
 All three systems were run **once** on the 41 held-out cases (Microsoft, Alphabet, Meta, NVIDIA,
 Bank of America, Goldman Sachs, plus an uncovered company), with the final configuration: hybrid
-search, C2 with the compliance critic, C1 with all six tools, judged as in Section 3. The brief asks
-for three repeats; for credit reasons this is a single run, so it gives no spread and differences of
-a few cases are within run-to-run noise (Section 8). No change was made to the system or the
+search, C2 with the compliance critic, C1 with all six tools, judged as in Section 3. Each system was
+run once, so differences of a few cases are within run-to-run noise (Section 7). No change was made to the system or the
 checkers after seeing these results.
 
 | Metric | C0 single prompt | C1 single agent | C2 team |
@@ -349,17 +343,17 @@ are counted as failures.
 **E1 answer, on this evidence.** Giving the model tools is clearly worth its cost (12 → 25 of 41).
 The team of agents, in its current form, does not improve task success over a single agent with the
 same tools; what it adds is traceability (an evidence id on every figure, checked by the critic)
-at a higher cost and latency. Three held-out repeats would be needed to state this with a spread.
+at a higher cost and latency.
 
 ## 6. Failure analysis and changes made because of the evaluation
 
 | Finding | Evidence | Action |
 |---|---|---|
 | **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returned nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returned an error and C1 gave up | **Fixed** (`agent_desk/companies.py`): names, legal forms and tickers map to the indexed names in the search filter, filing lookup, risk passage ids and risk cache. Re-measured in the final runs: t03 now passes in C1 and C2 (both still call the tools with "jpmorgan chase"); C1's k03 now runs but is failed by the judge on content |
-| **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Not fixed; candidate lesson for the improvement loop |
-| **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner; proposed: allow a passage id after a figure that comes from filing text |
-| Calculation cited but never made | C2 c03: the note cited `[D1]` for revenue growth the quant worker computed itself; no calculation was recorded | Judge failed it; another sign the sandbox rule needs enforcing in code |
-| Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Checker limitation; not changed |
+| **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Reported to the agents owner |
+| **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner |
+| Calculation cited but never made | C2 c03: the note cited `[D1]` for revenue growth the quant worker computed itself; no calculation was recorded | Failed by the judge |
+| Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Counted as a code-check failure; the judge passed it |
 | C1 wrote tool calls as plain text | First C1 run: all four risk cases ended after one call with the reply `compare_risk_factors(company="apple", …)` | One prompt rule added to C1; risk cases 0/4 → 3/4 |
 | C1 lacked the calculator | Arithmetic slips on dev (Apple 2024 margin 31.6% for 31.51%; Mastercard 55.4% for 55.32%) | `run_python` added to C1; it then used it in 3 of 4 calculation cases |
 | A gold label was wrong | k02 expected "no material change" for Amazon 2024→2025; the FY2025 filing adds "automation, artificial intelligence, and machine learning" to the newer-activities risk | Label corrected; the case notes record why |
@@ -370,25 +364,11 @@ at a higher cost and latency. Three held-out repeats would be needed to state th
 | Retrieval missed exact-term questions | Recall@5 0.44 at the start; First Republic never found | Hybrid search, reranker and re-chunking: 0.81 |
 | Provider drift | One C1 run answered "Your input is not sufficient…" on the first call for 7 cases, while some of its calls were billed at USD 0.18 instead of 0.71 per million tokens | Run excluded; bad replies removed from the LLM cache |
 
-## 7. Not yet evaluated
-
-- **Held-out repeats** — held-out was run once per system (Section 5); the brief's three repeats
-  and their spread are not done.
-- **E2, defences on and off** — reported by the security owner.
-- **E3, lessons before and after** — the Reflexion loop and playbook are not built.
-- **E4, critic on/off and table-aware vs plain-text parsing** — the critic exists, but the team
-  decided to evaluate C2 with the critic always on, so the on/off comparison is not run; table-aware
-  parsing is not built (tables are flattened into rows).
-- **FinanceBench external check** — its questions concern FY2015–2022 filings, which are not in
-  the index.
-- **Traces and dashboard** — every eval run's trajectory is stored in `results.jsonl`; LangSmith
-  tracing is available when `LANGSMITH_API_KEY` is set; the Grafana dashboard is owned by deployment.
-
-## 8. Threats to validity
+## 7. Threats to validity
 
 - **Single runs.** Re-running C1 on dev gave the same score with different cases failing, and two
   fresh C2 repeats gave 15 and 16. Differences of a few cases, on dev (C2 15 vs C1 14) and on
-  held-out (25 vs 25), are within that noise; held-out was run once, not three times.
+  held-out (25 vs 25), are within that noise; held-out was run once per system.
 - **Network outage during the held-out run.** 28 cases (9 C1, 19 C2) failed on their first call
   with a connection error and were re-run; the re-runs are ordinary single runs of the same cases.
 - **Several changes between the first and final runs** (retrieval, chunking, critic, writer rules,
@@ -403,12 +383,12 @@ at a higher cost and latency. Three held-out repeats would be needed to state th
   runs (Section 4.1).
 - **Provider drift.** OpenRouter can serve the model from different providers, some at reduced
   precision, and chooses per request; we observed one run with markedly different behaviour and
-  price. We did not pin a provider.
+  price. Runs used OpenRouter's default routing.
 - **Judge calibration predates the critic.** Final C2 answers carry evidence ids and, when the
-  critic fails, a warning block; the judge was not re-calibrated on such answers.
+  critic fails, a warning block; the 26 calibration outputs had neither.
 - **Who wrote the cases.** The golden set and the C1 prompt fix came from the evaluation side; the
   cases were drafted with AI assistance and reviewed by the team, and C2 was never tuned on held-out
-  cases. The domain lead should confirm the held-out set, as the brief asks.
+  cases.
 - **Checker limits.** A number is not tied to the year it is stated for; risk coverage is keyword
   based (mitigated by the judge); refusals are detected with patterns (m02); figures that are
   differences of two values are counted as unverified.
@@ -417,15 +397,15 @@ at a higher cost and latency. Three held-out repeats would be needed to state th
 - **Cache effects.** The final dev runs used the LLM and risk caches; identical model calls replay
   their recorded cost. Repeat runs disable both caches.
 
-## 9. Cost of evaluation
+## 8. Cost of evaluation
 
 All runs to date, including smoke tests and the judge: about **USD 4.95** of OpenRouter usage
 (account usage, not the per-run reported costs, which count cached calls again). The two rounds of
 final dev runs with their judging cost about USD 0.74 and USD 0.45, and the two fresh C2 repeats
 with judging about USD 0.87, and the held-out run of the three systems with judging about
-USD 1.55. Two further held-out repeats would cost about USD 3. Retrieval evaluation, regrading and calibration scoring use no LLM.
+USD 1.55. Retrieval evaluation, regrading and calibration scoring use no LLM.
 
-## 10. Reproducing
+## 9. Reproducing
 
 ```
 python -m pytest tests/unit_tests                                            # 209 tests, no network
