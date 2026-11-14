@@ -20,7 +20,8 @@ SCALES = {
 
 # A number, optionally followed by a scale word or a percent sign.
 _NUMBER = re.compile(
-    r"(?<![\w.])(?P<neg>[-−])?\$?\s?(?P<num>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+    # A minus sign counts only when it touches the number or "$": "- 11.16%" is a Markdown bullet.
+    r"(?<![\w.])(?:(?P<neg>[-−])(?=[\d$]))?\$?\s?(?P<num>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
     r"\s?(?P<suffix>%|percent\b|trillion\b|billion\b|million\b|thousand\b|tn\b|bn\b|mn\b|mm\b|[tbmk]\b)?",
     re.IGNORECASE,
 )
