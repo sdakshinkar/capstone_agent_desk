@@ -50,6 +50,8 @@ def _short_calls(rec) -> list[dict[str, Any]]:
             row["blocked_by_hook"] = c.block_reason  # the model tried; the pre-tool hook stopped it
         if c.overrides:
             row["changed_by_hook"] = c.overrides
+        if c.not_executed:
+            row["not_executed"] = True  # requested by the model, but the tool never ran
         out.append(row)
     return out
 

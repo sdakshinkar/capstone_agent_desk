@@ -239,6 +239,8 @@ def _guarded(tool_obj: Any, real: Callable[..., str], question: str, counts: Cou
             kwargs["force_refresh"] = False
             events.append({"tool": name, "args": requested, "action": "modified",
                            "overrides": {"force_refresh": False}, "reason": "force_refresh is not allowed"})
+        else:
+            events.append({"tool": name, "args": requested, "action": "allowed"})  # reached the tool unchanged
         return clean_tool_result(real(*args, **kwargs))
 
     return wrapper

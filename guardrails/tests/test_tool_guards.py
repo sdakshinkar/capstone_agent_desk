@@ -102,10 +102,11 @@ def test_install_reports_blocked_and_changed_calls(monkeypatch):
     events = []
     with install(Q, events=events):
         rag_tools.search_filing.invoke({"query": "news on ABCD"})
-        rag_tools.search_filing.invoke({"query": "supply chain"})  # allowed: no event
+        rag_tools.search_filing.invoke({"query": "supply chain"})  # allowed: reported as "allowed"
         sandbox_tools.run_python.invoke({"code": "print(statistics.sys.modules)"})
         edgar_tools.get_company_fact.invoke({"cik": "320193", "concept": "Revenues", "force_refresh": True})
     assert [(e["tool"], e["action"]) for e in events] == [
-        ("search_filing", "blocked"), ("run_python", "blocked"), ("get_company_fact", "modified")]
+        ("search_filing", "blocked"), ("search_filing", "allowed"), ("run_python", "blocked"),
+        ("get_company_fact", "modified")]
     assert events[0]["args"]["query"] == "news on ABCD"
-    assert events[2]["overrides"] == {"force_refresh": False}
+    assert events[3]["overrides"] == {"force_refresh": False}
