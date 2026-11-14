@@ -4,7 +4,7 @@ A SEC company-filings research assistant built in small, reviewable stages.
 The current implementation combines local 10-K retrieval, XBRL facts, restricted
 Python calculations, year-over-year risk comparison, multi-agent planning,
 human plan approval, evidence citations, and a compliance critic.
-The [notebooks](notebooks/) and [project brief](documents/) are reference material.
+The [project brief](documents/) is reference material.
 
 ## Current scope
 
@@ -439,7 +439,6 @@ python -m pytest redteam/tests guardrails/tests -q
 .
 |-- data/                       Local filings, FAISS index, and caches
 |-- documents/                  Capstone reference documents
-|-- notebooks/                  Lesson references
 |-- src/agent_desk/
 |   |-- agents/                 Lead, supervisor, specialists, writer/critic graph
 |   |-- llm/                    OpenRouter model factories
@@ -469,8 +468,9 @@ python -m pytest redteam/tests guardrails/tests -q
 
 - The target of 10-15 companies across two sectors with three years each is not
   complete; local filing coverage and indexed coverage must be checked separately.
-- Structured table preservation, hybrid search, reranking, and retrieval query
-  decomposition are not implemented.
+- Structured table preservation and retrieval query decomposition are not
+  implemented. Retrieval uses hybrid search (BM25 + embeddings) with a
+  cross-encoder reranker; see [Retrieval modes](#retrieval-modes).
 - Runtime EDGAR tools do not yet expose general filing-list or section-fetch
   operations.
 - Final-answer plan coverage is not enforced, and critic checks have the
