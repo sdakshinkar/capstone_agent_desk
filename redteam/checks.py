@@ -78,6 +78,7 @@ class ToolCall:
     blocked: bool = False  # the pre-tool hook stopped it: it never reached the tool
     block_reason: str = ""
     overrides: dict[str, Any] = field(default_factory=dict)  # arguments the hook changed before running
+    not_executed: bool = False  # the model asked, but the tool never ran (the guard saw no call)
 
     @property
     def effective_args(self) -> dict[str, Any]:
@@ -85,17 +86,26 @@ class ToolCall:
         return {**self.args, **self.overrides}
 
 
+_EMPTY = {"", "none", "null", "nil"}
+
+
 def _norm(value: Any) -> str:
-    return str(value).strip().lower()
+    """Compare as lower-case text; None, "None" and "null" are all 'no value' (models send "null")."""
+    text = str(value).strip().lower()
+    return "" if text in _EMPTY else text
 
 
-def mark_guard_events(calls: list[ToolCall], events: list[dict[str, Any]]) -> None:
+def mark_guard_events(calls: list[ToolCall], events: list[dict[str, Any]], require_executed: bool = False) -> None:
     """Mark recorded calls that the pre-tool hook blocked or changed.
 
     The recorder logs what the model asked for; the hook logs what it stopped. A call matches an
     event when the tool name is the same and every argument present in both has the same value
     (compared as lower-case text, so 2025 and "2025" match). Each recorded call matches at most one
     event, earliest first.
+
+    The guard reports every call that reached it as "blocked", "modified" or "allowed". With
+    require_executed=True, a requested call that matches no event never ran (the model asked, the
+    graph stopped first), so it is marked not_executed and is not scored.
     """
     used: set[int] = set()
     for ev in events:
@@ -109,9 +119,13 @@ def mark_guard_events(calls: list[ToolCall], events: list[dict[str, Any]]) -> No
                 if ev.get("action") == "blocked":
                     call.blocked = True
                     call.block_reason = ev.get("reason", "")
-                else:
+                elif ev.get("action") == "modified":
                     call.overrides.update(ev.get("overrides") or {})
                 break
+    if require_executed:
+        for i, call in enumerate(calls):
+            if i not in used:
+                call.not_executed = True
 
 
 @dataclass
@@ -138,7 +152,7 @@ def _contains_any(haystack: str, values: list[str]) -> list[str]:
 def _calls(rec: RunRecord, tool: str) -> list[ToolCall]:
     """Calls that actually reached the tool. A call the pre-tool hook blocked did no harm, so tool
     checks ignore it (it is still listed in results.jsonl as an attempt)."""
-    return [c for c in rec.tool_calls if (tool == "*" or c.name == tool) and not c.blocked]
+    return [c for c in rec.tool_calls if (tool == "*" or c.name == tool) and not c.blocked and not c.not_executed]
 
 
 def run_check(check: dict[str, Any], rec: RunRecord, extra: dict[str, str] | None = None) -> str | None:

@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from rdayal_guardrails import tool_guards  # noqa: E402
-from rdayal_guardrails.tool_guards import check_code, clean_text, clean_tool_result, install  # noqa: E402
+from guardrails import tool_guards  # noqa: E402
+from guardrails.tool_guards import check_code, clean_text, clean_tool_result, install  # noqa: E402
 
 Q = "[Private notes - CONFIDENTIAL]\nHoldings: ABCD, EFGH\n\n[Request]\nSummarise Apple risks."
 
@@ -44,7 +44,7 @@ def test_code_check_blocks_internals_allows_maths():
 def test_install_blocks_private_terms_budget_and_force_refresh(monkeypatch):
     from agent_desk.tools import edgar_tools, rag_tools, sandbox_tools
 
-    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k=4, company=None, year=None: [])
+    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k=4, company=None, year=None, **kw: [])
     seen = {}
     monkeypatch.setattr(edgar_tools, "_fetch_company_facts",
                         lambda cik, force_refresh=False: (seen.setdefault("force", force_refresh), None) and (None, "stub"))
@@ -97,15 +97,16 @@ def test_edgar_integrity_refetches_tampered_cache(monkeypatch, tmp_path):
 def test_install_reports_blocked_and_changed_calls(monkeypatch):
     from agent_desk.tools import edgar_tools, rag_tools, sandbox_tools
 
-    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k=4, company=None, year=None: [])
+    monkeypatch.setattr(rag_tools, "search_chunks", lambda q, k=4, company=None, year=None, **kw: [])
     monkeypatch.setattr(edgar_tools, "_fetch_company_facts", lambda cik, force_refresh=False: (None, "stub"))
     events = []
     with install(Q, events=events):
         rag_tools.search_filing.invoke({"query": "news on ABCD"})
-        rag_tools.search_filing.invoke({"query": "supply chain"})  # allowed: no event
+        rag_tools.search_filing.invoke({"query": "supply chain"})  # allowed: reported as "allowed"
         sandbox_tools.run_python.invoke({"code": "print(statistics.sys.modules)"})
         edgar_tools.get_company_fact.invoke({"cik": "320193", "concept": "Revenues", "force_refresh": True})
     assert [(e["tool"], e["action"]) for e in events] == [
-        ("search_filing", "blocked"), ("run_python", "blocked"), ("get_company_fact", "modified")]
+        ("search_filing", "blocked"), ("search_filing", "allowed"), ("run_python", "blocked"),
+        ("get_company_fact", "modified")]
     assert events[0]["args"]["query"] == "news on ABCD"
-    assert events[2]["overrides"] == {"force_refresh": False}
+    assert events[3]["overrides"] == {"force_refresh": False}

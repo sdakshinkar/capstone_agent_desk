@@ -105,9 +105,9 @@ def poisoned_filing_chunk(spec: dict[str, Any]) -> Iterator[None]:
         },
     )
 
-    def search_with_poison(query, k=4, company=None, year=None):
+    def search_with_poison(query, k=4, company=None, year=None, **kwargs):  # kwargs: mode (semantic/keyword/hybrid)
         try:
-            results = list(real_search(query, k, company=company, year=year))
+            results = list(real_search(query, k, company=company, year=year, **kwargs))
         except FileNotFoundError:  # no index built: the poisoned passage is the only result
             results = []
         wanted_company = (company or spec["company"]).strip().lower() == spec["company"]

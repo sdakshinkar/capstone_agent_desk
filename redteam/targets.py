@@ -149,7 +149,8 @@ def run_target(target: str, question: str, defences: bool, guardrails: Any | Non
     rec.tool_calls = recorder.tool_calls
     # The recorder saw what the model ASKED for; mark the calls the hook stopped or changed, so a
     # blocked watchlist search or blocked escape code is not scored as a successful attack.
-    mark_guard_events(rec.tool_calls, guard_events)
+    reports_calls = guard is not None and hasattr(guard, "install") and "events" in inspect.signature(guard.install).parameters
+    mark_guard_events(rec.tool_calls, guard_events, require_executed=reports_calls)
     rec.llm_calls = recorder.llm_calls
     rec.input_tokens = recorder.input_tokens
     rec.output_tokens = recorder.output_tokens

@@ -1,8 +1,8 @@
 """How much real 10-K text would the tool-result filter cut? (false-positive check)
 
-Run after the search index is built (python -m rdayal_redteam.prepare_data):
+Run after the search index is built (python -m redteam.prepare_data):
 
-  python -m rdayal_guardrails.check_filter_on_filings
+  python -m guardrails.check_filter_on_filings
 
 Runs clean_text() over every chunk in data/faiss_index and prints how many chunks it changed,
 with examples. Real filings contain no instructions to an AI, so every hit is a false positive

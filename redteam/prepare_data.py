@@ -2,7 +2,7 @@
 
 Run once from the project root (needs SEC_USER_AGENT in .env and internet):
 
-  python -m rdayal_redteam.prepare_data
+  python -m redteam.prepare_data
 
 The attacks ask about Apple, Microsoft and Alphabet for fiscal 2023-2025. The team's
 filling_download.py is set up for Apple 2023-2024 only, so this script calls the same

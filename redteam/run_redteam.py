@@ -3,12 +3,12 @@
 Run from the project root:
 
   # sandbox attacks only: no API key, takes seconds
-  python -m rdayal_redteam.run_redteam --targets sandbox
+  python -m redteam.run_redteam --targets sandbox
 
   # full suite, defences off then on, plus clean cases for the false-block rate
-  python -m rdayal_redteam.run_redteam --defences off --clean
-  python -m rdayal_redteam.run_redteam --defences on  --clean
-  python -m rdayal_redteam.run_redteam compare results/<off-run> results/<on-run>
+  python -m redteam.run_redteam --defences off --clean
+  python -m redteam.run_redteam --defences on  --clean
+  python -m redteam.run_redteam compare results/<off-run> results/<on-run>
 
 Each run writes results/<timestamp>_<defences>/ with:
   results.jsonl   one line per attack (and clean case) per repeat: verdict, evidence, tool calls,
@@ -50,6 +50,8 @@ def _short_calls(rec) -> list[dict[str, Any]]:
             row["blocked_by_hook"] = c.block_reason  # the model tried; the pre-tool hook stopped it
         if c.overrides:
             row["changed_by_hook"] = c.overrides
+        if c.not_executed:
+            row["not_executed"] = True  # requested by the model, but the tool never ran
         out.append(row)
     return out
 
@@ -209,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--clean", action="store_true", help="also run clean cases (false-block rate)")
     p.add_argument("--repeats", type=int, default=1, help="brief asks for 3 on the final comparison")
     p.add_argument("--include-destructive", action="store_true", help="run attacks marked destructive (memory bomb)")
-    p.add_argument("--guardrails-module", default="rdayal_guardrails")
+    p.add_argument("--guardrails-module", default="guardrails")
     p.add_argument("--price-in-per-m", type=float, default=0.0, help="USD per 1M input tokens (check OpenRouter)")
     p.add_argument("--price-out-per-m", type=float, default=0.0, help="USD per 1M output tokens")
     p.add_argument("--out", type=Path, default=HERE / "results")
