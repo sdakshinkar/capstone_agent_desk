@@ -6,7 +6,7 @@ Python calculations, year-over-year risk comparison, multi-agent planning,
 human plan approval, evidence citations, and a compliance critic.
 The [project brief](documents/) is reference material.
 
-**Presentation:** [Group 16 - Capstone Project - Analyst Desk (Google Slides)](https://docs.google.com/presentation/d/1A-sOc9sdI_LAdGq7thEc8mYXEJSzSyFVonHs7OyNwTM/edit?usp=sharing)
+**Presentation:** [Group 16 - Capstone Project - Analyst Desk (Google Slides)](https://docs.google.com/presentation/d/1A-sOc9sdI_LAdGq7thEc8mYXEJSzSyFVonHs7OyNwTM/edit?usp=sharing) · [PowerPoint copy](docs/Group%2016%20-%20Capstone%20Project%20-%20Analyst%20Desk.pptx)
 
 ## Current scope
 
@@ -434,7 +434,8 @@ python -m pytest redteam/tests guardrails/tests -q
 
 - **[Domain brief](docs/domain_brief.md)**, **[policy pack](docs/policy_pack.md)** and the
   **[demo deck](docs/analyst_desk_demo.pptx)**.
-- **[Final presentation (Google Slides)](https://docs.google.com/presentation/d/1A-sOc9sdI_LAdGq7thEc8mYXEJSzSyFVonHs7OyNwTM/edit?usp=sharing)**.
+- **[Final presentation (Google Slides)](https://docs.google.com/presentation/d/1A-sOc9sdI_LAdGq7thEc8mYXEJSzSyFVonHs7OyNwTM/edit?usp=sharing)**
+  and its **[PowerPoint copy](docs/Group%2016%20-%20Capstone%20Project%20-%20Analyst%20Desk.pptx)**.
 
 ## Project structure
 
