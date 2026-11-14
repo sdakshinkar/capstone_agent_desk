@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from agent_desk.agents.langgraph_workflow import run_langgraph_workflow
 from agent_desk.agents.workflow import run_team_workflow
+from agent_desk.guardrails import app_hooks as guard
 
 QUESTION1 = "What was Apple's operating income in the latest fiscal year?"
 QUESTION2 = (
@@ -37,7 +38,8 @@ def main() -> int:
             metadata={"question": QUESTION},
         ):
             # print(run_langgraph_workflow(QUESTION))
-            print(run_team_workflow(QUESTION))
+            guard.enable_by_default()  # guardrails on unless AGENT_DESK_DEFENCES=off
+            print(guard.run_guarded(QUESTION, run_team_workflow))
         return 0
     except Exception as exc:  # pragma: no cover - debugger path
         print(f"Workflow failed: {exc}")

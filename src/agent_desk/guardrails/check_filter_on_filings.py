@@ -2,7 +2,7 @@
 
 Run after the search index is built (python -m redteam.prepare_data):
 
-  python -m guardrails.check_filter_on_filings
+  python -m agent_desk.guardrails.check_filter_on_filings   (from src/, or with PYTHONPATH=src)
 
 Runs clean_text() over every chunk in data/faiss_index and prints how many chunks it changed,
 with examples. Real filings contain no instructions to an AI, so every hit is a false positive
@@ -15,7 +15,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from agent_desk.rag.filing_rag import _load_store  # noqa: E402

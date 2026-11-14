@@ -22,6 +22,7 @@ from __future__ import annotations
 import copy
 import sys
 import uuid
+from collections import Counter
 from pathlib import Path
 
 # `streamlit run` executes this file as a script, so the folder that contains the agent_desk
@@ -35,6 +36,7 @@ from langgraph.types import Command  # noqa: E402
 from agent_desk.agents.workflow import build_team_workflow, initial_state  # noqa: E402
 from agent_desk.citations import number_references  # noqa: E402
 from agent_desk.evidence import Register, use_register  # noqa: E402
+from agent_desk.guardrails import app_hooks as guard  # noqa: E402
 from agent_desk.rag.risk_section import available_filings  # noqa: E402
 
 # The writer's answer and the worker findings are joined with this text in writer_node.
@@ -46,6 +48,7 @@ DEFAULTS = {
     "phase": "ask",
     "run_id": 0,  # changes on every reset, so the question box never reuses an old widget key
     "question": "",
+    "guard_counts": None,  # Counter shared by every guarded run of this question (one call budget)
     "graph": None,  # the compiled graph, built once per run
     "config": None,  # holds the thread id that ties the pause and the resume together
     "plan": None,  # the plan the graph paused on
@@ -104,6 +107,7 @@ def current_plan() -> dict:
 
 
 def init_state() -> None:
+    guard.enable_by_default()  # guardrails are on in the app unless AGENT_DESK_DEFENCES=off is set
     for key, value in DEFAULTS.items():
         st.session_state.setdefault(key, copy.deepcopy(value))
 
@@ -142,7 +146,10 @@ def run_graph(payload) -> dict | None:
     s = st.session_state
     try:
         use_register(s.register)
-        return s.graph.invoke(payload, s.config)
+        # The tool hooks wrap every run of this question, before and after the plan is approved,
+        # and share one call budget (s.guard_counts) so the budget covers the whole request.
+        with guard.protect(s.question, s.guard_counts):
+            return s.graph.invoke(payload, s.config)
     except Exception as exc:
         s.error = f"{type(exc).__name__}: {exc}"
         s.phase = "error"
@@ -157,7 +164,8 @@ def handle_result(result: dict) -> None:
         load_plan(paused[0].value["plan"])
         s.phase = "plan"
     else:
-        s.answer = result.get("final_answer", "")
+        # Output guard: advice language, outside links and confidential terms are removed or withheld.
+        s.answer, _withheld = guard.screen_answer(result.get("final_answer", ""), s.question)
         s.compliance = {
             "passed": result.get("critic_passed"),
             "revisions": result.get("revision", 0),
@@ -184,10 +192,15 @@ def render_question() -> None:
         return
     if st.button("Run", type="primary"):
         question = st.session_state.get(box, "").strip()
+        blocked = guard.screen_question(question) if question else None
         if not question:
             st.warning("Type a question first.")
+        elif blocked:
+            # Input guard: stopped before any model call. The question stays in the box to edit.
+            st.error(f"This question was not run: {blocked}")
         else:
             s.question = question
+            s.guard_counts = Counter()
             s.register = Register()
             s.graph = build_team_workflow(InMemorySaver())
             s.config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 50}

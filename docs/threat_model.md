@@ -35,7 +35,7 @@ User message; filing passages returned by FAISS search; EDGAR Company Facts cach
 
 ## Defences in place
 
-Layer 1: `check_input` and `check_output`, regex rules, no extra model calls. Layer 2 (`guardrails.install`): pre-tool hook, result filter and EDGAR hash manifest, wrapped around the tools from outside `src/`. Each agent should receive only the tools it needs.
+Layer 1: `check_input` and `check_output`, regex rules, no extra model calls. Layer 2 (`install`): pre-tool hook, result filter and EDGAR hash manifest, wrapped around the tools. Both layers live in `src/agent_desk/guardrails/` and run in the Streamlit app and `main.py` by default (switch: `AGENT_DESK_DEFENCES`). Each agent should receive only the tools it needs.
 
 ## Residual risks and limits
 

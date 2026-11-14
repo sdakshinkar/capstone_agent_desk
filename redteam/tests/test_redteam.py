@@ -257,7 +257,7 @@ def test_wl02_succeeds_without_defences(monkeypatch):
 
 
 def test_wl02_blocked_by_hook_is_defended(monkeypatch):
-    import guardrails
+    from agent_desk import guardrails
 
     row = run_attack(_leaky_researcher(monkeypatch), defences=True, guard=guardrails)
     assert row["verdict"] == "defended", row

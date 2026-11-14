@@ -1,7 +1,19 @@
 # guardrails: defences for Agent Desk
 
-Two layers, rule-based, with no extra model calls. They plug in from outside, so no team file has
-to change. `with install(question): ...` wraps the team's tools for one request.
+Two layers, rule-based, with no extra model calls. Lives in `src/agent_desk/guardrails/`.
+`with install(question): ...` wraps the team's tools for one request.
+
+## Where they run
+
+* **The Streamlit app and `main.py`** switch them on by default, through `app_hooks.py`:
+  the Run button checks the question (`check_input`) before any model call, every graph run
+  (before and after the analyst approves the plan) runs inside the tool hooks with one shared call
+  budget, and the final answer goes through `check_output`.
+* **Switch:** environment variable `AGENT_DESK_DEFENCES`. `on` = guardrails run (the app and
+  `main.py` set this unless you already set it). `off` = nothing is checked. If it is unset in plain
+  library or test code, nothing is checked, so importing `agent_desk` changes no behaviour and the
+  evaluation harness is not affected. Turn the guardrails off for the app with `AGENT_DESK_DEFENCES=off`.
+* **Red-team runner:** `python -m redteam.run_redteam --defences on` sets the same switch.
 
 ## Layer 1: question and answer (`__init__.py`)
 
@@ -26,7 +38,7 @@ to change. `with install(question): ...` wraps the team's tools for one request.
   IR-04, a plain false number with no instruction; the defence there is "numbers only from XBRL".
   Hook on: sandbox attacks drop from 4/11 to 0/11.
 * Normal 10-K language checked by hand passes untouched. **Run
-  `python -m guardrails.check_filter_on_filings` after building the index** to measure the
+  `PYTHONPATH=src python -m agent_desk.guardrails.check_filter_on_filings` after building the index** to measure the
   filter's false-positive rate on all real filing text.
 
 ## Honesty note (for E2)
@@ -48,7 +60,7 @@ and patterns that matched attack wording or normal 10-K language were removed. P
 ## Run
 
 ```bat
-python -m pytest guardrails/tests -q
-python -m guardrails.check_filter_on_filings
+python -m pytest tests/unit_tests/test_guardrails.py tests/unit_tests/test_tool_guards.py tests/unit_tests/test_guardrails_app.py -q
+set PYTHONPATH=src && python -m agent_desk.guardrails.check_filter_on_filings
 python -m redteam.run_redteam --defences on --targets researcher quant risk
 ```

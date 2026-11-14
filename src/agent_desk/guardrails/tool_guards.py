@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterator
 from unittest import mock
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]  # src/agent_desk/guardrails/tool_guards.py -> project root
 MANIFEST = PROJECT_ROOT / "data" / "edgar_manifest.json"
 
 CALL_BUDGET = {
@@ -247,14 +247,18 @@ def _guarded(tool_obj: Any, real: Callable[..., str], question: str, counts: Cou
 
 
 @contextlib.contextmanager
-def install(question: str = "", events: list[dict[str, Any]] | None = None) -> Iterator[Counter]:
+def install(question: str = "", events: list[dict[str, Any]] | None = None,
+            counts: Counter | None = None) -> Iterator[Counter]:
     """Wrap the team's tools for one request. Yields the per-tool call counter.
 
     If `events` is given, every call the guard blocked or changed is appended to it as
     {"tool", "args", "action": "blocked" | "modified", "reason", "overrides" (modified only)},
     so the red-team checkers can tell a call that reached the tool from one stopped by the hook.
+
+    Pass the same `counts` to several installs (the app runs the graph twice, before and after the
+    analyst approves the plan) to keep one call budget for the whole request.
     """
-    counts: Counter = Counter()
+    counts = counts if counts is not None else Counter()
     events = events if events is not None else []
     with contextlib.ExitStack() as stack:
         for tool_obj in _team_tools():

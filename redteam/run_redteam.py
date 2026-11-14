@@ -211,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--clean", action="store_true", help="also run clean cases (false-block rate)")
     p.add_argument("--repeats", type=int, default=1, help="brief asks for 3 on the final comparison")
     p.add_argument("--include-destructive", action="store_true", help="run attacks marked destructive (memory bomb)")
-    p.add_argument("--guardrails-module", default="guardrails")
+    p.add_argument("--guardrails-module", default="agent_desk.guardrails")
     p.add_argument("--price-in-per-m", type=float, default=0.0, help="USD per 1M input tokens (check OpenRouter)")
     p.add_argument("--price-out-per-m", type=float, default=0.0, help="USD per 1M output tokens")
     p.add_argument("--out", type=Path, default=HERE / "results")

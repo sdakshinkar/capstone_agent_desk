@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from guardrails import tool_guards  # noqa: E402
-from guardrails.tool_guards import check_code, clean_text, clean_tool_result, install  # noqa: E402
+from agent_desk.guardrails import tool_guards  # noqa: E402
+from agent_desk.guardrails.tool_guards import check_code, clean_text, clean_tool_result, install  # noqa: E402
 
 Q = "[Private notes - CONFIDENTIAL]\nHoldings: ABCD, EFGH\n\n[Request]\nSummarise Apple risks."
 

@@ -1,6 +1,6 @@
 # Guardrails: what they achieved (E2, 14 Nov 2026)
 
-Full per-case table with the exact question sent for every attack: [`redteam/E2_results.md`](../redteam/E2_results.md).
+Full per-case table with the exact question sent for every attack: [`redteam/E2_results.md`](../../../redteam/E2_results.md).
 Everything below is read from the two saved runs (`redteam/results/20261114_145835_defences-off` and
 `20261114_163405_defences-on`): same 45 attacks, same 16 honest questions, same model, one run each.
 

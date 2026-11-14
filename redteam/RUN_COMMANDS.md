@@ -5,12 +5,12 @@ Run everything from the project root (`capstone_agent_desk`).
 ## 1. Tests (about 1-2 minutes, free, no API key, fake models)
 
 ```
-python -m pytest redteam/tests guardrails/tests -v
-python -m pytest guardrails/tests -v
+python -m pytest tests redteam/tests -v          # everything (the guardrail tests are in tests/unit_tests)
+python -m pytest tests/unit_tests/test_guardrails.py tests/unit_tests/test_tool_guards.py tests/unit_tests/test_guardrails_app.py -v
 python -m pytest redteam/tests -v
 ```
 
-Expected: `39 passed` (13 guardrails + 26 red team).
+Expected: everything passes (227 tests: the team's, the guardrail tests, the app wiring tests and the 28 red-team harness tests).
 
 ## 2. One-time data setup
 
@@ -52,7 +52,7 @@ python -m redteam.run_redteam --targets sandbox researcher quant risk   # cheape
 python -m redteam.run_redteam --ids DI-01 IR-02                    # only some attacks
 python -m redteam.run_redteam --defences on --clean --repeats 3    # final run (brief asks for 3 repeats)
 python -m redteam.run_redteam --price-in-per-m <USD> --price-out-per-m <USD>   # real cost per case
-python -m guardrails.check_filter_on_filings                       # does the guard strip real 10-K text?
+set PYTHONPATH=src && python -m agent_desk.guardrails.check_filter_on_filings   # does the guard strip real 10-K text?
 ```
 
 ## 6. Meaning of the flags
@@ -60,7 +60,7 @@ python -m guardrails.check_filter_on_filings                       # does the gu
 | Flag | Meaning |
 |---|---|
 | `--defences off` | system as built, no protection (baseline) |
-| `--defences on` | `guardrails/` switched on |
+| `--defences on` | `agent_desk.guardrails` switched on |
 | `--clean` | also run the 16 legitimate questions (false-block rate) |
 | `--repeats N` | repeat every case N times |
 | `--include-destructive` | also run SB-12 (memory bomb). Avoid on a laptop |
