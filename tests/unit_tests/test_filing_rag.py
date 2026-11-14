@@ -5,38 +5,142 @@ from langchain_core.embeddings.fake import FakeEmbeddings
 
 from agent_desk.rag import filing_rag
 
+MODES = ["semantic", "keyword", "hybrid"]
+
+
+def _build_index(tmp_path, monkeypatch, docs):
+    embeddings = FakeEmbeddings(size=16)
+    FAISS.from_documents(docs, embeddings).save_local(str(tmp_path))
+    monkeypatch.setattr(filing_rag, "INDEX_DIR", tmp_path)
+    monkeypatch.setattr(filing_rag, "_embeddings", embeddings)
+    monkeypatch.setattr(filing_rag, "_store_cache", None)
+    monkeypatch.setattr(filing_rag, "_bm25_cache", {})
+    return tmp_path
+
 
 @pytest.fixture
 def index_dir(tmp_path, monkeypatch):
-    embeddings = FakeEmbeddings(size=16)
     docs = [
         Document(page_content=f"{company} {year} risk {i}", metadata={"company": company, "year": year})
         for i in range(4)
         for company in ("apple", "microsoft")
         for year in ("2024", "2025")
     ]
-    FAISS.from_documents(docs, embeddings).save_local(str(tmp_path))
-    monkeypatch.setattr(filing_rag, "INDEX_DIR", tmp_path)
-    monkeypatch.setattr(filing_rag, "_embeddings", embeddings)
-    monkeypatch.setattr(filing_rag, "_store_cache", None)
-    return tmp_path
+    return _build_index(tmp_path, monkeypatch, docs)
 
 
-def test_search_filters_by_company_and_year(index_dir):
-    results = filing_rag.search_chunks("risk", k=3, company="Apple", year=2025)
+@pytest.fixture
+def text_index(tmp_path, monkeypatch):
+    texts = [
+        ("jpmorgan", "2025", "We recorded a $588 million First Republic-related gain in 2025."),
+        ("jpmorgan", "2025", "Credit card net charge-offs increased during the year."),
+        ("jpmorgan", "2024", "The First Republic acquisition was completed in May 2023."),
+        ("apple", "2025", "The Company had approximately 166,000 full-time equivalent employees."),
+        ("apple", "2025", "Supply chain disruptions could affect product availability."),
+        ("meta", "2025", "Meta's headcount was 78,865 as of December 31, 2025."),
+    ]
+    docs = [
+        Document(page_content=text, metadata={"company": c, "year": y, "start_index": i})
+        for i, (c, y, text) in enumerate(texts)
+    ]
+    return _build_index(tmp_path, monkeypatch, docs)
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_search_filters_by_company_and_year(index_dir, mode):
+    results = filing_rag.search_chunks("risk", k=3, company="Apple", year=2025, mode=mode)
 
     assert len(results) == 3
     assert {(d.metadata["company"], d.metadata["year"]) for d in results} == {("apple", "2025")}
 
 
-def test_search_without_filters_and_unknown_company(index_dir):
-    assert len(filing_rag.search_chunks("risk", k=5)) == 5
-    assert filing_rag.search_chunks("risk", company="google") == []
+@pytest.mark.parametrize("mode", MODES)
+def test_search_without_filters_and_unknown_company(index_dir, mode):
+    assert len(filing_rag.search_chunks("risk", k=5, mode=mode)) == 5
+    assert filing_rag.search_chunks("risk", company="google", mode=mode) == []
+
+
+def test_default_mode_is_semantic(index_dir, monkeypatch):
+    calls = []
+    monkeypatch.setitem(
+        filing_rag._SEARCHERS, "semantic", lambda q, k, company=None, year=None: calls.append(q) or []
+    )
+    filing_rag.search_chunks("risk")
+    assert calls == ["risk"]
+
+
+def test_unknown_mode_is_rejected(index_dir):
+    with pytest.raises(ValueError, match="mode must be one of"):
+        filing_rag.search_chunks("risk", mode="fuzzy")
+
+
+def test_tokenize_keeps_numbers_and_splits_punctuation():
+    assert filing_rag.tokenize("Meta's 78,865 ride-hailing $72.22B") == [
+        "meta", "s", "78,865", "ride", "hailing", "72.22", "b",
+    ]
+
+
+def test_keyword_search_ranks_exact_terms_first(text_index):
+    top = filing_rag.keyword_search("First Republic gain", k=2, company="jpmorgan")
+
+    assert top[0].page_content.startswith("We recorded a $588 million First Republic")
+    assert all(d.metadata["company"] == "jpmorgan" for d in top)
+
+
+def test_keyword_search_matches_numbers(text_index):
+    top = filing_rag.keyword_search("166,000 employees", k=1)
+    assert "166,000" in top[0].page_content
+
+
+def test_keyword_search_respects_year_filter(text_index):
+    top = filing_rag.keyword_search("First Republic", k=5, company="jpmorgan", year=2024)
+    assert [d.metadata["year"] for d in top] == ["2024"]
+
+
+def test_keyword_search_with_no_tokens_returns_nothing(text_index):
+    assert filing_rag.keyword_search("?!", k=3) == []
+
+
+def test_keyword_index_is_cached_per_filter(text_index):
+    filing_rag.keyword_search("gain", company="jpmorgan")
+    filing_rag.keyword_search("loss", company="jpmorgan")
+    filing_rag.keyword_search("gain")
+    assert len(filing_rag._bm25_cache) == 2
+
+
+def test_hybrid_returns_unique_chunks_including_keyword_hit(text_index):
+    results = filing_rag.hybrid_search("First Republic gain", k=3, company="jpmorgan")
+
+    contents = [d.page_content for d in results]
+    assert len(contents) == len(set(contents)) == 3
+    assert any("$588 million" in c for c in contents)
+
+
+def _d(text):
+    return Document(page_content=text)
+
+
+def test_rrf_rewards_documents_ranked_by_both_retrievers():
+    a, b, c, d = _d("a"), _d("b"), _d("c"), _d("d")
+    fused = filing_rag.reciprocal_rank_fusion(
+        {"semantic": [a, b, c], "keyword": [d, c, b]}, weights={"semantic": 0.5, "keyword": 0.5}
+    )
+    # b and c appear in both lists, so they beat a and d, which appear in only one.
+    assert {x.page_content for x in fused[:2]} == {"b", "c"}
+    assert {x.page_content for x in fused} == {"a", "b", "c", "d"}
+
+
+def test_rrf_weights_shift_the_ranking():
+    a, b = _d("a"), _d("b")
+    lists = {"semantic": [a, b], "keyword": [b, a]}
+    assert filing_rag.reciprocal_rank_fusion(lists, {"semantic": 0.8, "keyword": 0.2})[0].page_content == "a"
+    assert filing_rag.reciprocal_rank_fusion(lists, {"semantic": 0.2, "keyword": 0.8})[0].page_content == "b"
 
 
 def test_search_without_index_explains_how_to_build(tmp_path, monkeypatch):
     monkeypatch.setattr(filing_rag, "INDEX_DIR", tmp_path / "missing")
     monkeypatch.setattr(filing_rag, "_store_cache", None)
 
-    with pytest.raises(FileNotFoundError, match="create_embeddings"):
-        filing_rag.search_chunks("risk")
+    for mode in MODES:
+        with pytest.raises(FileNotFoundError, match="create_embeddings"):
+            filing_rag.search_chunks("risk", mode=mode)

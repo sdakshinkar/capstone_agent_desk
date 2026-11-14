@@ -25,6 +25,13 @@ COMPANIES = {
     "AAPL": {"name": "Apple Inc.", "cik": "0000320193"},
     "MSFT": {"name": "Microsoft Corporation", "cik": "0000789019"},
     "GOOGL": {"name": "Alphabet Inc.", "cik": "0001652044"},
+    "AMZN": {"name": "Amazon.com, Inc.", "cik": "0001018724"},
+    "META": {"name": "Meta Platforms, Inc.", "cik": "0001326801"},
+    "NVDA": {"name": "NVIDIA Corporation", "cik": "0001045810"},
+    "JPM": {"name": "JPMorgan Chase & Co.", "cik": "0000019617"},
+    "BAC": {"name": "Bank of America Corporation", "cik": "0000070858"},
+    "GS": {"name": "The Goldman Sachs Group, Inc.", "cik": "0000886982"},
+    "MA": {"name": "Mastercard Incorporated", "cik": "0001141391"},
 }
 
 load_dotenv(PROJECT_ROOT / ".env")

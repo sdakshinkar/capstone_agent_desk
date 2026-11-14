@@ -1,0 +1,2 @@
+# Keep the SEC filings byte-for-byte as downloaded (no line-ending conversion).
+data/filings/** -text

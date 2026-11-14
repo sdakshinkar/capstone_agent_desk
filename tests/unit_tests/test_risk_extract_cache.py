@@ -15,6 +15,7 @@ RISKS = [
 @pytest.fixture
 def cache(monkeypatch, tmp_path):
     """Point the cache at a temp folder and count real extractions."""
+    monkeypatch.delenv("AGENT_DESK_RISK_CACHE", raising=False)
     monkeypatch.setattr(re, "CACHE_DIR", tmp_path / "risk_cache")
     calls = []
 

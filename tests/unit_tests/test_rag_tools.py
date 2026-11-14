@@ -13,8 +13,8 @@ def test_search_filing_tool_passes_filters_and_returns_metadata(monkeypatch):
     )
     calls = []
 
-    def fake_search_chunks(query, k, company=None, year=None):
-        calls.append((query, k, company, year))
+    def fake_search_chunks(query, k, company=None, year=None, mode="semantic"):
+        calls.append((query, k, company, year, mode))
         return [document]
 
     monkeypatch.setattr(rag_tools, "search_chunks", fake_search_chunks)
@@ -25,7 +25,7 @@ def test_search_filing_tool_passes_filters_and_returns_metadata(monkeypatch):
         )
     )
 
-    assert calls == [("supply chain", 1, "apple", 2025)]
+    assert calls == [("supply chain", 1, "apple", 2025, "semantic")]
     assert result == [
         {
             "text": "Supply chain risk factors.",
@@ -34,14 +34,28 @@ def test_search_filing_tool_passes_filters_and_returns_metadata(monkeypatch):
     ]
 
 
+@pytest.mark.parametrize("mode", ["semantic", "keyword", "hybrid"])
+def test_search_filing_tool_passes_mode(monkeypatch, mode):
+    seen = []
+    monkeypatch.setattr(
+        rag_tools,
+        "search_chunks",
+        lambda query, k, company=None, year=None, mode="semantic": seen.append(mode) or [],
+    )
+
+    assert json.loads(rag_tools.search_filing.invoke({"query": "risk", "mode": mode})) == []
+    assert seen == [mode]
+
+
 @pytest.mark.parametrize(
-    ("query", "year", "k", "message"),
+    ("query", "year", "k", "mode", "message"),
     [
-        (" ", None, 4, "must not be empty"),
-        ("risk", None, 0, "between 1 and 10"),
-        ("risk", 25, 4, "four-digit fiscal year"),
+        (" ", None, 4, "semantic", "must not be empty"),
+        ("risk", None, 0, "semantic", "between 1 and 10"),
+        ("risk", 25, 4, "semantic", "four-digit fiscal year"),
+        ("risk", None, 4, "fuzzy", "mode must be one of"),
     ],
 )
-def test_search_filing_rejects_invalid_input(query, year, k, message):
+def test_search_filing_rejects_invalid_input(query, year, k, mode, message):
     with pytest.raises(ValueError, match=message):
-        rag_tools.search_filing.func(query, year=year, k=k)
+        rag_tools.search_filing.func(query, year=year, k=k, mode=mode)

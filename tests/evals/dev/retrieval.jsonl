@@ -1,0 +1,32 @@
+{"id": "r001", "query": "How many full-time employees does Microsoft have?", "company": "microsoft", "year": 2025, "evidence": "we employed approximately 228,000 people on a full-time basis"}
+{"id": "r002", "query": "What is the relationship between Microsoft and OpenAI?", "company": "microsoft", "year": 2025, "evidence": "Microsoft and OpenAI maintain a long-term strategic partnership originally established in 2019"}
+{"id": "r003", "query": "How did attackers get into Microsoft email accounts in late 2023?", "company": "microsoft", "year": 2024, "evidence": "used a password spray attack to compromise a legacy test account"}
+{"id": "r004", "query": "When was the Activision Blizzard deal completed?", "company": "microsoft", "year": 2024, "evidence": "in October 2023 we completed our acquisition of Activision Blizzard"}
+{"id": "r005", "query": "What large gaming acquisition did Microsoft announce?", "company": "microsoft", "year": 2023, "evidence": "In January 2022, we announced plans to acquire Activision Blizzard, Inc."}
+{"id": "r006", "query": "How many people did Microsoft employ at the end of fiscal 2026?", "company": "microsoft", "year": 2026, "evidence": "we employed approximately 223,000 people on a full-time basis"}
+{"id": "r007", "query": "How many employees does Apple have?", "company": "apple", "year": 2025, "evidence": "the Company had approximately 166,000 full-time equivalent employees"}
+{"id": "r008", "query": "How many employees did Amazon have at the end of 2024?", "company": "amazon", "year": 2024, "evidence": "we employed approximately 1,556,000 full-time and part-time employees"}
+{"id": "r009", "query": "What was Meta's headcount at year end?", "company": "meta", "year": 2025, "evidence": "Headcount was 78,865 as of December 31, 2025"}
+{"id": "r010", "query": "How many employees does NVIDIA have and in how many countries?", "company": "nvidia", "year": 2025, "evidence": "we had approximately 36,000 employees in 38 countries"}
+{"id": "r011", "query": "How many employees does JPMorgan Chase have?", "company": "jpmorgan", "year": 2024, "evidence": "JPMorganChase had 317,233 employees globally"}
+{"id": "r012", "query": "What was Goldman Sachs headcount?", "company": "goldman_sachs", "year": 2024, "evidence": "we had headcount of 46,500"}
+{"id": "r013", "query": "How many people does Mastercard employ?", "company": "mastercard", "year": 2025, "evidence": "we employed approximately 39,800 persons globally"}
+{"id": "r014", "query": "How many employees does Bank of America have?", "company": "bank_of_america", "year": 2025, "evidence": "the Corporation employed approximately 213,000 employees"}
+{"id": "r015", "query": "Does Apple depend on single-source suppliers for components?", "company": "apple", "year": 2024, "evidence": "relies on single or limited sources for the supply and manufacture of many critical components"}
+{"id": "r016", "query": "How do export controls affect NVIDIA's ability to sell abroad?", "company": "nvidia", "year": 2025, "evidence": "shifting and expanding export control restrictions, impacting our ability to serve customers outside the United States"}
+{"id": "r017", "query": "What are Meta's reportable segments?", "company": "meta", "year": 2024, "evidence": "Family of Apps (FoA) and Reality Labs (RL)"}
+{"id": "r018", "query": "What are Amazon's operating segments?", "company": "amazon", "year": 2025, "evidence": "North America, International, and Amazon Web Services"}
+{"id": "r019", "query": "What is Waymo doing in Alphabet's Other Bets?", "company": "alphabet", "year": 2025, "evidence": "is now providing fully autonomous, paid ride-hailing services to customers in multiple cities"}
+{"id": "r020", "query": "What are Microsoft's three reporting segments?", "company": "microsoft", "year": 2025, "evidence": "Productivity and Business Processes, Intelligent Cloud, and More Personal Computing"}
+{"id": "r021", "query": "What gain related to First Republic did JPMorgan record in 2025?", "company": "jpmorgan", "year": 2025, "evidence": "a $588 million First Republic-related gain recorded in the first quarter of 2025"}
+{"id": "r022", "query": "What happened with Goldman Sachs and the Apple Card program?", "company": "goldman_sachs", "year": 2025, "evidence": "we entered into an agreement to transition the Apple Card program to another issuer"}
+{"id": "r023", "query": "Which capital rules apply to Bank of America?", "company": "bank_of_america", "year": 2024, "evidence": "we are subject to regulatory capital rules, including Basel 3"}
+{"id": "r024", "query": "How has Microsoft's partnership with OpenAI changed recently?", "company": "microsoft", "year": 2026, "evidence": "In October 2025 and April 2026, we extended this partnership"}
+{"id": "r025", "query": "Which regions make up Apple's Greater China segment?", "company": "apple", "year": 2025, "evidence": "Greater China includes China mainland, Hong Kong and Taiwan"}
+{"id": "r026", "query": "How concentrated is NVIDIA's revenue among its largest direct customers?", "company": "nvidia", "year": 2025, "evidence": "Sales to direct Customers A, B and C represented 12%, 11% and 11% of total revenue"}
+{"id": "r027", "query": "How much did Meta spend on capital expenditures in 2025?", "company": "meta", "year": 2025, "evidence": "were $72.22 billion for the year ended December 31, 2025"}
+{"id": "r028", "query": "What gain did JPMorgan record on Visa shares in 2024?", "company": "jpmorgan", "year": 2024, "evidence": "a $7.9 billion net gain related to Visa shares"}
+{"id": "r029", "query": "What acquisition did Goldman Sachs agree to in December 2025?", "company": "goldman_sachs", "year": 2025, "evidence": "we entered into an agreement to acquire Innovator Capital Management"}
+{"id": "r030", "query": "Which company's direct customers A, B and C each represented over 10% of revenue?", "company": null, "year": null, "evidence": "Sales to direct Customers A, B and C represented 12%, 11% and 11% of total revenue"}
+{"id": "r031", "query": "Which company agreed to transition the Apple Card program to another issuer?", "company": null, "year": null, "evidence": "we entered into an agreement to transition the Apple Card program to another issuer"}
+{"id": "r032", "query": "Which company's headcount was 78,865 at the end of 2025?", "company": null, "year": null, "evidence": "Headcount was 78,865 as of December 31, 2025"}

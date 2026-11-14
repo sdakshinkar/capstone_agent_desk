@@ -1,0 +1,2754 @@
+{
+  "microsoft": {
+    "cik": "0000789019",
+    "entity": "MICROSOFT CORPORATION",
+    "fiscal_year_end": "06-30",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 211915000000,
+          "accepted": [
+            211915000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2022-07-01",
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "operating_income": {
+          "value": 88523000000,
+          "accepted": [
+            88523000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2022-07-01",
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "net_income": {
+          "value": 72361000000,
+          "accepted": [
+            72361000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2022-07-01",
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "rd_expense": {
+          "value": 27195000000,
+          "accepted": [
+            27195000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2022-07-01",
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "eps_diluted": {
+          "value": 9.68,
+          "accepted": [
+            9.68
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2022-07-01",
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "total_assets": {
+          "value": 411976000000,
+          "accepted": [
+            411976000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-06-30",
+          "accession": "0000950170-23-035122",
+          "filed": "2023-07-27"
+        },
+        "operating_margin": {
+          "value": 41.7729,
+          "accepted": [
+            41.7729
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-06-30"
+        },
+        "net_margin": {
+          "value": 34.1462,
+          "accepted": [
+            34.1462
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-06-30"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 245122000000,
+          "accepted": [
+            245122000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2023-07-01",
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "operating_income": {
+          "value": 109433000000,
+          "accepted": [
+            109433000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-07-01",
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "net_income": {
+          "value": 88136000000,
+          "accepted": [
+            88136000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-07-01",
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "rd_expense": {
+          "value": 29510000000,
+          "accepted": [
+            29510000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2023-07-01",
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "eps_diluted": {
+          "value": 11.8,
+          "accepted": [
+            11.8
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-07-01",
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "total_assets": {
+          "value": 512163000000,
+          "accepted": [
+            512163000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-06-30",
+          "accession": "0000950170-24-087843",
+          "filed": "2024-07-30"
+        },
+        "operating_margin": {
+          "value": 44.6443,
+          "accepted": [
+            44.6443
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-06-30"
+        },
+        "net_margin": {
+          "value": 35.956,
+          "accepted": [
+            35.956
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-06-30"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 281724000000,
+          "accepted": [
+            281724000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "operating_income": {
+          "value": 128528000000,
+          "accepted": [
+            128528000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "net_income": {
+          "value": 101832000000,
+          "accepted": [
+            101832000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "rd_expense": {
+          "value": 32488000000,
+          "accepted": [
+            32488000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "eps_diluted": {
+          "value": 13.64,
+          "accepted": [
+            13.64
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "total_assets": {
+          "value": 619003000000,
+          "accepted": [
+            619003000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-06-30",
+          "accession": "0000950170-25-100235",
+          "filed": "2025-07-30"
+        },
+        "operating_margin": {
+          "value": 45.622,
+          "accepted": [
+            45.622
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-06-30"
+        },
+        "net_margin": {
+          "value": 36.146,
+          "accepted": [
+            36.146
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-06-30"
+        }
+      },
+      "2026": {
+        "revenue": {
+          "value": 331839000000,
+          "accepted": [
+            331839000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "operating_income": {
+          "value": 155237000000,
+          "accepted": [
+            155237000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "net_income": {
+          "value": 133749000000,
+          "accepted": [
+            133749000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "rd_expense": {
+          "value": 35562000000,
+          "accepted": [
+            35562000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "eps_diluted": {
+          "value": 17.95,
+          "accepted": [
+            17.95
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "total_assets": {
+          "value": 758376000000,
+          "accepted": [
+            758376000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2026-06-30",
+          "accession": "0001193125-26-323660",
+          "filed": "2026-07-29"
+        },
+        "operating_margin": {
+          "value": 46.7808,
+          "accepted": [
+            46.7808
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2026-06-30"
+        },
+        "net_margin": {
+          "value": 40.3054,
+          "accepted": [
+            40.3054
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2026-06-30"
+        }
+      }
+    }
+  },
+  "apple": {
+    "cik": "0000320193",
+    "entity": "Apple Inc.",
+    "fiscal_year_end": "09-30",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 383285000000,
+          "accepted": [
+            383285000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2022-09-25",
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "operating_income": {
+          "value": 114301000000,
+          "accepted": [
+            114301000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2022-09-25",
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "net_income": {
+          "value": 96995000000,
+          "accepted": [
+            96995000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2022-09-25",
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "rd_expense": {
+          "value": 29915000000,
+          "accepted": [
+            29915000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2022-09-25",
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "eps_diluted": {
+          "value": 6.13,
+          "accepted": [
+            6.13
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2022-09-25",
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "total_assets": {
+          "value": 352583000000,
+          "accepted": [
+            352583000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-09-30",
+          "accession": "0000320193-23-000106",
+          "filed": "2023-11-03"
+        },
+        "operating_margin": {
+          "value": 29.8214,
+          "accepted": [
+            29.8214
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-09-30"
+        },
+        "net_margin": {
+          "value": 25.3062,
+          "accepted": [
+            25.3062
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-09-30"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 391035000000,
+          "accepted": [
+            391035000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2023-10-01",
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "operating_income": {
+          "value": 123216000000,
+          "accepted": [
+            123216000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-10-01",
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "net_income": {
+          "value": 93736000000,
+          "accepted": [
+            93736000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-10-01",
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "rd_expense": {
+          "value": 31370000000,
+          "accepted": [
+            31370000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2023-10-01",
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "eps_diluted": {
+          "value": 6.08,
+          "accepted": [
+            6.08
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-10-01",
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "total_assets": {
+          "value": 364980000000,
+          "accepted": [
+            364980000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-09-28",
+          "accession": "0000320193-24-000123",
+          "filed": "2024-11-01"
+        },
+        "operating_margin": {
+          "value": 31.5102,
+          "accepted": [
+            31.5102
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-09-28"
+        },
+        "net_margin": {
+          "value": 23.9713,
+          "accepted": [
+            23.9713
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-09-28"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 416161000000,
+          "accepted": [
+            416161000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2024-09-29",
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "operating_income": {
+          "value": 133050000000,
+          "accepted": [
+            133050000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-09-29",
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "net_income": {
+          "value": 112010000000,
+          "accepted": [
+            112010000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-09-29",
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "rd_expense": {
+          "value": 34550000000,
+          "accepted": [
+            34550000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2024-09-29",
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "eps_diluted": {
+          "value": 7.46,
+          "accepted": [
+            7.46
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-09-29",
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "total_assets": {
+          "value": 359241000000,
+          "accepted": [
+            359241000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-09-27",
+          "accession": "0000320193-25-000079",
+          "filed": "2025-10-31"
+        },
+        "operating_margin": {
+          "value": 31.9708,
+          "accepted": [
+            31.9708
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-09-27"
+        },
+        "net_margin": {
+          "value": 26.9151,
+          "accepted": [
+            26.9151
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-09-27"
+        }
+      },
+      "2026": {
+        "revenue": {
+          "value": 478834000000,
+          "accepted": [
+            478834000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2025-09-28",
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "operating_income": {
+          "value": 158063000000,
+          "accepted": [
+            158063000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-09-28",
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "net_income": {
+          "value": 132175000000,
+          "accepted": [
+            132175000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-09-28",
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "rd_expense": {
+          "value": 45765000000,
+          "accepted": [
+            45765000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2025-09-28",
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "eps_diluted": {
+          "value": 8.98,
+          "accepted": [
+            8.98
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-09-28",
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "total_assets": {
+          "value": 404548000000,
+          "accepted": [
+            404548000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2026-09-26",
+          "accession": "0000320193-26-000026",
+          "filed": "2026-11-03"
+        },
+        "operating_margin": {
+          "value": 33.01,
+          "accepted": [
+            33.01
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2026-09-26"
+        },
+        "net_margin": {
+          "value": 27.6035,
+          "accepted": [
+            27.6035
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2026-09-26"
+        }
+      }
+    }
+  },
+  "alphabet": {
+    "cik": "0001652044",
+    "entity": "Alphabet Inc.",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 307394000000,
+          "accepted": [
+            307394000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "operating_income": {
+          "value": 84293000000,
+          "accepted": [
+            84293000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "net_income": {
+          "value": 73795000000,
+          "accepted": [
+            73795000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "rd_expense": {
+          "value": 45427000000,
+          "accepted": [
+            45427000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "eps_diluted": {
+          "value": 5.8,
+          "accepted": [
+            5.8
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "total_assets": {
+          "value": 402392000000,
+          "accepted": [
+            402392000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0001652044-24-000022",
+          "filed": "2024-01-31"
+        },
+        "operating_margin": {
+          "value": 27.4218,
+          "accepted": [
+            27.4218
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-12-31"
+        },
+        "net_margin": {
+          "value": 24.0066,
+          "accepted": [
+            24.0066
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 350018000000,
+          "accepted": [
+            350018000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "operating_income": {
+          "value": 112390000000,
+          "accepted": [
+            112390000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "net_income": {
+          "value": 100118000000,
+          "accepted": [
+            100118000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "rd_expense": {
+          "value": 49326000000,
+          "accepted": [
+            49326000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "eps_diluted": {
+          "value": 8.04,
+          "accepted": [
+            8.04
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "total_assets": {
+          "value": 450256000000,
+          "accepted": [
+            450256000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0001652044-25-000014",
+          "filed": "2025-02-05"
+        },
+        "operating_margin": {
+          "value": 32.1098,
+          "accepted": [
+            32.1098
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-12-31"
+        },
+        "net_margin": {
+          "value": 28.6037,
+          "accepted": [
+            28.6037
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 402836000000,
+          "accepted": [
+            402836000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "operating_income": {
+          "value": 129039000000,
+          "accepted": [
+            129039000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "net_income": {
+          "value": 132170000000,
+          "accepted": [
+            132170000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "rd_expense": {
+          "value": 61087000000,
+          "accepted": [
+            61087000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "eps_diluted": {
+          "value": 10.81,
+          "accepted": [
+            10.81
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "total_assets": {
+          "value": 595281000000,
+          "accepted": [
+            595281000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0001652044-26-000018",
+          "filed": "2026-02-05"
+        },
+        "operating_margin": {
+          "value": 32.0326,
+          "accepted": [
+            32.0326
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-12-31"
+        },
+        "net_margin": {
+          "value": 32.8099,
+          "accepted": [
+            32.8099
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "amazon": {
+    "cik": "0001018724",
+    "entity": "AMAZON.COM, INC.",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 574785000000,
+          "accepted": [
+            574785000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001018724-24-000008",
+          "filed": "2024-02-02"
+        },
+        "operating_income": {
+          "value": 36852000000,
+          "accepted": [
+            36852000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001018724-24-000008",
+          "filed": "2024-02-02"
+        },
+        "net_income": {
+          "value": 30425000000,
+          "accepted": [
+            30425000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001018724-24-000008",
+          "filed": "2024-02-02"
+        },
+        "eps_diluted": {
+          "value": 2.9,
+          "accepted": [
+            2.9
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001018724-24-000008",
+          "filed": "2024-02-02"
+        },
+        "total_assets": {
+          "value": 527854000000,
+          "accepted": [
+            527854000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0001018724-24-000008",
+          "filed": "2024-02-02"
+        },
+        "operating_margin": {
+          "value": 6.4114,
+          "accepted": [
+            6.4114
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-12-31"
+        },
+        "net_margin": {
+          "value": 5.2933,
+          "accepted": [
+            5.2933
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 637959000000,
+          "accepted": [
+            637959000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001018724-25-000004",
+          "filed": "2025-02-07"
+        },
+        "operating_income": {
+          "value": 68593000000,
+          "accepted": [
+            68593000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001018724-25-000004",
+          "filed": "2025-02-07"
+        },
+        "net_income": {
+          "value": 59248000000,
+          "accepted": [
+            59248000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001018724-25-000004",
+          "filed": "2025-02-07"
+        },
+        "eps_diluted": {
+          "value": 5.53,
+          "accepted": [
+            5.53
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001018724-25-000004",
+          "filed": "2025-02-07"
+        },
+        "total_assets": {
+          "value": 624894000000,
+          "accepted": [
+            624894000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0001018724-25-000004",
+          "filed": "2025-02-07"
+        },
+        "operating_margin": {
+          "value": 10.7519,
+          "accepted": [
+            10.7519
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-12-31"
+        },
+        "net_margin": {
+          "value": 9.2871,
+          "accepted": [
+            9.2871
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 716924000000,
+          "accepted": [
+            716924000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001018724-26-000004",
+          "filed": "2026-02-06"
+        },
+        "operating_income": {
+          "value": 79975000000,
+          "accepted": [
+            79975000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001018724-26-000004",
+          "filed": "2026-02-06"
+        },
+        "net_income": {
+          "value": 77670000000,
+          "accepted": [
+            77670000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001018724-26-000004",
+          "filed": "2026-02-06"
+        },
+        "eps_diluted": {
+          "value": 7.17,
+          "accepted": [
+            7.17
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001018724-26-000004",
+          "filed": "2026-02-06"
+        },
+        "total_assets": {
+          "value": 818042000000,
+          "accepted": [
+            818042000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0001018724-26-000004",
+          "filed": "2026-02-06"
+        },
+        "operating_margin": {
+          "value": 11.1553,
+          "accepted": [
+            11.1553
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-12-31"
+        },
+        "net_margin": {
+          "value": 10.8338,
+          "accepted": [
+            10.8338
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "meta": {
+    "cik": "0001326801",
+    "entity": "Meta Platforms, Inc.",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 134902000000,
+          "accepted": [
+            134902000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "operating_income": {
+          "value": 46751000000,
+          "accepted": [
+            46751000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "net_income": {
+          "value": 39098000000,
+          "accepted": [
+            39098000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "rd_expense": {
+          "value": 38483000000,
+          "accepted": [
+            38483000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "eps_diluted": {
+          "value": 14.87,
+          "accepted": [
+            14.87
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "total_assets": {
+          "value": 229623000000,
+          "accepted": [
+            229623000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0001326801-24-000012",
+          "filed": "2024-02-02"
+        },
+        "operating_margin": {
+          "value": 34.6555,
+          "accepted": [
+            34.6555
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-12-31"
+        },
+        "net_margin": {
+          "value": 28.9825,
+          "accepted": [
+            28.9825
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 164501000000,
+          "accepted": [
+            164501000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "operating_income": {
+          "value": 69380000000,
+          "accepted": [
+            69380000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "net_income": {
+          "value": 62360000000,
+          "accepted": [
+            62360000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "rd_expense": {
+          "value": 43873000000,
+          "accepted": [
+            43873000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "eps_diluted": {
+          "value": 23.86,
+          "accepted": [
+            23.86
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "total_assets": {
+          "value": 276054000000,
+          "accepted": [
+            276054000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0001326801-25-000017",
+          "filed": "2025-01-30"
+        },
+        "operating_margin": {
+          "value": 42.176,
+          "accepted": [
+            42.176
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-12-31"
+        },
+        "net_margin": {
+          "value": 37.9086,
+          "accepted": [
+            37.9086
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 200966000000,
+          "accepted": [
+            200966000000
+          ],
+          "unit": "USD",
+          "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "operating_income": {
+          "value": 83276000000,
+          "accepted": [
+            83276000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "net_income": {
+          "value": 60458000000,
+          "accepted": [
+            60458000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "rd_expense": {
+          "value": 57372000000,
+          "accepted": [
+            57372000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "eps_diluted": {
+          "value": 23.49,
+          "accepted": [
+            23.49
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "total_assets": {
+          "value": 366021000000,
+          "accepted": [
+            366021000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0001628280-26-003942",
+          "filed": "2026-01-29"
+        },
+        "operating_margin": {
+          "value": 41.4379,
+          "accepted": [
+            41.4379
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-12-31"
+        },
+        "net_margin": {
+          "value": 30.0837,
+          "accepted": [
+            30.0837
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "nvidia": {
+    "cik": "0001045810",
+    "entity": "NVIDIA CORP",
+    "fiscal_year_end": "01-29",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 26974000000,
+          "accepted": [
+            26974000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2022-01-31",
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "operating_income": {
+          "value": 4224000000,
+          "accepted": [
+            4224000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2022-01-31",
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "net_income": {
+          "value": 4368000000,
+          "accepted": [
+            4368000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2022-01-31",
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "rd_expense": {
+          "value": 7339000000,
+          "accepted": [
+            7339000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2022-01-31",
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "eps_diluted": {
+          "value": 1.74,
+          "accepted": [
+            0.17,
+            1.74
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2022-01-31",
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "total_assets": {
+          "value": 41182000000,
+          "accepted": [
+            41182000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-01-29",
+          "accession": "0001045810-23-000017",
+          "filed": "2023-02-24"
+        },
+        "operating_margin": {
+          "value": 15.6595,
+          "accepted": [
+            15.6595
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-01-29"
+        },
+        "net_margin": {
+          "value": 16.1934,
+          "accepted": [
+            16.1934
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-01-29"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 60922000000,
+          "accepted": [
+            60922000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2023-01-30",
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "operating_income": {
+          "value": 32972000000,
+          "accepted": [
+            32972000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-01-30",
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "net_income": {
+          "value": 29760000000,
+          "accepted": [
+            29760000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-30",
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "rd_expense": {
+          "value": 8675000000,
+          "accepted": [
+            8675000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2023-01-30",
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "eps_diluted": {
+          "value": 11.93,
+          "accepted": [
+            1.19,
+            11.93
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-30",
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "total_assets": {
+          "value": 65728000000,
+          "accepted": [
+            65728000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-01-28",
+          "accession": "0001045810-24-000029",
+          "filed": "2024-02-21"
+        },
+        "operating_margin": {
+          "value": 54.1217,
+          "accepted": [
+            54.1217
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-01-28"
+        },
+        "net_margin": {
+          "value": 48.8493,
+          "accepted": [
+            48.8493
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-01-28"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 130497000000,
+          "accepted": [
+            130497000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2024-01-29",
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "operating_income": {
+          "value": 81453000000,
+          "accepted": [
+            81453000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-01-29",
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "net_income": {
+          "value": 72880000000,
+          "accepted": [
+            72880000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-29",
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "rd_expense": {
+          "value": 12914000000,
+          "accepted": [
+            12914000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2024-01-29",
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "eps_diluted": {
+          "value": 2.94,
+          "accepted": [
+            2.94
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-29",
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "total_assets": {
+          "value": 111601000000,
+          "accepted": [
+            111601000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-01-26",
+          "accession": "0001045810-25-000023",
+          "filed": "2025-02-26"
+        },
+        "operating_margin": {
+          "value": 62.4175,
+          "accepted": [
+            62.4175
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-01-26"
+        },
+        "net_margin": {
+          "value": 55.848,
+          "accepted": [
+            55.848
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-01-26"
+        }
+      },
+      "2026": {
+        "revenue": {
+          "value": 215938000000,
+          "accepted": [
+            215938000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2025-01-27",
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "operating_income": {
+          "value": 130387000000,
+          "accepted": [
+            130387000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-01-27",
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "net_income": {
+          "value": 120067000000,
+          "accepted": [
+            120067000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-27",
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "rd_expense": {
+          "value": 18497000000,
+          "accepted": [
+            18497000000
+          ],
+          "unit": "USD",
+          "concept": "ResearchAndDevelopmentExpense",
+          "start": "2025-01-27",
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "eps_diluted": {
+          "value": 4.9,
+          "accepted": [
+            4.9
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-27",
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "total_assets": {
+          "value": 206803000000,
+          "accepted": [
+            206803000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2026-01-25",
+          "accession": "0001045810-26-000021",
+          "filed": "2026-02-25"
+        },
+        "operating_margin": {
+          "value": 60.3817,
+          "accepted": [
+            60.3817
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2026-01-25"
+        },
+        "net_margin": {
+          "value": 55.6025,
+          "accepted": [
+            55.6025
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2026-01-25"
+        }
+      }
+    }
+  },
+  "jpmorgan": {
+    "cik": "0000019617",
+    "entity": "JPMORGAN CHASE & CO",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 158104000000,
+          "accepted": [
+            158104000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000019617-24-000225",
+          "filed": "2024-02-16"
+        },
+        "net_income": {
+          "value": 49552000000,
+          "accepted": [
+            49552000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000019617-24-000225",
+          "filed": "2024-02-16"
+        },
+        "eps_diluted": {
+          "value": 16.23,
+          "accepted": [
+            16.23
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000019617-24-000225",
+          "filed": "2024-02-16"
+        },
+        "total_assets": {
+          "value": 3875393000000,
+          "accepted": [
+            3875393000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0000019617-24-000225",
+          "filed": "2024-02-16"
+        },
+        "net_margin": {
+          "value": 31.3414,
+          "accepted": [
+            31.3414
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 177556000000,
+          "accepted": [
+            177556000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000019617-25-000270",
+          "filed": "2025-02-14"
+        },
+        "net_income": {
+          "value": 58471000000,
+          "accepted": [
+            58471000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000019617-25-000270",
+          "filed": "2025-02-14"
+        },
+        "eps_diluted": {
+          "value": 19.75,
+          "accepted": [
+            19.75
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000019617-25-000270",
+          "filed": "2025-02-14"
+        },
+        "total_assets": {
+          "value": 4002814000000,
+          "accepted": [
+            4002814000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0000019617-25-000270",
+          "filed": "2025-02-14"
+        },
+        "net_margin": {
+          "value": 32.931,
+          "accepted": [
+            32.931
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 182447000000,
+          "accepted": [
+            182447000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-008131",
+          "filed": "2026-02-13"
+        },
+        "net_income": {
+          "value": 57048000000,
+          "accepted": [
+            57048000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-008131",
+          "filed": "2026-02-13"
+        },
+        "eps_diluted": {
+          "value": 20.02,
+          "accepted": [
+            20.02
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001628280-26-008131",
+          "filed": "2026-02-13"
+        },
+        "total_assets": {
+          "value": 4424900000000,
+          "accepted": [
+            4424900000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0001628280-26-008131",
+          "filed": "2026-02-13"
+        },
+        "net_margin": {
+          "value": 31.2683,
+          "accepted": [
+            31.2683
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "bank_of_america": {
+    "cik": "0000070858",
+    "entity": "BofA Finance LLC",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 98581000000,
+          "accepted": [
+            98581000000,
+            102769000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000070858-24-000122",
+          "filed": "2024-02-20"
+        },
+        "net_income": {
+          "value": 26515000000,
+          "accepted": [
+            26305000000,
+            26515000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000070858-24-000122",
+          "filed": "2024-02-20"
+        },
+        "eps_diluted": {
+          "value": 3.08,
+          "accepted": [
+            3.05,
+            3.08
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000070858-24-000122",
+          "filed": "2024-02-20"
+        },
+        "total_assets": {
+          "value": 3180151000000,
+          "accepted": [
+            3180151000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0000070858-24-000122",
+          "filed": "2024-02-20"
+        },
+        "net_margin": {
+          "value": 26.8967,
+          "accepted": [
+            25.5962,
+            25.8006,
+            26.6836,
+            26.8967
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 101887000000,
+          "accepted": [
+            101887000000,
+            105856000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000070858-25-000139",
+          "filed": "2025-02-25"
+        },
+        "net_income": {
+          "value": 27132000000,
+          "accepted": [
+            26973000000,
+            27132000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000070858-25-000139",
+          "filed": "2025-02-25"
+        },
+        "eps_diluted": {
+          "value": 3.21,
+          "accepted": [
+            3.19,
+            3.21
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000070858-25-000139",
+          "filed": "2025-02-25"
+        },
+        "total_assets": {
+          "value": 3261519000000,
+          "accepted": [
+            3261299000000,
+            3261519000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0000070858-25-000139",
+          "filed": "2025-02-25"
+        },
+        "net_margin": {
+          "value": 26.6295,
+          "accepted": [
+            25.4808,
+            25.631,
+            26.4734,
+            26.6295
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 113097000000,
+          "accepted": [
+            113097000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000070858-26-000157",
+          "filed": "2026-02-25"
+        },
+        "net_income": {
+          "value": 30509000000,
+          "accepted": [
+            30509000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000070858-26-000157",
+          "filed": "2026-02-25"
+        },
+        "eps_diluted": {
+          "value": 3.81,
+          "accepted": [
+            3.81
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000070858-26-000157",
+          "filed": "2026-02-25"
+        },
+        "total_assets": {
+          "value": 3411738000000,
+          "accepted": [
+            3411738000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0000070858-26-000157",
+          "filed": "2026-02-25"
+        },
+        "net_margin": {
+          "value": 26.976,
+          "accepted": [
+            26.976
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "goldman_sachs": {
+    "cik": "0000886982",
+    "entity": "The Goldman Sachs Group, Inc.",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 46254000000,
+          "accepted": [
+            46254000000
+          ],
+          "unit": "USD",
+          "concept": "RevenuesNetOfInterestExpense",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000886982-24-000006",
+          "filed": "2024-02-23"
+        },
+        "net_income": {
+          "value": 8516000000,
+          "accepted": [
+            8516000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000886982-24-000006",
+          "filed": "2024-02-23"
+        },
+        "eps_diluted": {
+          "value": 22.87,
+          "accepted": [
+            22.87
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0000886982-24-000006",
+          "filed": "2024-02-23"
+        },
+        "total_assets": {
+          "value": 1641594000000,
+          "accepted": [
+            1641594000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0000886982-24-000006",
+          "filed": "2024-02-23"
+        },
+        "net_margin": {
+          "value": 18.4114,
+          "accepted": [
+            18.4114
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 53512000000,
+          "accepted": [
+            53512000000
+          ],
+          "unit": "USD",
+          "concept": "RevenuesNetOfInterestExpense",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000886982-25-000005",
+          "filed": "2025-02-27"
+        },
+        "net_income": {
+          "value": 14276000000,
+          "accepted": [
+            14276000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000886982-25-000005",
+          "filed": "2025-02-27"
+        },
+        "eps_diluted": {
+          "value": 40.54,
+          "accepted": [
+            40.54
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0000886982-25-000005",
+          "filed": "2025-02-27"
+        },
+        "total_assets": {
+          "value": 1675972000000,
+          "accepted": [
+            1675972000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0000886982-25-000005",
+          "filed": "2025-02-27"
+        },
+        "net_margin": {
+          "value": 26.6781,
+          "accepted": [
+            26.6781
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 58283000000,
+          "accepted": [
+            58283000000
+          ],
+          "unit": "USD",
+          "concept": "RevenuesNetOfInterestExpense",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000886982-26-000091",
+          "filed": "2026-02-25"
+        },
+        "net_income": {
+          "value": 17176000000,
+          "accepted": [
+            17176000000
+          ],
+          "unit": "USD",
+          "concept": "NetIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000886982-26-000091",
+          "filed": "2026-02-25"
+        },
+        "eps_diluted": {
+          "value": 51.32,
+          "accepted": [
+            51.32
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0000886982-26-000091",
+          "filed": "2026-02-25"
+        },
+        "total_assets": {
+          "value": 1809320000000,
+          "accepted": [
+            1809320000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0000886982-26-000091",
+          "filed": "2026-02-25"
+        },
+        "net_margin": {
+          "value": 29.47,
+          "accepted": [
+            29.47
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  },
+  "mastercard": {
+    "cik": "0001141391",
+    "entity": "Mastercard Incorporated",
+    "fiscal_year_end": "12-31",
+    "years": {
+      "2023": {
+        "revenue": {
+          "value": 25098000000,
+          "accepted": [
+            25098000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001141391-24-000022",
+          "filed": "2024-02-13"
+        },
+        "operating_income": {
+          "value": 14008000000,
+          "accepted": [
+            14008000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001141391-24-000022",
+          "filed": "2024-02-13"
+        },
+        "net_income": {
+          "value": 11195000000,
+          "accepted": [
+            11195000000
+          ],
+          "unit": "USD",
+          "concept": "ProfitLoss",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001141391-24-000022",
+          "filed": "2024-02-13"
+        },
+        "eps_diluted": {
+          "value": 11.83,
+          "accepted": [
+            11.83
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "accession": "0001141391-24-000022",
+          "filed": "2024-02-13"
+        },
+        "total_assets": {
+          "value": 42448000000,
+          "accepted": [
+            42448000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2023-12-31",
+          "accession": "0001141391-24-000022",
+          "filed": "2024-02-13"
+        },
+        "operating_margin": {
+          "value": 55.8132,
+          "accepted": [
+            55.8132
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2023-12-31"
+        },
+        "net_margin": {
+          "value": 44.6051,
+          "accepted": [
+            44.6051
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2023-12-31"
+        }
+      },
+      "2024": {
+        "revenue": {
+          "value": 28167000000,
+          "accepted": [
+            28167000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001141391-25-000011",
+          "filed": "2025-02-12"
+        },
+        "operating_income": {
+          "value": 15582000000,
+          "accepted": [
+            15582000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001141391-25-000011",
+          "filed": "2025-02-12"
+        },
+        "net_income": {
+          "value": 12874000000,
+          "accepted": [
+            12874000000
+          ],
+          "unit": "USD",
+          "concept": "ProfitLoss",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001141391-25-000011",
+          "filed": "2025-02-12"
+        },
+        "eps_diluted": {
+          "value": 13.89,
+          "accepted": [
+            13.89
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accession": "0001141391-25-000011",
+          "filed": "2025-02-12"
+        },
+        "total_assets": {
+          "value": 48081000000,
+          "accepted": [
+            48081000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2024-12-31",
+          "accession": "0001141391-25-000011",
+          "filed": "2025-02-12"
+        },
+        "operating_margin": {
+          "value": 55.3201,
+          "accepted": [
+            55.3201
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2024-12-31"
+        },
+        "net_margin": {
+          "value": 45.706,
+          "accepted": [
+            45.706
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2024-12-31"
+        }
+      },
+      "2025": {
+        "revenue": {
+          "value": 32791000000,
+          "accepted": [
+            32791000000
+          ],
+          "unit": "USD",
+          "concept": "Revenues",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001141391-26-000013",
+          "filed": "2026-02-11"
+        },
+        "operating_income": {
+          "value": 18897000000,
+          "accepted": [
+            18897000000
+          ],
+          "unit": "USD",
+          "concept": "OperatingIncomeLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001141391-26-000013",
+          "filed": "2026-02-11"
+        },
+        "net_income": {
+          "value": 14968000000,
+          "accepted": [
+            14968000000
+          ],
+          "unit": "USD",
+          "concept": "ProfitLoss",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001141391-26-000013",
+          "filed": "2026-02-11"
+        },
+        "eps_diluted": {
+          "value": 16.52,
+          "accepted": [
+            16.52
+          ],
+          "unit": "USD/shares",
+          "concept": "EarningsPerShareDiluted",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accession": "0001141391-26-000013",
+          "filed": "2026-02-11"
+        },
+        "total_assets": {
+          "value": 54157000000,
+          "accepted": [
+            54157000000
+          ],
+          "unit": "USD",
+          "concept": "Assets",
+          "start": null,
+          "end": "2025-12-31",
+          "accession": "0001141391-26-000013",
+          "filed": "2026-02-11"
+        },
+        "operating_margin": {
+          "value": 57.6286,
+          "accepted": [
+            57.6286
+          ],
+          "unit": "percent",
+          "formula": "operating_income / revenue",
+          "end": "2025-12-31"
+        },
+        "net_margin": {
+          "value": 45.6467,
+          "accepted": [
+            45.6467
+          ],
+          "unit": "percent",
+          "formula": "net_income / revenue",
+          "end": "2025-12-31"
+        }
+      }
+    }
+  }
+}
