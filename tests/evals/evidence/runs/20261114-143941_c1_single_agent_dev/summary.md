@@ -1,4 +1,4 @@
-﻿# c1_single_agent on dev
+# c1_single_agent on dev
 
 Model meta-llama/llama-3.3-70b-instruct | commit 3fa917f | started 2026-11-14T14:39:41 | caches: llm, risk_extraction | search mode: hybrid
 

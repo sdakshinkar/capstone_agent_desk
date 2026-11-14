@@ -1,14 +1,14 @@
-﻿# c2_team on dev
+# c2_team on dev
 
 Model meta-llama/llama-3.3-70b-instruct | commit 3fa917f | started 2026-11-14T14:43:48 | caches: llm, risk_extraction | search mode: hybrid
 
 | Metric | c2_team |
 |---|---|
-| Task success | **14/21** |
+| Task success | **15/21** |
 |   code checks passed | 18/21 |
 |   judged cases | 13 |
 |   numeric | 8/8 |
-|   comparison | 2/3 |
+|   comparison | 3/3 |
 |   narrative | 2/4 |
 |   risk_change | 1/4 |
 |   missing | 1/2 |
@@ -31,11 +31,10 @@ Model meta-llama/llama-3.3-70b-instruct | commit 3fa917f | started 2026-11-14T14
 | Critic: still failing (flagged) | 8/21 |
 | Critic revisions / case | 0.81 |
 | Critic open issues by type | claim 2, number 22 |
-| Success per repeat | r1: 14 |
+| Success per repeat | r1: 15 |
 
 ## Failed cases
 
-- `c01` r1 (comparison): judge
 - `t03` r1 (narrative): must_include, judge
 - `t04` r1 (narrative): must_include, judge
 - `k01` r1 (risk_change): judge

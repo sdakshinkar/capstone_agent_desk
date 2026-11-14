@@ -26,6 +26,11 @@ Model meta-llama/llama-3.3-70b-instruct | commit ad60d2e | started 2026-11-11T18
 | Evidence retrieved | 3/4 |
 | Figures verified vs XBRL | 25/25 (100%) |
 | Calculations in sandbox | 0/4 |
+| Critic: passed first draft | n/a |
+| Critic: passed after revision | n/a |
+| Critic: still failing (flagged) | n/a |
+| Critic revisions / case | n/a |
+| Critic open issues by type | n/a |
 | Success per repeat | r1: 18 |
 
 ## Failed cases
@@ -33,3 +38,4 @@ Model meta-llama/llama-3.3-70b-instruct | commit ad60d2e | started 2026-11-11T18
 - `t03` r1 (narrative): must_include, judge
 - `k01` r1 (risk_change): judge
 - `k03` r1 (risk_change): judge
+

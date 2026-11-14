@@ -34,12 +34,14 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 | 24 | 11-14 | retrieval eval | 3fa917f | all three | 32 | 0.47 / 0.72 / 0.81 | 0.000 | On the rebuilt index. Hybrid MRR 0.64. First Republic (r021) found for the first time. |
 | 25 | 11-14 | `143717_c0_single_prompt_dev` *evidence* | 3fa917f | hybrid | dev 21 | 7 / 7 | 0.020 | Final C0. Better chunks lift text questions (3/4); numbers still 2/8. |
 | 26 | 11-14 | `143941_c1_single_agent_dev` *evidence* | 3fa917f | hybrid | dev 21 | 15 / 14 | 0.362 | Final C1 with the calculator (used in 3/4 calculation cases); numeric 8/8. |
-| 27 | 11-14 | `144348_c2_team_dev` *evidence* | 3fa917f | hybrid | dev 21 | 18 / 14 | 0.314 | Final C2 with the critic. All 26 figures match XBRL. Critic: 12 first-pass, 1 after revision, 8 still failing (citation form: passage ids after figures, missing ids). Failures: t03 (`company="jpmorgan chase"` matches no index name), t04 (planner chose fiscal 2024), m02 (labelled substitution not matched by refusal patterns; judge passed it), judge fails c01, k01, k03, k04. |
+| 27 | 11-14 | `144348_c2_team_dev` *evidence* | 3fa917f | hybrid | dev 21 | 18 / 15 | 0.314 | Final C2 with the critic. All 26 figures match XBRL. Critic: 12 first-pass, 1 after revision, 8 still failing (citation form: passage ids after figures, missing ids). Failures: t03 (`company="jpmorgan chase"` matches no index name), t04 (planner chose fiscal 2024), m02 (labelled substitution not matched by refusal patterns; judge passed it), judge fails k01, k03, k04 (and c01 before the rubric clarification, row 30). |
 | 28 | 11-14 | judge, runs 25–27 | 3fa917f | — | 39 | — | ~0.04 | Gemini judge, `--all`. |
+| 29 | 11-14 | company-name fix | (this commit) | — | — | — | 0.000 | `agent_desk/companies.py`: names, legal forms and tickers ("jpmorgan chase", "JPMorgan Chase & Co.", "JPM") map to index names in the search filter, filing lookup, risk passage ids and risk cache. C2's exact t03 search now returns the First Republic passage. Not yet re-run with the agents. |
+| 30 | 11-14 | judge rubric clarification | (this commit) | — | 15 comparison verdicts ×2 | C0 7, C1 14, C2 15 | ~0.02 | Comparison rubric: naming each company's own fiscal year is correct; fail only if the answer says the figures cover the same months, and only when the case notes say year-ends differ. A first wording without that condition wrongly failed C1 c02 (both years end 31 December) and was corrected. Five runs re-judged; kappa on the 26 hand labels still 1.00. C2 c01 now passes (14 → 15). |
 
 ## Next
 
 - Held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
-- For the team: normalise company names in `search_filing` / `compare_risk_factors`; let the critic
+- For the team: let the critic
   accept a passage id after figures taken from filing text; ask the domain lead to review the
   held-out cases.

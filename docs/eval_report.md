@@ -108,7 +108,8 @@ the **compliance critic's verdict**.
 **LLM judge for what code cannot decide** (`tests/evals/judge/`). `google/gemini-3.1-flash-lite`
 (temperature 0), a different family from the agents, grades narrative, comparison, risk-change and
 missing cases against a rubric built from the gold labels: claims supported by the retrieved
-passages; the comparison's direction right and fiscal periods not conflated; most labelled risk
+passages; the comparison's direction right and, where the case notes say the companies' fiscal
+years end in different months, the periods not presented as the same months; most labelled risk
 changes reported and none invented; unavailable data declined without invented figures. Numeric
 cases are never judged. The judge can only turn a code pass into a failure. **Task success = code
 checks passed and not failed by the judge.**
@@ -128,9 +129,22 @@ the calibration set it failed four risk-change answers that passed the keyword c
 labels agreed in all four (one missed the large rise in tariff language and stated no risks were
 added; one reported a change in Brazilian regulation that is not in the labels).
 
+**Rubric clarification (2026-11-14).** In the final C2 run the judge failed c01 (Apple vs Amazon
+margins) because the answer did not *mention* that the two fiscal years end in different months,
+although it named each company's own "fiscal 2025" correctly and the same kind of answer had passed
+before. The comparison rubric was reworded to state the rule explicitly: naming each company's own
+fiscal year is correct; fail only an answer that says or implies the figures cover the same months,
+and only when the case notes say the year-ends differ. A first rewording dropped that last
+condition and wrongly failed a correct JPMorgan/Mastercard answer (both years end on 31 December);
+it was corrected before any result was reported. All comparison answers in the five judged runs
+were re-judged, and agreement with the 26 hand labels is unchanged (26/26, kappa 1.00). This change
+was made after seeing dev results and only affects dev cases.
+
 Caveats: 26 items and one labeller leave wide uncertainty around a perfect score; the judged cases
 are mostly clear-cut; calibration used outputs produced before the critic, which carry no evidence
-ids. The judge model was switched from `qwen/qwen-2.5-72b-instruct` to Gemini on 2026-11-13, before
+ids. The judge occasionally reasons from its own knowledge cutoff (one verdict on C1 c03 said
+fiscal 2025 data could not exist "as of the current date"); that answer had already failed the code
+checks, so no result changed. The judge model was switched from `qwen/qwen-2.5-72b-instruct` to Gemini on 2026-11-13, before
 any run had been judged, because the account's OpenRouter guardrail blocked Qwen's only provider.
 
 ## 4. Results — development split
@@ -142,10 +156,10 @@ unbiased estimate; the held-out run (Section 5) is. Each system was run once per
 
 | Metric | C0 single prompt | C1 single agent | C2 team |
 |---|---|---|---|
-| **Task success (code + judge)** | **7/21** | **14/21** | **14/21** |
+| **Task success (code + judge)** | **7/21** | **14/21** | **15/21** |
 | code checks passed | 7/21 | 15/21 | 18/21 |
 | numeric | 2/8 | 8/8 | 8/8 |
-| comparison | 0/3 | 1/3 | 2/3 |
+| comparison | 0/3 | 1/3 | 3/3 |
 | narrative | 3/4 | 1/4 | 2/4 |
 | risk change | 0/4 | 2/4 | 1/4 |
 | missing data | 2/2 | 2/2 | 1/2 |
@@ -169,10 +183,10 @@ counts belong to E2.
 - **Tools account for most of the gain.** C0 cannot look up XBRL facts and answers from a fixed
   set of passages; it doubled from 3 to 7 with the better retrieval, all of the gain on text
   questions, but it gets only 2 of 8 numbers right.
-- **On this single dev run the team does not beat the single agent on task success (14 vs 14).**
-  C2 passes more code checks (18 vs 15) but the judge failed four of its answers (one comparison,
-  three risk changes) against one of C1's. C2 is cheaper per case than C1 here (USD 0.015 vs
-  0.017: C1's single context grows long) but about 2.6× slower at the median.
+- **On this single dev run the team is one case ahead of the single agent (15 vs 14).** C2
+  passes more code checks (18 vs 15); the judge failed three of its risk-change answers and one of
+  C1's. C2 is cheaper per case than C1 here (USD 0.015 vs 0.017: C1's single context grows long)
+  but about 2.6× slower at the median.
 - **C2's numbers are the most trustworthy.** Every figure it stated matched XBRL (26/26), against
   87% for C1 and 73% for C0. For an analyst note, where one wrong number undermines the whole note
   (the brief), this is the clearest advantage of the team.
@@ -241,7 +255,7 @@ The first dev runs (2026-11-11 to 11-13: semantic search, old chunks, no critic,
 calculator) gave C0 3/21, C1 12/21 and C2 18/21 (code + judge), with C2 at 15.3 s median latency and
 USD 0.0135 per case. Several things changed at once between those runs and the final ones —
 retrieval, chunking, the critic, the writer's citation rules and C1's tools — so the difference for
-C2 (18 → 14) cannot be attributed to any one of them; Section 6 lists the cases that changed and
+C2 (18 → 15) cannot be attributed to any one of them; Section 6 lists the cases that changed and
 why. These runs are in the evidence folder and the experiment log.
 
 ## 5. Results — held-out split (TBD)
@@ -266,7 +280,7 @@ development cases.
 
 | Finding | Evidence | Action |
 |---|---|---|
-| **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returns nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returns an error and C1 gives up | Not fixed. Proposed: map aliases to the indexed names inside the tools |
+| **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returns nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returns an error and C1 gives up | **Fixed after the final runs** (`agent_desk/companies.py`): names, legal forms and tickers map to the indexed names in the search filter, filing lookup, risk passage ids and risk cache. C2's exact t03 search now returns the $588 million First Republic passage. Not yet re-measured in an agent run |
 | **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Not fixed; candidate lesson for the improvement loop |
 | **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner; proposed: allow a passage id after a figure that comes from filing text |
 | Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Checker limitation; not changed |
@@ -275,6 +289,7 @@ development cases.
 | A gold label was wrong | k02 expected "no material change" for Amazon 2024→2025; the FY2025 filing adds "automation, artificial intelligence, and machine learning" to the newer-activities risk | Label corrected; the case notes record why |
 | Checker too strict on truncation | C2 wrote Apple's 31.97% margin as 31.9% with the right conclusion | Truncated percentages now match; whole numbers must still round |
 | Markdown bullets read as minus signs | "- 11.16%" parsed as −11.16% | Parser fixed; no result changed |
+| Judge failed a correct comparison for not mentioning different year-ends | C2 c01 (final run) | Comparison rubric clarified; kappa unchanged (Section 3) |
 | Keyword check passes wrong risk answers | Answers covering the label keywords but missing or inventing changes (C2 k01, k03, k04 in the final run) | Caught by the judge |
 | Retrieval missed exact-term questions | Recall@5 0.44 at the start; First Republic never found | Hybrid search, reranker and re-chunking: 0.81 |
 | Provider drift | One C1 run answered "Your input is not sufficient…" on the first call for 7 cases, while some of its calls were billed at USD 0.18 instead of 0.71 per million tokens | Run excluded; bad replies removed from the LLM cache |
@@ -295,10 +310,13 @@ development cases.
 ## 8. Threats to validity
 
 - **Single runs on dev.** Re-running C1 earlier gave the same score with different cases failing.
-  Dev differences of a few cases (including C1 = C2 = 14) are within noise; the held-out repeats
+  Dev differences of a few cases (including C2 15 vs C1 14) are within noise; the held-out repeats
   address this.
 - **Several changes between the first and final runs** (retrieval, chunking, critic, writer rules,
   C1's tools), so before/after differences are not attributed to a single change.
+- **Changes made after the final dev runs.** The company-name fix (which should help t03 and C1's
+  k03) is not reflected in the final dev numbers; the comparison rubric was clarified after seeing
+  them (Section 3). Both are dev-side changes made before any held-out run.
 - **Provider drift.** OpenRouter can serve the model from different providers, some at reduced
   precision, and chooses per request; we observed one run with markedly different behaviour and
   price. We did not pin a provider.
@@ -324,7 +342,7 @@ USD 0.74. Retrieval evaluation, regrading and calibration scoring use no LLM.
 ## 10. Reproducing
 
 ```
-python -m pytest tests/unit_tests                                            # 193 tests, no network
+python -m pytest tests/unit_tests                                            # 209 tests, no network
 python tests/evals/run_retrieval_eval.py --mode all --k 5                    # retrieval, no LLM
 python tests/evals/run_eval.py --config c2_team --split dev --search-mode hybrid   # plan only; add --yes
 python tests/evals/run_eval.py --regrade <run dir>                           # re-check saved answers
