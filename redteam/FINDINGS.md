@@ -4,7 +4,7 @@ Owner: Ria Dayal (red team, Role 5 / L15). Branch reviewed:
 `swapnil_multi_agent_with_planner_multiyearsupervisor_riskdiff` (commit "added ui", 11 Nov 2026).
 
 The brief says the person who writes attacks should not build defences ("Team roles"). Because the
-team was short on time and people, Ria wrote both the attacks and `rdayal_guardrails/`; see the
+team was short on time and people, Ria wrote both the attacks and `guardrails/`; see the
 separation note in README.md. Each finding below suggests a fix and, where it is in the team's own
 code, who should make it.
 
@@ -43,7 +43,7 @@ says it is "not an isolation boundary". This finding shows that the gap can actu
 
 ## F2 (high): no input or output guardrails existed in the team's code
 
-**Status (12 Nov):** partly addressed by `rdayal_guardrails/` (rule-based input/output guard plus
+**Status (12 Nov):** partly addressed by `guardrails/` (rule-based input/output guard plus
 tool-boundary hooks), which plug in from outside `src/`. It is rules only; a model-based classifier
 (Llama Guard 4 / Prompt Guard 2) is not added. Measured in E2_results.md.
 

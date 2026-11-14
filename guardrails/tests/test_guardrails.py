@@ -1,6 +1,6 @@
 """Guardrail tests. Examples are written from the policy, not copied from the red-team suite."""
 
-from rdayal_guardrails import check_input, check_output
+from guardrails import check_input, check_output
 
 LEGIT = [
     "What was Apple's operating income in fiscal 2025?",

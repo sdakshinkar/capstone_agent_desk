@@ -1,4 +1,4 @@
-# rdayal_guardrails: defences for Agent Desk
+# guardrails: defences for Agent Desk
 
 Two layers, rule-based, with no extra model calls. They plug in from outside, so no team file has
 to change. `with install(question): ...` wraps the team's tools for one request.
@@ -26,7 +26,7 @@ to change. `with install(question): ...` wraps the team's tools for one request.
   IR-04, a plain false number with no instruction; the defence there is "numbers only from XBRL".
   Hook on: sandbox attacks drop from 4/11 to 0/11.
 * Normal 10-K language checked by hand passes untouched. **Run
-  `python -m rdayal_guardrails.check_filter_on_filings` after building the index** to measure the
+  `python -m guardrails.check_filter_on_filings` after building the index** to measure the
   filter's false-positive rate on all real filing text.
 
 ## Honesty note (for E2)
@@ -48,7 +48,7 @@ and patterns that matched attack wording or normal 10-K language were removed. P
 ## Run
 
 ```bat
-python -m pytest rdayal_guardrails/tests -q
-python -m rdayal_guardrails.check_filter_on_filings
-python -m rdayal_redteam.run_redteam --defences on --targets researcher quant risk
+python -m pytest guardrails/tests -q
+python -m guardrails.check_filter_on_filings
+python -m redteam.run_redteam --defences on --targets researcher quant risk
 ```

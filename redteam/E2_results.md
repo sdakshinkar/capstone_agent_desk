@@ -1,7 +1,7 @@
 # E2: do the defences work? (Agent Desk red team, 12 Nov 2026)
 
 Owner: Ria Dayal. Model: meta-llama/llama-3.3-70b-instruct via OpenRouter (see `src/agent_desk/llm/llm.py`).
-Defences: `rdayal_guardrails` (rule-based input and output guard). One run per attack.
+Defences: `guardrails` (rule-based input and output guard). One run per attack.
 
 ## Agent attacks (researcher, quant and risk agents; 13 attacks)
 

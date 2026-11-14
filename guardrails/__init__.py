@@ -10,7 +10,7 @@ texts:
   * output: no buy/sell calls or price targets, no external links or images (exfiltration),
     nothing from a CONFIDENTIAL context block, no system-prompt text.
 
-Interface used by rdayal_redteam (and usable by the app):
+Interface used by redteam (and usable by the app):
   check_input(question)          -> {"allowed": bool, "reason": str}
   check_output(answer, question) -> {"allowed": bool, "reason": str, "answer": str | None}
 
