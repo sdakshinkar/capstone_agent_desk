@@ -373,6 +373,66 @@ Automated tests do not prove live model quality. Dedicated regression coverage
 for several newer evidence/critic behaviors and final-answer coverage checking
 remains incomplete.
 
+## Evaluation, threat model and red team
+
+### Evaluation (experiment E1)
+
+- **[Evaluation report](docs/eval_report.md)**: method, golden set, judge calibration, dev and
+  held-out results, failure analysis, threats to validity and cost.
+- **[Experiment log](docs/experiment_log.md)**: every eval run in order, with commit, search mode,
+  result, cost and what changed afterwards.
+- **[Eval harness guide](tests/evals/README.md)**: how to run the harness, the judge and calibration.
+- **[Evidence](tests/evals/evidence/)**: answers, trajectories, grades, judge verdicts and hand
+  labels of every run cited in the report.
+- **[Golden-case schema](evals/golden_case.schema.json)**: the format of the 62 cases in
+  [`tests/evals/cases/`](tests/evals/cases/), checked by a unit test.
+
+Key results (model `meta-llama/llama-3.3-70b-instruct`, hybrid search):
+
+| | C0 single prompt | C1 single agent | C2 team + critic |
+|---|---|---|---|
+| Held-out task success (41 cases, one run each) | 12/41 | 25/41 | 25/41 |
+| Figures matching SEC XBRL (held-out) | 54% | 94% | 97% |
+| Cost per case / median latency (held-out) | $0.001 / 4.2 s | $0.014 / 6.5 s | $0.022 / 25.8 s |
+
+The judge (`google/gemini-3.1-flash-lite`) agrees with 26 hand labels at Cohen's kappa 0.92.
+Retrieval Recall@5 on 32 query/evidence pairs is 0.81 with hybrid search and reranking.
+
+```powershell
+python tests\evals\run_eval.py --config c2_team --split dev --search-mode hybrid   # plan only; add --yes to run
+python tests\evals\run_retrieval_eval.py --mode all --k 5                         # retrieval, no LLM
+python tests\evals\judge\judge.py <run dir> --all --yes                           # judge a saved run
+python tests\evals\report.py <run dir> <run dir> <run dir>                        # side-by-side table
+```
+
+### Threat model
+
+- **[Threat model](docs/threat_model.md)**: assets (private watchlist, API key, EDGAR cache,
+  trust in numbers), entry points, threats with the attacks that test them, mitigations and their
+  status, and residual risks.
+
+### Red team and guardrails (experiment E2)
+
+- **[E2 results](redteam/E2_results.md)**: every attack with the question sent, what was planted,
+  and the result with defences off and on.
+- **[Red-team findings](redteam/FINDINGS.md)**: findings F1–F6 with suggested fixes.
+- **[Red-team suite](redteam/README.md)** and **[run commands](redteam/RUN_COMMANDS.md)**.
+- **[Guardrails](guardrails/README.md)** and **[guardrail results](guardrails/RESULTS.md)**.
+
+| | Defences off | Defences on |
+|---|---|---|
+| Attacks that worked (46 written, 45 run; 15 through the data path) | 18/45 (40%) | 1/45 (2%) |
+| Honest questions wrongly blocked | 0/16 | 0/16 |
+
+```powershell
+python -m pytest redteam/tests guardrails/tests -q
+```
+
+### Domain documents
+
+- **[Domain brief](docs/domain_brief.md)**, **[policy pack](docs/policy_pack.md)** and the
+  **[demo deck](docs/analyst_desk_demo.pptx)**.
+
 ## Project structure
 
 ```text
@@ -392,12 +452,17 @@ remains incomplete.
 |   |-- citations.py            Numbered UI references and source descriptions
 |   |-- main.py                 Terminal team runner and tracing context
 |   `-- __main__.py             Delegates to main()
-|-- tests/                      Automated tests
+|-- tests/
+|   |-- unit_tests/             Automated tests
+|   `-- evals/                  Eval harness: golden cases, truth, checkers, judge, evidence
+|-- evals/                      Golden-case schema
+|-- docs/                       Eval report, experiment log, threat model, domain docs
+|-- redteam/                    Red-team suite and E2 results
+|-- guardrails/                 Input/output guards and tool-boundary hooks
 |-- .env.example                Configuration template
 |-- pytest.ini
 |-- requirements.txt
-|-- README.md
-`-- README copy.md              This current implementation guide
+`-- README.md                   This implementation guide
 ```
 
 ## Remaining limitations
