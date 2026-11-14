@@ -25,10 +25,21 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 | 15 | 11-13 | calibration | dd98eba | — | 26 hand labels | κ = 1.00 | 0.000 | 26/26 agreement; the judge failed four risk answers that passed the keyword check, and the human labels agreed. |
 | 16 | 11-13 | judge, run 5 | dd98eba | — | 13 | — | ~0.01 | C0 judged; task success unchanged at 3/21. |
 | 17 | 11-13 | regrade, all runs | 35c1c12 | — | — | — | 0.000 | Added the verified-figures and sandbox-use diagnostics; fixed "- 11.16%" being read as negative. No pass/fail result changed. |
-
-| 18 | 11-13 | — | (this commit) | — | — | — | 0.000 | C1 given the `run_python` calculator, so C1 and C2 have the same six tools. All C1 rows above ran without it. Runs now record `has_sandbox` in `run.json`. |
+| 18 | 11-13 | — | 1829337 | — | — | — | 0.000 | C1 given the `run_python` calculator, so C1 and C2 have the same six tools. All C1 rows above ran without it. Runs now record `has_sandbox` in `run.json`. |
+| 19 | 11-14 | retrieval eval | 6aead1e | all three | 32 | 0.44 / 0.59 / 0.75 | 0.000 | After merging Arun_finetuning_RAG (cross-encoder reranker, BM25 stopwords and stemming), still on the old index. |
+| 20 | 11-14 | index rebuild | 6aead1e | — | 31 filings | 21,186 chunks | 0.000 | Per-Item chunking: 57,808 → 21,186 chunks, median 833 characters. The background job was stopped for low memory just after it finished; the saved index was checked complete (vectors = chunks = ids). Old index kept as `data/faiss_index_backup_20261114`. |
+| 21 | 11-14 | critic model check | — | — | 1 call | ok | 0.000 | `openai/gpt-4o-mini` (the critic's judge) reachable through the account's guardrail. |
+| 22 | 11-14 | merge PR #9 (critic) | 4dc7497 | — | — | — | 0.000 | Compliance critic, evidence register, tracing. Fixed while merging: `search_filing` P-ids restored next to Arun's `mode`; duplicate Apple FY2025 10-K (browser-saved `.html` + `_files/`) and `README copy.md` removed. |
+| 23 | 11-14 | eval harness for the critic | 3fa917f | — | — | — | 0.000 | C2 runs with a fresh evidence register (otherwise the critic skips itself) and step limit 50; critic verdicts recorded and summarised; repeats turn off the risk cache. No critic on/off switch (team decision). |
+| 24 | 11-14 | retrieval eval | 3fa917f | all three | 32 | 0.47 / 0.72 / 0.81 | 0.000 | On the rebuilt index. Hybrid MRR 0.64. First Republic (r021) found for the first time. |
+| 25 | 11-14 | `143717_c0_single_prompt_dev` *evidence* | 3fa917f | hybrid | dev 21 | 7 / 7 | 0.020 | Final C0. Better chunks lift text questions (3/4); numbers still 2/8. |
+| 26 | 11-14 | `143941_c1_single_agent_dev` *evidence* | 3fa917f | hybrid | dev 21 | 15 / 14 | 0.362 | Final C1 with the calculator (used in 3/4 calculation cases); numeric 8/8. |
+| 27 | 11-14 | `144348_c2_team_dev` *evidence* | 3fa917f | hybrid | dev 21 | 18 / 14 | 0.314 | Final C2 with the critic. All 26 figures match XBRL. Critic: 12 first-pass, 1 after revision, 8 still failing (citation form: passage ids after figures, missing ids). Failures: t03 (`company="jpmorgan chase"` matches no index name), t04 (planner chose fiscal 2024), m02 (labelled substitution not matched by refusal patterns; judge passed it), judge fails c01, k01, k03, k04. |
+| 28 | 11-14 | judge, runs 25–27 | 3fa917f | — | 39 | — | ~0.04 | Gemini judge, `--all`. |
 
 ## Next
 
-- Choose the search mode for all systems; disable the risk cache for the repeats.
-- Held-out: C0, C1, C2 × 3 repeats, then judge (about USD 3.50–4.50).
+- Held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
+- For the team: normalise company names in `search_filing` / `compare_risk_factors`; let the critic
+  accept a passage id after figures taken from filing text; ask the domain lead to review the
+  held-out cases.

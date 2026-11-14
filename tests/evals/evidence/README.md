@@ -15,6 +15,9 @@ calibrate the judge.
 | `20261113-161734_c0_single_prompt_dev` | C0 with hybrid search forced (`--search-mode hybrid`) |
 | `20261113-161828_c1_single_agent_dev` | C1 with hybrid search; 7 cases hit a provider glitch (no tool call), so not used for comparison |
 | `20261113-162059_c2_team_dev` | C2 with hybrid search |
+| `20261114-143717_c0_single_prompt_dev` | **Final** E1 dev, C0, hybrid search on the per-Item index (judged) |
+| `20261114-143941_c1_single_agent_dev` | **Final** E1 dev, C1 with all six tools including `run_python` (judged) |
+| `20261114-144348_c2_team_dev` | **Final** E1 dev, C2 with the compliance critic and evidence register (judged) |
 
 Judge calibration: 26 hand-labelled outputs (13 per calibration set), judge
 `google/gemini-3.1-flash-lite`, raw agreement 26/26, Cohen's kappa 1.00:

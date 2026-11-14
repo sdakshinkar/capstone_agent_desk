@@ -1,12 +1,12 @@
 # Agent Desk — Evaluation Report
 
-*Status: draft, 2026-11-13. Development-split results are final for this draft; the held-out
-comparison (three repeats per system) has not been run yet, and its tables are marked **TBD**.
-Experiment E2 (defences and red team) is reported separately by the security owner. E3 and E4
-depend on components that are not built yet (Section 7).*
+*Status: 2026-11-14. Final development-split runs are complete (Section 4). The held-out comparison
+(three repeats per system) has not been run, and its tables are marked **TBD**. Experiment E2
+(defences and red team) is reported separately by the security owner. E3 and E4 are not run
+(Section 7).*
 
-All numbers below can be reproduced from `tests/evals/evidence/` (answers, trajectories, grades
-and summaries of every cited run). The run-by-run history is in `docs/experiment_log.md`.
+All numbers can be reproduced from `tests/evals/evidence/` (answers, trajectories, grades, judge
+verdicts and summaries of every cited run). The run-by-run history is in `docs/experiment_log.md`.
 
 ---
 
@@ -30,16 +30,24 @@ The evaluation answers two questions from the brief:
 | Config | System | Decisions made by the model | Tools |
 |---|---|---|---|
 | **C0** `c0_single_prompt` | Fixed pipeline: code finds the companies named in the question, retrieves 6 passages per company, one LLM call answers | None (one answer call) | None |
-| **C1** `c1_single_agent` | One ReAct agent | Which tools to call, when to stop | `search_filing`, `list_edgar_companies`, `list_company_facts`, `get_company_fact`, `compare_risk_factors`, and since 2026-11-13 `run_python` (the dev runs below predate it) |
-| **C2** `c2_team` | Research lead (plan) → supervisor (routing, replan up to 2×) → researcher / quant / risk-diff workers → writer | Plan, routing, briefs, replans, each worker's tool use | Researcher: `search_filing`; quant: the four EDGAR tools + `run_python` sandbox; risk-diff: `compare_risk_factors` |
+| **C1** `c1_single_agent` | One ReAct agent | Which tools to call, when to stop | All six team tools: `search_filing`, `list_edgar_companies`, `list_company_facts`, `get_company_fact`, `compare_risk_factors`, `run_python` |
+| **C2** `c2_team` | Research lead (plan) → supervisor (routing, replan up to 2×) → researcher / quant / risk-diff workers → writer → **compliance critic** (up to 2 revisions) | Plan, routing, briefs, replans, each worker's tool use, the writer's draft, the critic's claim and wording judgements | Researcher: `search_filing`; quant: EDGAR tools + `run_python`; risk-diff: `compare_risk_factors` |
 
-All three use `meta-llama/llama-3.3-70b-instruct` through OpenRouter (default provider routing)
-and the same per-case budget: 300,000 tokens, 80 LLM calls, 900 s. Each configuration is one
-YAML file in `tests/evals/configs/`; there are no experiment branches.
+All three use `meta-llama/llama-3.3-70b-instruct` through OpenRouter (default provider routing),
+the same per-case budget (300,000 tokens, 80 LLM calls, 900 s) and, in the final runs, the same
+retrieval: **hybrid search** (BM25 + embeddings fused with RRF, then a cross-encoder reranker) over
+the per-Item chunk index. Each configuration is one YAML file in `tests/evals/configs/`; the search
+mode is set for the whole run with `--search-mode hybrid`.
 
-The C2 evaluated here is the team graph in `agents/workflow.py` run unattended (no plan-approval
-pause). It does not yet have the brief's parallel fan-out, compliance critic or memory; results
-describe the system as built.
+**C2 as evaluated.** In C2 every tool records what it returns in a per-question *evidence
+register* and hands back a short id — `F` for an XBRL fact, `D` for a sandbox calculation, `P` (or a
+risk-passage id) for a filing passage. The writer must put the id after every figure and claim. The
+compliance critic then checks every figure against the register by code, every passage-backed
+claim with an LLM judge (`openai/gpt-4o-mini`, a different family from the writer), and the wording
+for advice or promised returns; a failing draft goes back to the writer at most twice, after which
+the note is returned with a visible "did not pass" warning. The eval runs the team graph unattended
+(no plan-approval pause), with a fresh register per case and the application's step limit (50).
+Parallel fan-out and memory are not part of the system yet.
 
 ## 2. Golden set
 
@@ -56,9 +64,9 @@ describe the system as built.
 | **Total** | **21** | **41** | |
 
 **Split by company.** Dev covers Apple, Amazon, JPMorgan and Mastercard; held-out covers
-Microsoft, Alphabet, Meta, NVIDIA, Bank of America, Goldman Sachs (plus Tesla as an uncovered
+Microsoft, Alphabet, Meta, NVIDIA, Bank of America and Goldman Sachs (plus Tesla as an uncovered
 company). Related variants share a `group`, and a validator rejects any group that appears in both
-splits. Held-out results therefore measure companies the system was never tuned on.
+splits, so held-out results measure companies the system was never tuned on.
 
 **Gold answers stay out of reach.** Cases name a fact rather than its value; values live in
 `tests/evals/truth/xbrl_truth.json`. No agent tool reads `tests/`.
@@ -67,19 +75,18 @@ splits. Held-out results therefore measure companies the system was never tuned 
 company, year and metric (revenue, operating income, net income, R&D, diluted EPS, total assets),
 the full-year 10-K value from SEC Company Facts, with a fixed concept order (for example
 `RevenueFromContractWithCustomerExcludingAssessedTax`, then `Revenues`, then
-`RevenuesNetOfInterestExpense` for banks). Fiscal year means the year the period ends, so
-Microsoft's FY2025 ends June 2025 and NVIDIA's ends January 2025. Margins are computed in code.
-When a later 10-K restated a value, every reported version is accepted (Bank of America's 2024 net
-income: $26.97B or $27.13B). Each value records its concept, period and accession number.
+`RevenuesNetOfInterestExpense` for banks). Fiscal year means the year the period ends (Microsoft's
+FY2025 ends June 2025, NVIDIA's January 2025). Margins are computed in code. When a later 10-K
+restated a value, every reported version is accepted (Bank of America's 2024 net income: $26.97B or
+$27.13B). Each value records its concept, period and accession number.
 
 **Risk labels.** The ten risk-change cases (ten company-year pairs, as the brief asks) were drafted
 with AI assistance from keyword counts in each Item 1A and then reviewed and confirmed by the team.
-One label was corrected after review of the filings (k02, see Section 6).
+One label was corrected against the filings (k02, Section 6).
 
 ## 3. How answers are graded
 
-**Code first** (`tests/evals/checkers/`). Every answer is graded by code immediately after it is
-produced:
+**Code first** (`tests/evals/checkers/`), immediately after each answer:
 
 | Check | Pass rule |
 |---|---|
@@ -92,123 +99,155 @@ produced:
 | passage_ids | every cited risk passage id exists in that filing |
 | health | no crash, no budget stop, no timeout (these count as failures) |
 
-Diagnostics are reported but never fail a case: expected tool called, whether the gold evidence
-sentence was among the passages retrieved, **share of figures verified against XBRL**, and
-**whether margin and growth cases used the `run_python` sandbox**.
+Diagnostics are reported but never fail a case: expected tool called; whether the gold evidence
+sentence was among the passages retrieved; **share of figures verified against XBRL** (dollar and
+percent figures in numeric and comparison answers that match a reported value or a margin/growth
+computed from one); **whether margin and growth cases used the `run_python` sandbox**; and, for C2,
+the **compliance critic's verdict**.
 
-**LLM judge for what code cannot decide** (`tests/evals/judge/`). A model from a different family
-than the agents — `google/gemini-3.1-flash-lite`, temperature 0 — grades narrative, comparison,
-risk-change and missing cases against a rubric built from the gold labels: every claim supported by
-the retrieved passages; the comparison's direction right; most labelled risk changes reported and
-none invented; unavailable data declined without invented figures. Numeric cases are never judged.
-The judge can only turn a code pass into a failure, never the reverse. Task success = code checks
-passed and not failed by the judge.
+**LLM judge for what code cannot decide** (`tests/evals/judge/`). `google/gemini-3.1-flash-lite`
+(temperature 0), a different family from the agents, grades narrative, comparison, risk-change and
+missing cases against a rubric built from the gold labels: claims supported by the retrieved
+passages; the comparison's direction right and fiscal periods not conflated; most labelled risk
+changes reported and none invented; unavailable data declined without invented figures. Numeric
+cases are never judged. The judge can only turn a code pass into a failure. **Task success = code
+checks passed and not failed by the judge.**
 
 ### Judge calibration
 
 The judge was checked against **26 outputs labelled by hand** (13 from C1, 13 from C2, dev split,
-covering all four judged types). Labels were entered without seeing the judge's verdicts.
+all four judged types), labelled without seeing the judge's verdicts.
 
 | | Judge pass | Judge fail |
 |---|---|---|
 | **Human pass** | 17 | 0 |
 | **Human fail** | 0 | 9 |
 
-Raw agreement 26/26; **Cohen's kappa = 1.00**.
+Raw agreement 26/26; **Cohen's kappa = 1.00**. The judge adds information the code checks miss: in
+the calibration set it failed four risk-change answers that passed the keyword check, and the human
+labels agreed in all four (one missed the large rise in tariff language and stated no risks were
+added; one reported a change in Brazilian regulation that is not in the labels).
 
-The judge adds information the code checks miss: it failed four risk-change answers that passed
-the keyword check (C2 k01, C2 k03, C1 k01, C1 k04), and the human labels agreed in all four.
-Examples: C2's Apple answer stated that no new risks were added and missed the large rise in
-tariff and trade-restriction language; C1's Mastercard answer reported a change in Brazilian
-regulation that is not in the labels.
+Caveats: 26 items and one labeller leave wide uncertainty around a perfect score; the judged cases
+are mostly clear-cut; calibration used outputs produced before the critic, which carry no evidence
+ids. The judge model was switched from `qwen/qwen-2.5-72b-instruct` to Gemini on 2026-11-13, before
+any run had been judged, because the account's OpenRouter guardrail blocked Qwen's only provider.
 
-Caveats: 26 items and a single labeller leave wide uncertainty around a perfect score; the judged
-cases are mostly clear-cut; calibration used dev outputs from two systems and has not been
-repeated on held-out answers. The judge model was switched from `qwen/qwen-2.5-72b-instruct` to
-Gemini on 2026-11-13, before any run had been judged, because the account's OpenRouter guardrail
-blocked Qwen's only provider.
+## 4. Results — development split
 
-## 4. Results — development split (single run)
+Dev results guided changes to the checkers, the C1 prompt and retrieval, so they are not an
+unbiased estimate; the held-out run (Section 5) is. Each system was run once per configuration.
 
-Dev results guided changes to the checkers and to the C1 prompt, so they are not an unbiased
-estimate; the held-out run in Section 5 is.
-
-### E1 on dev
+### 4.1 E1, final dev runs (hybrid search, C2 with critic, C1 with calculator)
 
 | Metric | C0 single prompt | C1 single agent | C2 team |
 |---|---|---|---|
-| **Task success (code + judge)** | **3/21** | **12/21** | **18/21** |
-| code checks passed | 3/21 | 14/21 | 20/21 |
-| numeric | 1/8 | 6/8 | 8/8 |
-| comparison | 0/3 | 2/3 | 3/3 |
-| narrative | 0/4 | 1/4 | 3/4 |
-| risk change | 0/4 | 1/4 | 2/4 |
-| missing data | 2/2 | 2/2 | 2/2 |
+| **Task success (code + judge)** | **7/21** | **14/21** | **14/21** |
+| code checks passed | 7/21 | 15/21 | 18/21 |
+| numeric | 2/8 | 8/8 | 8/8 |
+| comparison | 0/3 | 1/3 | 2/3 |
+| narrative | 3/4 | 1/4 | 2/4 |
+| risk change | 0/4 | 2/4 | 1/4 |
+| missing data | 2/2 | 2/2 | 1/2 |
 | Errors / timeouts | 0 / 0 | 0 / 0 | 0 / 0 |
 | Replans | — | — | 5 |
-| Latency p50 / p95 (s) | 1.4 / 2.6 | 6.3 / 16.6 | 15.3 / 132.4 |
-| LLM calls per case | 1.0 | 4.4 | 11.5 |
-| Tokens per case | 833 | 14,202 | 26,209 |
-| Cost per case (USD) | 0.0005 | 0.0099 | 0.0135 |
-| Cost, 21 cases (USD) | 0.011 | 0.207 | 0.283 |
-| Figures verified vs XBRL | 2/7 (29%) | 19/20 (95%) | 25/25 (100%) |
-| Evidence sentence retrieved (narrative) | 0/4 | 1/4 | 3/4 |
+| Latency p50 / p95 (s) | 4.4 / 15.8 | 9.2 / 26.6 | 23.6 / 59.0 |
+| LLM calls per case | 1.0 | 5.7 | 14.1 |
+| Tokens per case | 1,614 | 27,107 | 27,287 |
+| Cost per case (USD) | 0.0010 | 0.0172 | 0.0149 |
+| Cost, 21 cases (USD) | 0.020 | 0.362 | 0.314 |
+| Figures verified vs XBRL | 11/15 (73%) | 13/15 (87%) | **26/26 (100%)** |
+| Calculations in sandbox | — | 3/4 | 1/4 |
+| Evidence sentence retrieved (narrative) | 3/4 | 1/4 | 2/4 |
 
-Runs: `20261113-134923_c0_single_prompt_dev`, `20261113-144116_c1_single_agent_dev`,
-`20261111-185914_c2_team_dev`. Policy-violation, attack-success and false-block counts belong to
-E2 and are not in this table.
+Runs: `20261114-143717_c0_single_prompt_dev`, `20261114-143941_c1_single_agent_dev`,
+`20261114-144348_c2_team_dev` (commit 3fa917f). Policy-violation, attack-success and false-block
+counts belong to E2.
 
-**Reading the table.** Tools account for most of the gain: C0, which cannot look up XBRL facts or
-search beyond six fixed passages per company, mostly (and correctly) answered that the information
-was not in its passages. The team then adds six more correct answers than C1 for 36% more cost per
-case and about 2.4× the median latency; its p95 latency is dominated by risk comparisons (one took
-441 s). On this split the team's extra cost looks justified for accuracy-critical notes, but a
-single run of 21 cases cannot separate a six-case gap from run-to-run noise with confidence; see
-Section 6.
+**Reading the table.**
 
-### Numbers you can trust (signature challenge A)
+- **Tools account for most of the gain.** C0 cannot look up XBRL facts and answers from a fixed
+  set of passages; it doubled from 3 to 7 with the better retrieval, all of the gain on text
+  questions, but it gets only 2 of 8 numbers right.
+- **On this single dev run the team does not beat the single agent on task success (14 vs 14).**
+  C2 passes more code checks (18 vs 15) but the judge failed four of its answers (one comparison,
+  three risk changes) against one of C1's. C2 is cheaper per case than C1 here (USD 0.015 vs
+  0.017: C1's single context grows long) but about 2.6× slower at the median.
+- **C2's numbers are the most trustworthy.** Every figure it stated matched XBRL (26/26), against
+  87% for C1 and 73% for C0. For an analyst note, where one wrong number undermines the whole note
+  (the brief), this is the clearest advantage of the team.
+- **Twenty-one cases and one run cannot separate a difference of a few cases from run-to-run
+  noise** (Section 8). The E1 conclusion waits for the held-out repeats.
 
-- **Every figure C2 stated in numeric and comparison answers matched an XBRL value or a margin
-  or growth computed from them (25/25).** C1 stated one wrong figure (Mastercard's 2024 operating
-  margin as 55.4%; the value is 55.32%), an arithmetic slip without a calculator.
-- **The quant worker rarely used its sandbox.** After `run_python` was added to the quant worker,
-  it was called in only **1 of 4** margin and growth cases (run `20261112-183020_c2_team_dev`);
-  the other three margins were computed by the model and happened to be right. The brief's rule
-  "do not calculate numbers inside the LLM" is therefore not yet enforced by the system — only
-  requested in the prompt.
-- After the merge, C2 still passed all 11 numeric and comparison dev cases.
+### 4.2 Compliance critic (C2)
 
-### Retrieval
+| Outcome | Notes |
+|---|---|
+| Passed on the first draft | 12/21 |
+| Passed after revision | 1/21 |
+| Still failing after two revisions (returned with a warning) | 8/21 |
+| Revisions per case | 0.81 |
+| Open issues at the end, by type | 22 number, 2 claim |
+
+The critic's open issues are almost all about **citation form, not wrong values**: all 26 figures
+in C2's numeric and comparison answers matched XBRL. Two patterns account for most of them:
+
+- **Figures from filing text are rejected.** Employee counts (166,000; 1,556,000) come from a
+  filing passage, so the writer cites `[P1]`; the critic's number rule accepts only a fact (`F`) or
+  a calculation (`D`) id after a figure.
+- **Figures without an id**, and an id the register never issued (`D1` in one note).
+
+Revisions rarely help (1 of 9 failing drafts was fixed). As configured, the critic therefore flags
+38% of dev notes, mostly for citation form, and adds latency (two extra rounds on 9 cases). The
+critic did not stop any wrong figure on this split because there were none to stop; whether it
+catches planted wrong numbers (the brief's demo) is not measured here.
+
+### 4.3 Numbers you can trust (signature challenge A)
+
+- C2: 26/26 figures verified, and every figure now carries an evidence id that links it to an XBRL
+  fact or a sandbox calculation (the critic enforces the presence and value of the id).
+- The quant worker still computes most ratios itself: `run_python` was called in **1 of 4** margin
+  and growth cases (the same rate as before the critic). The brief's rule "do not calculate numbers
+  inside the LLM" is requested in the prompt but not enforced; the critic accepts a ratio only with
+  a `D` id, which is why some ratios end up flagged rather than computed in the sandbox.
+- C1, which has had the calculator since 2026-11-13, used it in 3 of 4 calculation cases.
+
+### 4.4 Retrieval
 
 The filing search was evaluated on its own with 32 query/evidence pairs
 (`tests/evals/dev/retrieval.jsonl`, no LLM): a case is a hit if the exact 10-K sentence is in the
-top five chunks.
+top five chunks returned with the case's company and year filter.
 
-| Mode | Recall@5 | MRR@5 |
+| Mode | Initial index and search | Final (per-Item chunks, stemming, reranker) |
 |---|---|---|
-| semantic (MiniLM embeddings, FAISS) | 14/32 = 0.44 | 0.36 |
-| keyword (BM25) | 16/32 = 0.50 | 0.37 |
-| **hybrid** (RRF of both) | **17/32 = 0.53** | 0.36 |
+| semantic (MiniLM, FAISS) | 0.44 Recall@5, MRR 0.36 | 0.47, MRR 0.36 |
+| keyword (BM25) | 0.50, MRR 0.37 | 0.72, MRR 0.50 |
+| **hybrid** | 0.53, MRR 0.36 | **0.81, MRR 0.64** |
 
-Semantic Recall@50 is 0.78, so many misses are ranking failures rather than absent passages; a
-reranker (not yet built) targets exactly that. Hybrid search recovered five cases (segment
-questions, NVIDIA export controls and customer concentration) and lost one; MRR did not improve.
-The passage for JPMorgan's $588 million First Republic gain is missed by all three modes, and it is
-the cause of C2's only narrative failure (t03).
+Three changes produced the gain: a cross-encoder reranker over the top 30 fused results (hybrid
+0.53 → 0.75 on the old index), a BM25 tokenizer with stopwords and light stemming, and re-chunking
+that joins each Item's paragraphs before splitting (57,808 chunks, many a lone header or table row,
+became 21,186 chunks of median 833 characters; hybrid 0.75 → 0.81). The JPMorgan First Republic
+passage that every earlier mode missed is now found (rank 5 hybrid, rank 3 keyword).
 
-**Hybrid search inside the agents (dev).** With hybrid search forced for every system, C0 rose
-from 3 to 4 (two employee-count questions now answered, one lost), and C2 stayed at 18/21 on code
-checks. C2's two narrative changes were not retrieval failures: in both, the search returned the
-right passage and the answer was still wrong (an invented employee figure; a plan that searched
-fiscal 2024 instead of 2025). The C1 hybrid run is excluded: seven of its cases received an
-unrelated reply on the very first model call ("Your input is not sufficient…"), before any search,
-and some of its cases were billed at about USD 0.18 per million tokens instead of the USD 0.71 of
-every earlier run, which points to OpenRouter routing those requests to a different provider.
+**From retrieval to answers.** Better retrieval did not translate fully into agent answers. C2 still
+failed the First Republic question (t03) because the researcher called `search_filing` with
+`company="jpmorgan chase"`, which matches no indexed company (`jpmorgan`), so the filtered search
+returned nothing; the retrieval eval uses the indexed name and does not see this.
+
+### 4.5 Before the retrieval changes and the critic (history)
+
+The first dev runs (2026-11-11 to 11-13: semantic search, old chunks, no critic, C1 without the
+calculator) gave C0 3/21, C1 12/21 and C2 18/21 (code + judge), with C2 at 15.3 s median latency and
+USD 0.0135 per case. Several things changed at once between those runs and the final ones —
+retrieval, chunking, the critic, the writer's citation rules and C1's tools — so the difference for
+C2 (18 → 14) cannot be attributed to any one of them; Section 6 lists the cases that changed and
+why. These runs are in the evidence folder and the experiment log.
 
 ## 5. Results — held-out split (TBD)
 
-Planned: C0, C1 and C2 on all 41 held-out cases, **three repeats each** with the LLM cache off,
-judged as above. Estimated cost USD 3.50–4.50.
+Planned: C0, C1 and C2 on all 41 held-out cases, **three repeats each**, LLM and risk caches off,
+hybrid search, judged as above. Estimated cost USD 5–6 with the critic and reranker.
 
 | Metric | C0 | C1 | C2 |
 |---|---|---|---|
@@ -218,78 +257,80 @@ judged as above. Estimated cost USD 3.50–4.50.
 | Latency p50 / p95 (s) | TBD | TBD | TBD |
 | Cost per case (USD) | TBD | TBD | TBD |
 | Figures verified vs XBRL | TBD | TBD | TBD |
-| Calculations in sandbox | — | — | TBD |
+| Critic: first-pass / revised / still failing | — | — | TBD |
 
-Before this run: fix the search mode (semantic or hybrid) for all three systems, disable the
-risk-extraction cache, and make no further prompt changes. C1 has had the `run_python` tool since
-2026-11-13, so all held-out runs use the same tools. Any change made after seeing
-held-out results will be reported, and the affected cases treated as development cases.
+Any change made after seeing held-out results will be reported, and the affected cases treated as
+development cases.
 
 ## 6. Failure analysis and changes made because of the evaluation
 
 | Finding | Evidence | Action |
 |---|---|---|
-| C1 wrote tool calls as plain text | First C1 run: all four risk cases ended after one call with the reply `compare_risk_factors(company="apple", …)`; the ReAct loop treats text as the final answer | One prompt rule added to C1; risk cases went from 0/4 to 3/4. Only the baseline changed |
-| A gold label was wrong | k02 expected "no material change" for Amazon 2024→2025; the agent reported a change, and the FY2025 filing indeed adds "automation, artificial intelligence, and machine learning" to the risk about newer activities | Label corrected; the case notes record why |
-| Checker too strict on truncation | C2 wrote Apple's 31.97% margin as 31.9% with the right conclusion | Percentages truncated at one or more decimals now match; whole numbers must still round |
-| Markdown bullets read as minus signs | "- 11.16%" parsed as −11.16% | Parser fixed; no pass/fail result changed |
-| Keyword check passes wrong risk answers | Four answers covered the label keywords but missed or invented changes | The judge catches these (Section 3) |
-| Model arithmetic | C1: Apple 2024 margin given as 31.6% (true 31.51%), Mastercard as 55.4% (55.32%) | Supports routing calculations to the sandbox; C2's quant worker uses it only 1 time in 4. C1 did not have the sandbox on dev and has been given it for held-out |
-| Giving up after one failed lookup | C1 looked for a `Revenue` concept for Mastercard, did not find it, and answered "not available"; asked for "jpmorgan chase", it received the valid names in the error and did not retry | Recorded; not fixed (baseline) |
-| Retrieval miss | t03 / r021: the First Republic passage is never in the top results | Hybrid search did not fix it; reranking is the next step |
+| **Company names not normalised in tool calls** | C2 t03: `search_filing(company="jpmorgan chase")` returns nothing (index name `jpmorgan`); C1 k03: `compare_risk_factors` with the same name returns an error and C1 gives up | Not fixed. Proposed: map aliases to the indexed names inside the tools |
+| **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Not fixed; candidate lesson for the improvement loop |
+| **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner; proposed: allow a passage id after a figure that comes from filing text |
+| Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Checker limitation; not changed |
+| C1 wrote tool calls as plain text | First C1 run: all four risk cases ended after one call with the reply `compare_risk_factors(company="apple", …)` | One prompt rule added to C1; risk cases 0/4 → 3/4 |
+| C1 lacked the calculator | Arithmetic slips on dev (Apple 2024 margin 31.6% for 31.51%; Mastercard 55.4% for 55.32%) | `run_python` added to C1; it then used it in 3 of 4 calculation cases |
+| A gold label was wrong | k02 expected "no material change" for Amazon 2024→2025; the FY2025 filing adds "automation, artificial intelligence, and machine learning" to the newer-activities risk | Label corrected; the case notes record why |
+| Checker too strict on truncation | C2 wrote Apple's 31.97% margin as 31.9% with the right conclusion | Truncated percentages now match; whole numbers must still round |
+| Markdown bullets read as minus signs | "- 11.16%" parsed as −11.16% | Parser fixed; no result changed |
+| Keyword check passes wrong risk answers | Answers covering the label keywords but missing or inventing changes (C2 k01, k03, k04 in the final run) | Caught by the judge |
+| Retrieval missed exact-term questions | Recall@5 0.44 at the start; First Republic never found | Hybrid search, reranker and re-chunking: 0.81 |
+| Provider drift | One C1 run answered "Your input is not sufficient…" on the first call for 7 cases, while some of its calls were billed at USD 0.18 instead of 0.71 per million tokens | Run excluded; bad replies removed from the LLM cache |
 
 ## 7. Not yet evaluated
 
 - **Held-out comparison, three repeats** — Section 5.
 - **E2, defences on and off** — reported by the security owner.
 - **E3, lessons before and after** — the Reflexion loop and playbook are not built.
-- **E4, critic on/off and table-aware vs plain-text parsing** — neither the compliance critic nor
-  table-aware parsing exists; the filings are parsed as text with tables flattened into rows.
+- **E4, critic on/off and table-aware vs plain-text parsing** — the critic exists, but the team
+  decided to evaluate C2 with the critic always on, so the on/off comparison is not run; table-aware
+  parsing is not built (tables are flattened into rows).
 - **FinanceBench external check** — its questions concern FY2015–2022 filings, which are not in
-  our index; using it requires indexing those filings separately.
-- **Traces and dashboard** — every run's trajectory is stored in `results.jsonl`; LangSmith or
-  Langfuse traces and the Grafana dashboard are owned by deployment.
+  the index.
+- **Traces and dashboard** — every eval run's trajectory is stored in `results.jsonl`; LangSmith
+  tracing is available when `LANGSMITH_API_KEY` is set; the Grafana dashboard is owned by deployment.
 
 ## 8. Threats to validity
 
-- **Provider drift.** OpenRouter can serve the same model ID from different providers, some at
-  reduced precision, and chooses per request. We observed a run whose price per token and
-  behaviour changed markedly. Runs on different days may not be comparable; we did not pin a
-  provider.
-- **Single runs on dev.** Re-running C1 gave the same score (14/21 on code) with different cases
-  failing. Dev differences of a few cases are within noise; the held-out repeats address this.
-- **C1 lacked the calculator on dev.** `run_python` was added to C2's quant worker after C1 was
-  built, so the C1 dev runs had five of the team's six tools, which favours C2 on calculation
-  cases (C1's two arithmetic slips in Section 6 happened without it). C1 has had all six tools
-  since 2026-11-13; the held-out comparison uses the same tools for C1 and C2.
-- **Who wrote the cases.** The golden set and the C1 prompt fix came from the evaluation side, and
-  the cases were drafted with AI assistance and reviewed by the team. The C2 team was never tuned on
-  held-out cases. The brief's separation (the person tuning the agent does not write held-out
-  cases) should be confirmed by the domain lead's review of the held-out set.
+- **Single runs on dev.** Re-running C1 earlier gave the same score with different cases failing.
+  Dev differences of a few cases (including C1 = C2 = 14) are within noise; the held-out repeats
+  address this.
+- **Several changes between the first and final runs** (retrieval, chunking, critic, writer rules,
+  C1's tools), so before/after differences are not attributed to a single change.
+- **Provider drift.** OpenRouter can serve the model from different providers, some at reduced
+  precision, and chooses per request; we observed one run with markedly different behaviour and
+  price. We did not pin a provider.
+- **Judge calibration predates the critic.** Final C2 answers carry evidence ids and, when the
+  critic fails, a warning block; the judge was not re-calibrated on such answers.
+- **Who wrote the cases.** The golden set and the C1 prompt fix came from the evaluation side; the
+  cases were drafted with AI assistance and reviewed by the team, and C2 was never tuned on held-out
+  cases. The domain lead should confirm the held-out set, as the brief asks.
 - **Checker limits.** A number is not tied to the year it is stated for; risk coverage is keyword
-  based (mitigated by the judge); refusals are detected with patterns; figures that are differences
-  of two values (for example a gap between two margins) are counted as unverified.
-- **Small retrieval set.** 32 cases, eight of them Microsoft, dev only.
-- **Cache effects.** Cached model calls replay their recorded cost, so cached re-runs overstate
-  spend; the risk-extraction cache makes repeated risk comparisons more alike than fresh ones.
-  Repeat runs disable the LLM cache; the risk cache should be disabled for the held-out repeats.
-- **Eval step limit.** The harness runs C2 with a graph recursion limit of 30; the application
-  uses 40. No dev case reached the limit.
+  based (mitigated by the judge); refusals are detected with patterns (m02); figures that are
+  differences of two values are counted as unverified.
+- **Retrieval eval scope.** 32 cases, eight of them Microsoft, dev only, always with the correct
+  company filter — which is why it did not reveal the company-name problem.
+- **Cache effects.** The final dev runs used the LLM and risk caches; identical model calls replay
+  their recorded cost. Repeat runs disable both caches.
 
 ## 9. Cost of evaluation
 
-All runs to date, including smoke tests and the judge: about **USD 1.30** of OpenRouter usage
-(costs reported by OpenRouter per call). Retrieval evaluation, regrading and calibration scoring
-use no LLM.
+All runs to date, including smoke tests and the judge: about **USD 2.05** of OpenRouter usage
+(costs reported by OpenRouter per call), of which the final dev runs and their judging were about
+USD 0.74. Retrieval evaluation, regrading and calibration scoring use no LLM.
 
 ## 10. Reproducing
 
 ```
-python -m pytest tests/unit_tests                                    # 167 tests, no network
-python tests/evals/run_retrieval_eval.py --mode all --k 5            # retrieval, no LLM
-python tests/evals/run_eval.py --config c2_team --split dev          # plan only; add --yes to run
-python tests/evals/run_eval.py --regrade <run dir>                   # re-check saved answers, no LLM
-python tests/evals/judge/judge.py <run dir> --all --yes              # judge
+python -m pytest tests/unit_tests                                            # 193 tests, no network
+python tests/evals/run_retrieval_eval.py --mode all --k 5                    # retrieval, no LLM
+python tests/evals/run_eval.py --config c2_team --split dev --search-mode hybrid   # plan only; add --yes
+python tests/evals/run_eval.py --regrade <run dir>                           # re-check saved answers
+python tests/evals/judge/judge.py <run dir> --all --yes                      # judge
 python tests/evals/judge/calibrate.py score <run dir> [<run dir> ...]
-python tests/evals/report.py <run dir> <run dir> <run dir>           # side-by-side table
+python tests/evals/report.py <run dir> <run dir> <run dir>                   # side-by-side table
 ```
+
+The index must be built first (`create_all_embeddings()` in `src/agent_desk/utils/create_embeddings.py`).
