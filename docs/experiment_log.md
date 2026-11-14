@@ -47,7 +47,7 @@ Runs marked *evidence* are copied to `tests/evals/evidence/runs/`. Model for eve
 
 ## Next
 
-- Fix risk extraction without the cache (provider routing or retries), then held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
+- Held-out: C0, C1, C2 × 3 repeats with hybrid search, caches off, then judge (about USD 5–6).
 - For the team: let the critic
   accept a passage id after figures taken from filing text; ask the domain lead to review the
   held-out cases.

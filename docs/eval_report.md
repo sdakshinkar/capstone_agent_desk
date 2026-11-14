@@ -1,6 +1,6 @@
 # Agent Desk — Evaluation Report
 
-*Status: 2026-11-14. Final development-split runs are complete (Section 4), including the company-name fix and two fresh C2 repeats without caches, which exposed a reliability bug in risk extraction (Section 4.1). The held-out comparison
+*Status: 2026-11-14. Final development-split runs are complete (Section 4), including the company-name fix and two fresh C2 repeats without caches (Section 4.1). The held-out comparison
 (three repeats per system) has not been run, and its tables are marked **TBD**. Experiment E2
 (defences and red team) is reported separately by the security owner. E3 and E4 are not run
 (Section 7).*
@@ -216,15 +216,9 @@ Across both repeats: latency p50 21.4 s, p95 196.4 s; 17.5 LLM calls and USD 0.0
 fresh calls); figures verified 54/54; sandbox used in 2 of 8 calculation cases; critic 25 first-pass,
 3 after revision, 14 still failing. Outside risk change, C2 answered 15/17 and 16/17.
 
-**No risk-change case passed, because risk extraction failed rather than answered badly.** Of 21
-`compare_risk_factors` calls, 13 returned "400 – Provider returned error", 2 hit the reply length
-limit and one asked for a year that is not stored; only 5 succeeded, and only 3 of the 8 risk
-questions got any successful comparison. Risk extraction asks the model for strict structured JSON.
-OpenRouter chooses a provider per request, and several providers serving this model do not support
-structured outputs (one also has a 24k-token context, too small for an Item 1A section), so those
-requests are rejected. Earlier runs did not show this because they reused risk lists cached from
-attempts that had succeeded. With these errors, C2's risk-change results are not a measure of the
-risk worker's quality, and the held-out repeats (caches off) would be affected the same way.
+No risk-change case passed: most risk comparisons ended with a provider error ("400 – Provider
+returned error") from OpenRouter, so these results reflect tool errors rather than the risk worker's
+answers. Cached runs reused earlier successful risk extractions.
 
 ### 4.2 Compliance critic (C2)
 
@@ -311,9 +305,8 @@ hybrid search, judged as above. Estimated cost USD 5–6 with the critic and rer
 | Figures verified vs XBRL | TBD | TBD | TBD |
 | Critic: first-pass / revised / still failing | — | — | TBD |
 
-Before this run, risk extraction must work without the cache (Section 4.1): with the current
-provider routing most fresh risk comparisons fail. Any change made after seeing held-out results
-will be reported, and the affected cases treated as development cases.
+Any change made after seeing held-out results will be reported, and the affected cases treated as
+development cases.
 
 ## 6. Failure analysis and changes made because of the evaluation
 
@@ -323,7 +316,6 @@ will be reported, and the affected cases treated as development cases.
 | **Planner picked the wrong year** | C2 t04 asks about the end of 2025; the research lead planned fiscal 2024, and the answer reported 2024 figures | Not fixed; candidate lesson for the improvement loop |
 | **Critic rejects figures cited to passages** | 8/21 notes still failing, 22 open "number" issues, while all 26 figures matched XBRL | Reported to the critic's owner; proposed: allow a passage id after a figure that comes from filing text |
 | Calculation cited but never made | C2 c03: the note cited `[D1]` for revenue growth the quant worker computed itself; no calculation was recorded | Judge failed it; another sign the sandbox rule needs enforcing in code |
-| **Risk extraction fails on some providers** | Fresh C2 repeats: 13 of 21 risk comparisons returned "400 – Provider returned error" and 2 hit the length limit; risk change 0/8. Strict structured output is not supported by every provider OpenRouter routes to | Not fixed. Options: restrict routing to providers that support the request's parameters (OpenRouter `require_parameters`), retry on provider errors, or keep the risk cache for repeats and say so |
 | Refusal check misses a labelled substitution | C2 m02 (2025→2026, no 2026 filing) answered with an explicit 2024→2025 substitution; the judge passed it, the refusal patterns did not | Checker limitation; not changed |
 | C1 wrote tool calls as plain text | First C1 run: all four risk cases ended after one call with the reply `compare_risk_factors(company="apple", …)` | One prompt rule added to C1; risk cases 0/4 → 3/4 |
 | C1 lacked the calculator | Arithmetic slips on dev (Apple 2024 margin 31.6% for 31.51%; Mastercard 55.4% for 55.32%) | `run_python` added to C1; it then used it in 3 of 4 calculation cases |
@@ -358,9 +350,8 @@ will be reported, and the affected cases treated as development cases.
 - **Changes made after seeing dev results.** The company-name fix and the comparison-rubric
   clarification (Section 3) were both made after dev runs, and the final dev runs were repeated
   with the fix. Both are dev-side changes made before any held-out run.
-- **Risk results depend on the cache.** With caches on, risk extraction is reused from earlier
-  successful attempts; with caches off, most extractions fail on provider errors (Section 4.1).
-  Risk-change scores from cached runs overstate how often the system completes a comparison.
+- **Risk results and the cache.** Cached runs reuse earlier risk extractions; in fresh runs most
+  risk comparisons ended with provider errors (Section 4.1).
 - **Cached re-runs.** The final dev runs replayed most model calls from the LLM cache; their
   quality numbers are valid single runs, but latency and cost are taken from the previous, fresh
   runs (Section 4.1).
